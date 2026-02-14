@@ -55,8 +55,9 @@ function User() {
                   <div className="review-card">
                      <h3>Restaurant Name</h3>
                      <p>
-                        This is a sample review. The food was
-                        amazing and the service was excellent!
+                        This is a sample review. The food
+                        was amazing and the service was
+                        excellent!
                      </p>
                   </div>
                </div>
