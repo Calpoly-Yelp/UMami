@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap");
 
 .logo {
-   font-family: 'Poppins', sans-serif;
+   font-family: "Poppins", sans-serif;
    font-style: normal;
    font-size: 32px;
    line-height: 150%;
@@ -10,7 +10,7 @@
 }
 
 .logo-u {
-   color: #A4D65E;
+   color: #a4d65e;
 }
 
 .logo-mami {

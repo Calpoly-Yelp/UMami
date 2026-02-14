@@ -1,5 +1,5 @@
-import Logo from '../assets/logo.jsx';
-import './user.css';
+import Logo from "../assets/logo.jsx";
+import "./user.css";
 
 function User() {
    return (
