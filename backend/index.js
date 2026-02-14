@@ -29,3 +29,5 @@ app.listen(PORT, () => {
       `Try visiting http://localhost:${PORT}/test-supabase`,
    );
 });
+
+export default app;

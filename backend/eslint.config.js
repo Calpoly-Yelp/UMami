@@ -20,6 +20,10 @@ export default defineConfig([
          globals: globals.node,
       },
 
+      env: {
+        jest: true,
+      },
+
       rules: {
          "no-console": "off",
          "no-process-exit": "off",
