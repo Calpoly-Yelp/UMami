@@ -7,8 +7,13 @@ describe("User Profile Page", () => {
    test("renders the user page", () => {
       render(<UserPage />);
 
-      // check for UMami logo
+      // check for Header elemtents
       const logoElement = document.querySelector(".logo");
       expect(logoElement).toBeInTheDocument();
+      const accountIcon = document.querySelector(
+         ".user-header svg",
+      );
+      expect(accountIcon).toBeInTheDocument();
+      // check for
    });
 });
