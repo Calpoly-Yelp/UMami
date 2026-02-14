@@ -3,9 +3,8 @@ import {
    Routes,
    Route,
 } from "react-router-dom";
-import Home from "./pages/Home.jsx";
-import User from "./pages/User.jsx";
-import "./App.css";
+import Home from "./pages/home.jsx";
+import User from "./pages/user.jsx";
 
 function App() {
    return (

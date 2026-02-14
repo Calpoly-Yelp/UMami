@@ -21,7 +21,7 @@ export default defineConfig([
       },
 
       env: {
-        jest: true,
+         jest: true,
       },
 
       rules: {
