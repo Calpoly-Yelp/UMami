@@ -18,12 +18,6 @@
    border-bottom: gray solid 3px;
 }
 
-.user-page img {
-   height: 20px;
-   width: auto;
-   background: transparent;
-}
-
 .user-page .user-content {
    display: flex;
    flex-direction: row;
@@ -35,10 +29,11 @@
    display: flex;
    flex-direction: column;
    align-items: center;
-   gap: 10px;
-   padding: 20px;
+   height: 40vh;
+   gap: 2vh;
+   padding: 4vh 2vw;
    background-color: #8e908926;
-   border-radius: 10px;
+   border-radius: 2vw;
    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -46,6 +41,33 @@
    display: flex;
    align-items: center;
    gap: 8px;
+}
+
+.user-page
+   .user-content
+   .user-info
+   .card
+   img.user-profile-picture {
+   width: 60px;
+   height: 60px;
+   min-width: 60px;
+   min-height: 60px;
+   border-radius: 50%;
+   object-fit: cover;
+}
+
+.user-page
+   .user-content
+   .user-info
+   .card
+   .name
+   img.verified-badge {
+   width: 20px;
+   height: 20px;
+   min-width: 20px;
+   min-height: 20px;
+   border-radius: 50%;
+   object-fit: contain;
 }
 
 .user-page .user-content .user-info .card .edit-icons {
@@ -81,10 +103,9 @@
    font-size: 20px;
    color: black;
 }
+
 .user-page .user-content .user-activity .review-card {
    background-color: #8e908926;
-   border-radius: 10px;
-   padding: 15px;
-   margin-bottom: 15px;
+   width: 65vw;
    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
