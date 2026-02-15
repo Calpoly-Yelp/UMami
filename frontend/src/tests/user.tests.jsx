@@ -38,4 +38,13 @@ describe("User Profile Page", () => {
       );
       expect(reviewComments).toHaveTextContent("Loved it!");
    });
+
+   // check for saved restaurant elements
+   test("renders saved restaurants", () => {
+      render(<UserPage />);
+      const restaurantCards = document.querySelectorAll(
+         ".restaurant-card",
+      );
+      expect(restaurantCards.length).toBe(3);
+   });
 });
