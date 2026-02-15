@@ -9,6 +9,16 @@ import ReviewCard from "../components/reviewCard.jsx";
 import "./user.css";
 
 function User() {
+   const handleNavClick = (e, sectionId) => {
+      e.preventDefault();
+      const section = document.getElementById(sectionId);
+      if (section) {
+         section.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+         });
+      }
+   };
    const testUser = {
       name: "Eli Schiffler",
       profilePicture:
@@ -70,28 +80,51 @@ function User() {
                   </div>
                </div>
                <div className="navigation-links">
-                  <a href="#reviews">My Reviews</a>
-                  <a href="#restaurants">
+                  <a
+                     href="#reviews"
+                     onClick={(e) =>
+                        handleNavClick(e, "reviews")
+                     }
+                  >
+                     My Reviews
+                  </a>
+                  <a
+                     href="#restaurants"
+                     onClick={(e) =>
+                        handleNavClick(e, "restaurants")
+                     }
+                  >
                      My Saved Restaurants
                   </a>
-                  <a href="#other-accounts">
+                  <a
+                     href="#other-accounts"
+                     onClick={(e) =>
+                        handleNavClick(e, "other-accounts")
+                     }
+                  >
                      Other Accounts
                   </a>
                </div>
             </div>
             <div className="user-activity">
-               <div className="reviews">
+               <div className="reviews" id="reviews">
                   <div className="activity-header">
                      <h2>My Reviews</h2>
                   </div>
                   <ReviewCard review={testReview} />
                </div>
-               <div className="restaurants">
+               <div
+                  className="restaurants"
+                  id="restaurants"
+               >
                   <div className="activity-header">
                      <h2>My Saved Restaurants</h2>
                   </div>
                </div>
-               <div className="other-accounts">
+               <div
+                  className="other-accounts"
+                  id="other-accounts"
+               >
                   <div className="activity-header">
                      <h2>Other Accounts</h2>
                   </div>
