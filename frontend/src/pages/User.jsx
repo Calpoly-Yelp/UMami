@@ -4,8 +4,9 @@ import {
    MdOutlineEdit,
    MdOutlineAddAPhoto,
 } from "react-icons/md";
-import cpLogo from "../../public/cplogo.png";
+import cpLogo from "../assets/cplogo.png";
 import ReviewCard from "../components/reviewCard.jsx";
+import RestaurantCard from "../components/restaurantCard.jsx";
 import "./user.css";
 
 function User() {
@@ -39,6 +40,30 @@ function User() {
          "https://picsum.photos/200/300",
       ],
    };
+
+   const testRestaurants = [
+      {
+         name: "Shake Smart",
+         image: "https://placehold.co/300x200/003831/FFFFFF?text=Spicy+Spoon",
+         averageRating: 4.5,
+         tags: ["Acai", "Smoothies", "Toast"],
+         isBookmarked: true,
+      },
+      {
+         name: "Jamba Juice",
+         image: "https://placehold.co/300x200/003831/FFFFFF?text=Green+Fork",
+         averageRating: 4.0,
+         tags: ["Smoothies", "Juice", "Breakfast"],
+         isBookmarked: false,
+      },
+      {
+         name: "Health Shack",
+         image: "https://placehold.co/300x200/003831/FFFFFF?text=Umami+Eats",
+         averageRating: 3.5,
+         tags: ["Juice", "Toast", "Acai"],
+         isBookmarked: true,
+      },
+   ];
 
    return (
       <div className="user-page">
@@ -107,18 +132,22 @@ function User() {
                </div>
             </div>
             <div className="user-activity">
-               <div className="reviews" id="reviews">
+               <div className="reviews">
                   <div className="activity-header">
                      <h2>My Reviews</h2>
                   </div>
                   <ReviewCard review={testReview} />
                </div>
-               <div
-                  className="restaurants"
-                  id="restaurants"
-               >
+               <div className="restaurants">
                   <div className="activity-header">
                      <h2>My Saved Restaurants</h2>
+                  </div>
+                  <div className="restaurant-list">
+                     {testRestaurants.map((restaurant) => (
+                        <RestaurantCard
+                           restaurant={restaurant}
+                        />
+                     ))}
                   </div>
                </div>
                <div

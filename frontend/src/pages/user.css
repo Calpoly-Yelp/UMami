@@ -119,6 +119,21 @@
 
 .user-page .user-content .user-activity .review-card {
    background-color: #8e908926;
-   width: 65vw;
    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-page .user-content .user-activity .restaurants {
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+}
+
+.user-page
+   .user-content
+   .user-activity
+   .restaurants
+   .restaurant-list {
+   display: flex;
+   flex-direction: row;
+   gap: 20px;
 }

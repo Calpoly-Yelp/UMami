@@ -1,4 +1,4 @@
-import cpLogo from "../../public/cplogo.png";
+import cpLogo from "../assets/cplogo.png";
 import "./reviewCard.css";
 
 function ReviewCard({ review }) {
