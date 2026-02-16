@@ -7,6 +7,8 @@ import {
 import cpLogo from "../assets/cplogo.png";
 import ReviewCard from "../components/reviewCard.jsx";
 import RestaurantCard from "../components/restaurantCard.jsx";
+import FollowedUserCard from "../components/followedUserCard.jsx";
+import { UserCheck } from "@phosphor-icons/react";
 import "./user.css";
 
 function User() {
@@ -62,6 +64,23 @@ function User() {
          averageRating: 3.5,
          tags: ["Juice", "Toast", "Acai"],
          isBookmarked: true,
+      },
+   ];
+
+   const testFollowedUsers = [
+      {
+         name: "Jane",
+         isVerified: true,
+         profilePicture:
+            "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
+         numReviews: 10,
+      },
+      {
+         name: "Bob",
+         isVerified: false,
+         profilePicture:
+            "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
+         numReviews: 5,
       },
    ];
 
@@ -132,13 +151,16 @@ function User() {
                </div>
             </div>
             <div className="user-activity">
-               <div className="reviews">
+               <div className="reviews" id="reviews">
                   <div className="activity-header">
                      <h2>My Reviews</h2>
                   </div>
                   <ReviewCard review={testReview} />
                </div>
-               <div className="restaurants">
+               <div
+                  className="restaurants"
+                  id="restaurants"
+               >
                   <div className="activity-header">
                      <h2>My Saved Restaurants</h2>
                   </div>
@@ -156,6 +178,17 @@ function User() {
                >
                   <div className="activity-header">
                      <h2>Other Accounts</h2>
+                  </div>
+                  <div className="user-list">
+                     <div className="following-header">
+                        <UserCheck size={16} />
+                        <h5>Following</h5>
+                     </div>
+                     <div className="user-list-items">
+                        {testFollowedUsers.map((user) => (
+                           <FollowedUserCard user={user} />
+                        ))}
+                     </div>
                   </div>
                </div>
             </div>

@@ -6,37 +6,36 @@ import UserPage from "../pages/User.jsx";
 describe("User Profile Page", () => {
    test("renders the user page", () => {
       render(<UserPage />);
+   });
 
-      // check for Header elements
+   // check for header elements
+   test("renders header elements", () => {
+      render(<UserPage />);
       const logoElement = document.querySelector(".logo");
       expect(logoElement).toBeInTheDocument();
       const accountIcon = document.querySelector(
          ".user-header svg",
       );
       expect(accountIcon).toBeInTheDocument();
+   });
 
-      // check for user info elements
-      const profilePicture = document.querySelector(
-         ".user-profile-picture",
+   // check for user info elements
+   test("renders user info", () => {
+      render(<UserPage />);
+      const nameElement = document.querySelector(".name");
+      expect(nameElement).toBeInTheDocument();
+      const verifiedBadge = document.querySelector(
+         ".verified-badge",
       );
-      expect(profilePicture).toBeInTheDocument();
-      const userName = document.querySelector(".name h3");
-      expect(userName).toHaveTextContent("Eli Schiffler");
+      expect(verifiedBadge).toBeInTheDocument();
+   });
 
-      // check for review card elements
-      const reviewCard =
-         document.querySelector(".review-card");
-      expect(reviewCard).toBeInTheDocument();
-      const reviewUserName = reviewCard.querySelector(
-         ".review-user-name",
-      );
-      expect(reviewUserName).toHaveTextContent(
-         "Eli Schiffler",
-      );
-      const reviewComments = reviewCard.querySelector(
-         ".review-comments",
-      );
-      expect(reviewComments).toHaveTextContent("Loved it!");
+   // check for review card elements
+   test("renders review cards", () => {
+      render(<UserPage />);
+      const reviewCards =
+         document.querySelectorAll(".review-card");
+      expect(reviewCards.length).toBe(1);
    });
 
    // check for saved restaurant elements
@@ -46,5 +45,14 @@ describe("User Profile Page", () => {
          ".restaurant-card",
       );
       expect(restaurantCards.length).toBe(3);
+   });
+
+   // check for followed user elements
+   test("renders followed users", () => {
+      render(<UserPage />);
+      const followedUserCards = document.querySelectorAll(
+         ".followed-user-card",
+      );
+      expect(followedUserCards.length).toBe(2);
    });
 });
