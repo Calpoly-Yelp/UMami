@@ -4,6 +4,7 @@ import "@testing-library/jest-dom";
 import UserPage from "../pages/User.jsx";
 
 describe("User Profile Page", () => {
+   // checks to see if user page will render
    test("renders the user page", () => {
       render(<UserPage />);
    });

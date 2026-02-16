@@ -1,143 +1,141 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap");
+html,
+body {
+   margin: 0;
+   padding: 0;
+   height: 100vh;
+   overflow: hidden;
+}
+
+:root {
+   --primary-gray: #8e9089;
+   --light-gray-bg: #8e908926;
+   --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+   --standard-gap: 20px;
+}
 
 .user-page {
    margin: 0;
    font-family: "Poppins", sans-serif;
    min-height: 100vh;
-   min-width: 100vw;
+   width: 100vw;
    background: linear-gradient(#f5f5f2, #e4e3d3);
    overflow: hidden;
 }
 
-.user-page .user-header {
+.user-header,
+.user-content,
+.user-list-items,
+.restaurant-list,
+.following-header {
    display: flex;
    flex-direction: row;
-   padding-left: 20px;
-   padding-right: 20px;
+}
+
+.user-header {
+   padding: 0 20px;
    height: 80px;
    align-items: center;
    justify-content: space-between;
    border-bottom: gray solid 3px;
 }
 
-.user-page .user-content {
-   display: flex;
-   flex-direction: row;
+.user-content {
    gap: 40px;
    height: calc(100vh - 80px);
    overflow: hidden;
 }
-.user-page .user-content .user-info {
+
+.user-info {
    display: flex;
    flex-direction: column;
    width: 20vw;
-   height: 100vh;
    padding: 20px;
 }
 
-.user-page .user-content .user-info .card {
+.card,
+.review-card {
+   background-color: var(--light-gray-bg);
+   box-shadow: var(--card-shadow);
+}
+
+.card {
    display: flex;
    flex-direction: column;
    align-items: center;
    height: 40vh;
    gap: 2vh;
    padding: 4vh 2vw;
-   background-color: #8e908926;
    border-radius: 2vw;
-   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.user-page .user-content .user-info .card .name {
+.name {
    display: flex;
    align-items: center;
    gap: 8px;
 }
 
-.user-page
-   .user-content
-   .user-info
-   .card
-   img.user-profile-picture {
-   width: 60px;
-   height: 60px;
-   min-width: 60px;
-   min-height: 60px;
-   border-radius: 50%;
-   object-fit: cover;
+.edit-icons,
+.navigation-links a {
+   color: var(--primary-gray);
 }
 
-.user-page
-   .user-content
-   .user-info
-   .card
-   .name
-   img.verified-badge {
-   width: 20px;
-   height: 20px;
-   min-width: 20px;
-   min-height: 20px;
-   border-radius: 50%;
-   object-fit: contain;
-}
-
-.user-page .user-content .user-info .card .edit-icons {
-   display: flex;
-   gap: 10px;
-   font-size: 20px;
-   color: #8e9089;
-}
-
-.user-page .user-content .user-info .navigation-links a {
+.navigation-links a {
    display: block;
    padding: 10px 0;
    text-decoration: none;
-   color: #8e9089;
-   border-bottom: 1px solid #8e9089;
+   border-bottom: 1px solid var(--primary-gray);
 }
 
-.user-page
-   .user-content
-   .user-info
-   .navigation-links
-   a:last-child {
+.navigation-links a:last-child {
    border-bottom: none;
 }
 
-.user-page .user-content .user-activity {
+.user-activity {
    flex: 1;
    height: 100%;
    overflow-y: auto;
    padding-right: 10px;
-   margin: 0;
    font-size: 24px;
    color: #333;
 }
-.user-page .user-content .user-activity .activity-header {
+
+.activity-header {
    margin-bottom: 20px;
    font-size: 20px;
    color: black;
 }
 
-.user-page .user-content .user-activity .review-card {
-   background-color: #8e908926;
-   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.restaurants,
+.restaurant-list,
+.user-list-items {
+   gap: var(--standard-gap);
 }
 
-.user-page .user-content .user-activity .restaurants {
+.restaurants {
    display: flex;
    flex-direction: column;
-   gap: 20px;
 }
 
-.user-list-items {
-   display: flex;
-   flex-direction: row;
-   gap: 20px;
+.user-profile-picture,
+.verified-badge {
+   border-radius: 50%;
+   flex-shrink: 0;
 }
 
-.user-page .user-content .user-activity .following-header {
-   display: flex;
-   flex-direction: row;
+.user-profile-picture {
+   width: 60px;
+   height: 60px;
+   object-fit: cover;
+}
+
+.verified-badge {
+   width: 20px;
+   height: 20px;
+   object-fit: contain;
+}
+
+.following-header {
    align-items: center;
    gap: 10px;
    width: 100%;
@@ -146,17 +144,6 @@
 .following-header h5 {
    margin: 0;
 }
-
 .following-header svg {
    display: block;
-}
-
-.user-page
-   .user-content
-   .user-activity
-   .restaurants
-   .restaurant-list {
-   display: flex;
-   flex-direction: row;
-   gap: 20px;
 }
