@@ -9,7 +9,6 @@ const PORT = process.env.PORT || 4000;
 
 app.use(express.json());
 
-// Test Supabase connection
 app.get("/test-supabase", async (req, res) => {
    const { data, error } = await supabase
       .from("Restaurant")

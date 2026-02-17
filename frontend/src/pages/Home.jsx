@@ -1,4 +1,3 @@
-// display hello world
 
 function Home() {
    return (
