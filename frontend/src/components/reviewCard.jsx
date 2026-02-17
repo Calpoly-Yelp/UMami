@@ -1,4 +1,4 @@
-import cpLogo from "../assets/cplogo.png";
+import UserName from "./userName.jsx";
 import "./reviewCard.css";
 
 function ReviewCard({ review }) {
@@ -7,6 +7,7 @@ function ReviewCard({ review }) {
    const {
       userPfp,
       userName,
+      isVerified,
       rating,
       date,
       comments,
@@ -50,16 +51,10 @@ function ReviewCard({ review }) {
                   }
                />
                {/* Username with an optional verified badge */}
-               <div className="review-user-name">
-                  {userName || "Anonymous"}
-                  {review.isVerified && (
-                     <img
-                        src={cpLogo}
-                        alt="Company Logo"
-                        className="verified-badge"
-                     />
-                  )}
-               </div>
+               <UserName
+                  name={userName}
+                  isVerified={isVerified}
+               />
             </div>
             {/* Display the rating in stars */}
             <div className="review-rating">

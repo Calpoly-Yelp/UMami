@@ -33,30 +33,11 @@
    flex: 0 0 auto;
 }
 
-.review-card .review-user-info img.verified-badge {
-   width: 20px;
-   height: 20px;
-   min-width: 15px;
-   min-height: 15px;
-   border-radius: 50%;
-   padding-left: 5px;
-   object-fit: contain;
-   display: inline-block;
-}
-
 .review-user-meta {
    display: flex;
    flex-direction: column;
    gap: 2px;
    min-width: 0;
-}
-
-.review-user-name {
-   font-weight: 700;
-   line-height: 1.2;
-   white-space: nowrap;
-   overflow: hidden;
-   text-overflow: ellipsis;
 }
 
 .review-date {

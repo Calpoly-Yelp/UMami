@@ -4,11 +4,11 @@ import {
    MdOutlineEdit,
    MdOutlineAddAPhoto,
 } from "react-icons/md";
-import cpLogo from "../assets/cplogo.png";
 import ReviewCard from "../components/reviewCard.jsx";
 import RestaurantCard from "../components/restaurantCard.jsx";
 import FollowedUserCard from "../components/followedUserCard.jsx";
 import { UserCheck } from "@phosphor-icons/react";
+import UserName from "../components/userName.jsx";
 import "./user.css";
 
 // This is our user page layout
@@ -114,16 +114,10 @@ function User() {
                      />
                   )}
                   {/* Display users name and optionally a verified badge */}
-                  <div className="name">
-                     <h3>{testUser.name}</h3>
-                     {testUser.isVerified && (
-                        <img
-                           src={cpLogo}
-                           alt="Company Logo"
-                           className="verified-badge"
-                        />
-                     )}
-                  </div>
+                  <UserName
+                     name={testUser.name}
+                     isVerified={testUser.isVerified}
+                  />
                   <div className="edit-icons">
                      <MdOutlineAddAPhoto />
                      <MdOutlineEdit />

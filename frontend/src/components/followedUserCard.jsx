@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UserCheck } from "@phosphor-icons/react";
-import cpLogo from "../assets/cplogo.png";
+import UserName from "./userName.jsx";
 import "./followedUserCard.css";
 
 function FollowedUserCard({ user }) {
@@ -17,18 +17,10 @@ function FollowedUserCard({ user }) {
          />
          <div className="followed-user-info">
             {/* Display users name and optionally a verified badge */}
-            <div className="name-row">
-               <span className="user-name">
-                  {user.name}
-               </span>
-               {user.isVerified && (
-                  <img
-                     src={cpLogo}
-                     alt="Verified"
-                     className="verified-badge"
-                  />
-               )}
-            </div>
+            <UserName
+               name={user.name}
+               isVerified={user.isVerified}
+            />
             {/* Display total number of user reviews */}
             <span className="review-count">
                {user.numReviews} Reviews
