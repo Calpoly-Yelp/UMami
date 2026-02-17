@@ -1,50 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
 
 .name {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2em;
-  font-family: 'Poppins', sans-serif;
-  color: black;
+   display: inline-flex;
+   align-items: center;
+   gap: 0.2em;
+   font-family: "Poppins", sans-serif;
+   color: black;
 }
 
 .name h3 {
-  margin: 0;
-  font-size: 1em;
-  font-weight: 600;
+   margin: 0;
+   font-size: 1em;
+   font-weight: 600;
 }
 
 .verified-badge {
-  height: 1em;
-  width: 1em;
-  object-fit: contain;
+   height: 1em;
+   width: 1em;
+   object-fit: contain;
 }
 
 .verified-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
+   position: relative;
+   display: inline-flex;
+   align-items: center;
 }
 
 .verified-wrapper::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 115%;
-  top: 50%;
-  transform: translateY(-50%) translateX(-5px);
-  background:  #a0a39aec;
-  color: black;
-  font-size: 0.65em;
-  padding: 0.3em 0.5em;
-  border-radius: 5px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  z-index: 10;
+   content: attr(data-tooltip);
+   position: absolute;
+   left: 115%;
+   top: 50%;
+   transform: translateY(-50%) translateX(-5px);
+   background: #a0a39aec;
+   color: black;
+   font-size: 0.65em;
+   padding: 0.3em 0.5em;
+   border-radius: 5px;
+   white-space: nowrap;
+   opacity: 0;
+   pointer-events: none;
+   transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+   z-index: 10;
 }
 
 .verified-wrapper:hover::after {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
+   opacity: 1;
+   transform: translateY(-50%) translateX(0);
 }
