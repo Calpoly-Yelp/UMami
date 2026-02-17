@@ -17,11 +17,10 @@ export default defineConfig([
       languageOptions: {
          ecmaVersion: "latest",
          sourceType: "module",
-         globals: globals.node,
-      },
-
-      env: {
-         jest: true,
+         globals: {
+            ...globals.node,
+            ...globals.jest,
+         },
       },
 
       rules: {

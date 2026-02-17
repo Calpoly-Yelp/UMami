@@ -1,5 +1,4 @@
 import { describe, it, expect } from "@jest/globals";
-s;
 import request from "supertest";
 import app from "../index.js";
 
