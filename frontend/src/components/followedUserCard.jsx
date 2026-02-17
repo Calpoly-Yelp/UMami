@@ -4,16 +4,19 @@ import cpLogo from "../assets/cplogo.png";
 import "./followedUserCard.css";
 
 function FollowedUserCard({ user }) {
+   // logic to update state of following
    const [isFollowing, setIsFollowing] = useState(true);
 
    return (
       <div className="followed-user-card">
+         {/* Display users pfp on top */}
          <img
             className="followed-user-pfp"
             src={user.profilePicture}
             alt={user.name}
          />
          <div className="followed-user-info">
+            {/* Display users name and optionally a verified badge */}
             <div className="name-row">
                <span className="user-name">
                   {user.name}
@@ -26,10 +29,12 @@ function FollowedUserCard({ user }) {
                   />
                )}
             </div>
+            {/* Display total number of user reviews */}
             <span className="review-count">
                {user.numReviews} Reviews
             </span>
          </div>
+         {/* Follow button */}
          <button
             className={`follow-button ${isFollowing ? "following" : ""}`}
             onClick={() => setIsFollowing(!isFollowing)}

@@ -2,16 +2,20 @@ import { useState } from "react";
 import "./restaurantCard.css";
 
 function RestaurantCard({ restaurant }) {
+   // changes whether the restaurant is bookmarked or no
    const [isBookmarked, setIsBookmarked] = useState(
       restaurant.isBookmarked || false,
    );
 
+   // logic to change bookmarked status when clicked
    const handleBookmarkToggle = (e) => {
       e.stopPropagation();
       setIsBookmarked((prev) => !prev);
    };
+
    return (
       <div className="restaurant-card">
+         {/* Restaurant Image at top of card */}
          <div className="restaurant-image-wrapper">
             <img
                className="restaurant-image"
@@ -22,11 +26,13 @@ function RestaurantCard({ restaurant }) {
 
          <div className="restaurant-content">
             <div className="restaurant-header">
+               {/* Restaurant Name and Rating */}
                <div className="restaurant-name-rating">
                   <h3 className="restaurant-name">
                      {restaurant.name}
                   </h3>
                   <span className="restaurant-rating">
+                     {/* Stars are precise up to half a star */}
                      {[1, 2, 3, 4, 5].map((star) => {
                         const rating =
                            restaurant.averageRating || 0;
@@ -37,7 +43,6 @@ function RestaurantCard({ restaurant }) {
                         } else if (rating >= star - 0.5) {
                            starType = "half";
                         }
-
                         return (
                            <span
                               key={star}
@@ -49,6 +54,7 @@ function RestaurantCard({ restaurant }) {
                      })}
                   </span>
                </div>
+               {/* Bookmark Button */}
                <button
                   className={`bookmark-button ${
                      isBookmarked ? "bookmarked" : ""
@@ -74,7 +80,7 @@ function RestaurantCard({ restaurant }) {
                   </svg>
                </button>
             </div>
-
+            {/* Display all the restaurants tags up to max 3 */}
             {restaurant.tags &&
                restaurant.tags.length > 0 && (
                   <div className="restaurant-tags">

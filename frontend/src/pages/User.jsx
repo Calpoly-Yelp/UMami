@@ -11,7 +11,9 @@ import FollowedUserCard from "../components/followedUserCard.jsx";
 import { UserCheck } from "@phosphor-icons/react";
 import "./user.css";
 
+// This is our user page layout
 function User() {
+   // used to scroll in between pieces of the page
    const handleNavClick = (e, sectionId) => {
       e.preventDefault();
       const section = document.getElementById(sectionId);
@@ -22,13 +24,14 @@ function User() {
          });
       }
    };
+
+   // test data
    const testUser = {
       name: "Eli Schiffler",
       profilePicture:
          "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
       isVerified: true,
    };
-
    const testReview = {
       userPfp: testUser.profilePicture,
       userName: testUser.name,
@@ -42,7 +45,6 @@ function User() {
          "https://picsum.photos/200/300",
       ],
    };
-
    const testRestaurants = [
       {
          name: "Shake Smart",
@@ -66,7 +68,6 @@ function User() {
          isBookmarked: true,
       },
    ];
-
    const testFollowedUsers = [
       {
          name: "Jane",
@@ -86,6 +87,7 @@ function User() {
 
    return (
       <div className="user-page">
+         {/* Header Section */}
          <div className="user-header">
             <Logo />
             <MdOutlineAccountCircle
@@ -93,9 +95,12 @@ function User() {
                color="#154734"
             />
          </div>
+         {/* Content Section */}
          <div className="user-content">
             <div className="user-info">
+               {/* Card Section */}
                <div className="card">
+                  {/* If user has a profile picture, display that, otherwise display default image */}
                   {testUser.profilePicture ? (
                      <img
                         className="user-profile-picture"
@@ -108,6 +113,7 @@ function User() {
                         color="#8E9089"
                      />
                   )}
+                  {/* Display users name and optionally a verified badge */}
                   <div className="name">
                      <h3>{testUser.name}</h3>
                      {testUser.isVerified && (
@@ -123,6 +129,7 @@ function User() {
                      <MdOutlineEdit />
                   </div>
                </div>
+               {/* Navigation Links for the user webpage */}
                <div className="navigation-links">
                   <a
                      href="#reviews"
@@ -151,12 +158,14 @@ function User() {
                </div>
             </div>
             <div className="user-activity">
+               {/* Review Section */}
                <div className="reviews" id="reviews">
                   <div className="activity-header">
                      <h2>My Reviews</h2>
                   </div>
                   <ReviewCard review={testReview} />
                </div>
+               {/* Restaurant Section */}
                <div
                   className="restaurants"
                   id="restaurants"
@@ -165,6 +174,7 @@ function User() {
                      <h2>My Saved Restaurants</h2>
                   </div>
                   <div className="restaurant-list">
+                     {/* map all the users favorited restaurants */}
                      {testRestaurants.map((restaurant) => (
                         <RestaurantCard
                            restaurant={restaurant}
@@ -172,6 +182,7 @@ function User() {
                      ))}
                   </div>
                </div>
+               {/* Other Accounts Section */}
                <div
                   className="other-accounts"
                   id="other-accounts"
@@ -185,6 +196,7 @@ function User() {
                         <h5>Following</h5>
                      </div>
                      <div className="user-list-items">
+                        {/* map all the users followed accounts */}
                         {testFollowedUsers.map((user) => (
                            <FollowedUserCard user={user} />
                         ))}

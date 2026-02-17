@@ -14,10 +14,12 @@ function ReviewCard({ review }) {
       photos = [],
    } = review;
 
+   // Round the users rating to a flat number
    const safeRating = Number.isFinite(Number(rating))
       ? Math.max(0, Math.min(5, Math.round(Number(rating))))
       : 0;
 
+   // Format our date into "Feb. 16 2026" format
    const formattedDate = date
       ? (() => {
            const d = new Date(date);
@@ -34,6 +36,7 @@ function ReviewCard({ review }) {
       <article className="review-card">
          <header className="review-header">
             <div className="review-user-info">
+               {/* Review avatar that contains pfp */}
                <img
                   className="review-avatar"
                   src={
@@ -46,6 +49,7 @@ function ReviewCard({ review }) {
                         : "User profile picture"
                   }
                />
+               {/* Username with an optional verified badge */}
                <div className="review-user-name">
                   {userName || "Anonymous"}
                   {review.isVerified && (
@@ -57,7 +61,7 @@ function ReviewCard({ review }) {
                   )}
                </div>
             </div>
-
+            {/* Display the rating in stars */}
             <div className="review-rating">
                <div className="stars" role="img">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -69,6 +73,7 @@ function ReviewCard({ review }) {
                      </span>
                   ))}
                </div>
+               {/* Display the date of the review */}
                <div className="review-user-meta">
                   {date ? (
                      <time
@@ -83,11 +88,12 @@ function ReviewCard({ review }) {
                </div>
             </div>
          </header>
-
+         {/* Display the users review comment */}
          {comments ? (
             <p className="review-comments">{comments}</p>
          ) : null}
 
+         {/* Display the users review tags */}
          {tags.length > 0 ? (
             <ul className="review-tags">
                {tags.map((tag, index) => (
@@ -98,6 +104,7 @@ function ReviewCard({ review }) {
             </ul>
          ) : null}
 
+         {/* Display any uploaded photos */}
          {photos.length > 0 ? (
             <div className="review-photos">
                {photos.map((photo, index) => {
