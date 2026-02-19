@@ -32,19 +32,113 @@ function User() {
          "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
       isVerified: true,
    };
-   const testReview = {
-      userPfp: testUser.profilePicture,
-      userName: testUser.name,
-      isVerified: testUser.isVerified,
-      rating: 4,
-      date: "2026-02-14",
-      comments: "Loved it!",
-      tags: ["Cozy", "Spicy"],
-      photos: [
-         "https://loremflickr.com/320/240/food",
-         "https://picsum.photos/200/300",
-      ],
-   };
+   const testReviews = [
+      {
+         userPfp: testUser.profilePicture,
+         userName: testUser.name,
+         isVerified: testUser.isVerified,
+         rating: 4,
+         date: "2026-02-14",
+         comments: "Loved it!",
+         tags: ["Cozy", "Spicy"],
+         photos: [
+            "https://loremflickr.com/320/240/food",
+            "https://picsum.photos/200/300",
+         ],
+      },
+      {
+         userPfp: testUser.profilePicture,
+         userName: testUser.name,
+         isVerified: testUser.isVerified,
+         rating: 3,
+         date: "2026-02-16",
+         comments:
+            "This food was so good! I will for sure be coming back again.",
+         tags: [],
+         photos: [
+            "https://loremflickr.com/320/240/food",
+            "https://picsum.photos/200/300",
+         ],
+      },
+      {
+         userPfp: testUser.profilePicture,
+         userName: testUser.name,
+         isVerified: testUser.isVerified,
+         rating: 5,
+         date: "2026-02-18",
+         comments:
+            "This was honestly one of the best dining experiences I've had in a long time. From the moment we walked in, the atmosphere felt warm and inviting, and the staff were incredibly attentive without being overbearing. The food itself was absolutely phenomenal — every bite was packed with flavor, and you could tell that high-quality ingredients were used throughout. I ordered the house special, and it exceeded all expectations. The portion sizes were generous, the presentation was beautiful, and the flavors were perfectly balanced. I also tried a few bites from my friends' plates, and everything we tasted was consistently excellent. On top of that, the ambiance made it such a comfortable place to sit and talk for hours. I would highly recommend this place to anyone looking for a memorable meal, and I’m already planning my next visit!",
+         tags: ["Cozy", "Spicy", "Date Night", "Must Try"],
+         photos: [
+            "https://loremflickr.com/320/240/food",
+            "https://picsum.photos/200/300",
+         ],
+      },
+      {
+         userPfp: testUser.profilePicture,
+         userName: testUser.name,
+         isVerified: testUser.isVerified,
+         rating: 4,
+         date: "2026-02-19",
+         comments: "Great spot.",
+         tags: [
+            "Cozy",
+            "Spicy",
+            "Date Night",
+            "Must Try",
+            "Family Friendly",
+            "Outdoor Seating",
+            "Live Music",
+            "Vegan Options",
+            "Gluten Free",
+            "Late Night",
+            "Affordable",
+            "Trendy",
+            "Romantic",
+            "Comfort Food",
+            "Quick Service",
+         ],
+         photos: [
+            "https://loremflickr.com/320/240/food",
+            "https://picsum.photos/200/300",
+         ],
+      },
+      {
+         userPfp: testUser.profilePicture,
+         userName: testUser.name,
+         isVerified: testUser.isVerified,
+         rating: 5,
+         date: "2026-02-20",
+         comments:
+            "Absolutely incredible experience from start to finish. The ambiance was lively yet comfortable, making it perfect for both casual outings and special occasions. Every dish we ordered was thoughtfully prepared and beautifully presented. The flavors were bold and balanced, and you could truly taste the quality of the ingredients. The service was attentive, friendly, and knowledgeable, offering excellent recommendations that did not disappoint. We tried a wide range of menu items — appetizers, entrees, desserts, and even specialty drinks — and everything exceeded expectations. It’s rare to find a place that delivers consistently across every aspect of the dining experience, but this restaurant absolutely nailed it. I would highly recommend it to anyone looking for outstanding food, welcoming atmosphere, and memorable moments.",
+         tags: [
+            "Cozy",
+            "Spicy",
+            "Date Night",
+            "Must Try",
+            "Family Friendly",
+            "Outdoor Seating",
+            "Live Music",
+            "Vegan Options",
+            "Gluten Free",
+            "Late Night",
+            "Affordable",
+            "Trendy",
+            "Romantic",
+            "Comfort Food",
+            "Quick Service",
+            "Hidden Gem",
+            "Downtown",
+            "Great Cocktails",
+            "Brunch",
+            "Reservations Recommended",
+         ],
+         photos: [
+            "https://loremflickr.com/320/240/food",
+            "https://picsum.photos/200/300",
+         ],
+      },
+   ];
    const testRestaurants = [
       {
          name: "Shake Smart",
@@ -144,10 +238,10 @@ function User() {
                   <a
                      href="#other-accounts"
                      onClick={(e) =>
-                        handleNavClick(e, "other-accounts")
+                        handleNavClick(e, "following")
                      }
                   >
-                     Other Accounts
+                     Following
                   </a>
                </div>
             </div>
@@ -157,7 +251,18 @@ function User() {
                   <div className="activity-header">
                      <h2>My Reviews</h2>
                   </div>
-                  <ReviewCard review={testReview} />
+                  <div className="review-list">
+                     {/* map all the users reviews */}
+                     {testReviews.map((review, index) => (
+                        <ReviewCard
+                           key={
+                              review.id ??
+                              `${review.date ?? "review"}-${index}`
+                           }
+                           review={review}
+                        />
+                     ))}
+                  </div>
                </div>
                {/* Restaurant Section */}
                <div
@@ -169,32 +274,38 @@ function User() {
                   </div>
                   <div className="restaurant-list">
                      {/* map all the users favorited restaurants */}
-                     {testRestaurants.map((restaurant) => (
-                        <RestaurantCard
-                           restaurant={restaurant}
-                        />
-                     ))}
+                     {testRestaurants.map(
+                        (restaurant, index) => (
+                           <RestaurantCard
+                              key={
+                                 restaurant.id ??
+                                 `${restaurant.name ?? "restaurant"}-${index}`
+                              }
+                              restaurant={restaurant}
+                           />
+                        ),
+                     )}
                   </div>
                </div>
                {/* Other Accounts Section */}
-               <div
-                  className="other-accounts"
-                  id="other-accounts"
-               >
+               <div className="following" id="following">
                   <div className="activity-header">
-                     <h2>Other Accounts</h2>
+                     <h2>Following</h2>
+                     <UserCheck size={32} />
                   </div>
-                  <div className="user-list">
-                     <div className="following-header">
-                        <UserCheck size={16} />
-                        <h5>Following</h5>
-                     </div>
-                     <div className="user-list-items">
-                        {/* map all the users followed accounts */}
-                        {testFollowedUsers.map((user) => (
-                           <FollowedUserCard user={user} />
-                        ))}
-                     </div>
+                  <div className="following-list">
+                     {/* map all the users followed accounts */}
+                     {testFollowedUsers.map(
+                        (user, index) => (
+                           <FollowedUserCard
+                              key={
+                                 user.id ??
+                                 `${user.name ?? "user"}-${index}`
+                              }
+                              user={user}
+                           />
+                        ),
+                     )}
                   </div>
                </div>
             </div>

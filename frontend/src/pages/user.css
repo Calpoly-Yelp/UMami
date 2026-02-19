@@ -12,6 +12,8 @@ body {
    --light-gray-bg: #8e908926;
    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
    --standard-gap: 20px;
+   --standard-padding-horizontal: 5vw;
+   --standard-padding-vertical: 4vh;
 }
 
 .user-page {
@@ -25,9 +27,8 @@ body {
 
 .user-header,
 .user-content,
-.user-list-items,
-.restaurant-list,
-.following-header {
+.following-list,
+.restaurant-list {
    display: flex;
    flex-direction: row;
 }
@@ -41,7 +42,6 @@ body {
 }
 
 .user-content {
-   gap: 40px;
    height: calc(100vh - 80px);
    overflow: hidden;
 }
@@ -50,13 +50,8 @@ body {
    display: flex;
    flex-direction: column;
    width: 20vw;
-   padding: 20px;
-}
-
-.card,
-.review-card {
-   background-color: var(--light-gray-bg);
-   box-shadow: var(--card-shadow);
+   padding: var(--standard-padding-vertical)
+      var(--standard-padding-horizontal);
 }
 
 .card {
@@ -67,6 +62,8 @@ body {
    gap: 2vh;
    padding: 4vh 2vw;
    border-radius: 2vw;
+   background-color: var(--light-gray-bg);
+   box-shadow: var(--card-shadow);
 }
 
 .edit-icons,
@@ -89,26 +86,34 @@ body {
    flex: 1;
    height: 100%;
    overflow-y: auto;
-   padding-right: 10px;
    font-size: 24px;
    color: #333;
 }
 
 .activity-header {
+   display: flex;
    margin-bottom: 20px;
+   padding-right: var(--standard-padding-horizontal);
    font-size: 20px;
    color: black;
+   align-items: center;
+   margin: 0;
+   gap: 10px;
 }
 
+.activity-header svg {
+   display: block;
+}
+
+.reviews,
 .restaurants,
-.restaurant-list,
-.user-list-items {
-   gap: var(--standard-gap);
+.following {
+   padding-right: var(--standard-padding-horizontal);
 }
 
-.restaurants {
-   display: flex;
-   flex-direction: column;
+.restaurant-list,
+.following-list {
+   gap: var(--standard-gap);
 }
 
 .user-profile-picture,
@@ -123,15 +128,22 @@ body {
    object-fit: cover;
 }
 
-.following-header {
-   align-items: center;
-   gap: 10px;
-   width: 100%;
+.review-list {
+   display: flex;
+   overflow-x: auto;
+   gap: 1rem;
+   padding: 10px;
+
+   scroll-behavior: smooth;
+   -webkit-overflow-scrolling: touch;
+   scroll-snap-type: x mandatory;
 }
 
-.following-header h5 {
-   margin: 0;
+.review-list::-webkit-scrollbar {
+   display: none;
 }
-.following-header svg {
-   display: block;
+
+.review-list > * {
+   flex: 0 0 100%;
+   scroll-snap-align: center;
 }

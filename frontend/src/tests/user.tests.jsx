@@ -1,7 +1,32 @@
-import { describe, test, expect } from "@jest/globals";
+import {
+   describe,
+   test,
+   expect,
+   beforeAll,
+} from "@jest/globals";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import UserPage from "../pages/User.jsx";
+
+// this beforeAll is neccessary to handle our
+// IntersectionObserver we used in reviewCard.jsx
+beforeAll(() => {
+   window.IntersectionObserver = class IntersectionObserver {
+      constructor() {}
+      observe() {
+         return null;
+      }
+      unobserve() {
+         return null;
+      }
+      disconnect() {
+         return null;
+      }
+   };
+
+   window.requestAnimationFrame = (cb) => setTimeout(cb, 0);
+   window.cancelAnimationFrame = (id) => clearTimeout(id);
+});
 
 describe("User Profile Page", () => {
    // checks to see if user page will render
@@ -36,7 +61,7 @@ describe("User Profile Page", () => {
       render(<UserPage />);
       const reviewCards =
          document.querySelectorAll(".review-card");
-      expect(reviewCards.length).toBe(1);
+      expect(reviewCards.length).toBe(5);
    });
 
    // check for saved restaurant elements
