@@ -114,6 +114,8 @@ body {
 .restaurant-list,
 .following-list {
    gap: var(--standard-gap);
+   overflow-x: auto;
+   padding: 10px;
 }
 
 .user-profile-picture,
@@ -131,7 +133,7 @@ body {
 .review-list {
    display: flex;
    overflow-x: auto;
-   gap: 1rem;
+   gap: var(--standard-gap);
    padding: 10px;
 
    scroll-behavior: smooth;
@@ -139,7 +141,9 @@ body {
    scroll-snap-type: x mandatory;
 }
 
-.review-list::-webkit-scrollbar {
+.review-list::-webkit-scrollbar,
+.restaurant-list::-webkit-scrollbar,
+.following-list::-webkit-scrollbar {
    display: none;
 }
 

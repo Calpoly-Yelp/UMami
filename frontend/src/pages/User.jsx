@@ -142,21 +142,21 @@ function User() {
    const testRestaurants = [
       {
          name: "Shake Smart",
-         image: "https://placehold.co/300x200/003831/FFFFFF?text=Spicy+Spoon",
+         image: "https://placehold.co/300x200/003831/FFFFFF?text=Shake+Smart",
          averageRating: 4.5,
          tags: ["Acai", "Smoothies", "Toast"],
          isBookmarked: true,
       },
       {
          name: "Jamba Juice",
-         image: "https://placehold.co/300x200/003831/FFFFFF?text=Green+Fork",
+         image: "https://placehold.co/300x200/003831/FFFFFF?text=Jamba+Juice",
          averageRating: 4.0,
          tags: ["Smoothies", "Juice", "Breakfast"],
          isBookmarked: false,
       },
       {
          name: "Health Shack",
-         image: "https://placehold.co/300x200/003831/FFFFFF?text=Umami+Eats",
+         image: "https://placehold.co/300x200/003831/FFFFFF?text=Health+Shack",
          averageRating: 3.5,
          tags: ["Juice", "Toast", "Acai"],
          isBookmarked: true,
