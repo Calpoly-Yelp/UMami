@@ -73,7 +73,7 @@
 }
 
 .star.empty {
-   color: #f5f5f2;
+   color: #f5f5f2 !important;
 }
 
 .star.filled {
