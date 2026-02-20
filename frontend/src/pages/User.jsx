@@ -1,7 +1,5 @@
 import Logo from "../assets/logo.jsx";
-import {
-   MdOutlineAccountCircle,
-} from "react-icons/md";
+import { MdOutlineAccountCircle } from "react-icons/md";
 import ReviewCard from "../components/reviewCard.jsx";
 import RestaurantCard from "../components/restaurantCard.jsx";
 import FollowedUserCard from "../components/followedUserCard.jsx";
@@ -257,7 +255,10 @@ function User() {
                   />
                   <div className="edit-icons">
                      <div className="edit-icon-wrapper">
-                        <img src={addPhotoIcon} alt="Add Photo" />
+                        <img
+                           src={addPhotoIcon}
+                           alt="Add Photo"
+                        />
                         <span>Add Photo</span>
                      </div>
                      <div className="edit-icon-wrapper">
