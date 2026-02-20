@@ -7,7 +7,11 @@ import {
 import ReviewCard from "../components/reviewCard.jsx";
 import RestaurantCard from "../components/restaurantCard.jsx";
 import FollowedUserCard from "../components/followedUserCard.jsx";
-import { UserCheck } from "@phosphor-icons/react";
+import {
+   UserCheck,
+   CaretLeft,
+   CaretRight,
+} from "@phosphor-icons/react";
 import UserName from "../components/userName.jsx";
 import "./user.css";
 
@@ -21,6 +25,24 @@ function User() {
          section.scrollIntoView({
             behavior: "smooth",
             block: "start",
+         });
+      }
+   };
+
+   // Logic to scroll the horizontal lists
+   const scrollContainer = (containerId, direction) => {
+      const container = document.querySelector(
+         `#${containerId} .review-list, #${containerId} .restaurant-list, #${containerId} .following-list`,
+      );
+
+      if (container) {
+         const scrollAmount = 300; // Approximate width of a card + gap
+         container.scrollBy({
+            left:
+               direction === "left"
+                  ? -scrollAmount
+                  : scrollAmount,
+            behavior: "smooth",
          });
       }
    };
@@ -271,6 +293,36 @@ function User() {
                <div className="reviews" id="reviews">
                   <div className="activity-header">
                      <h2>My Reviews</h2>
+                     <div className="scroll-buttons-container">
+                        <button
+                           className="scroll-button"
+                           onClick={() =>
+                              scrollContainer(
+                                 "reviews",
+                                 "left",
+                              )
+                           }
+                        >
+                           <CaretLeft
+                              size={18}
+                              weight="bold"
+                           />
+                        </button>
+                        <button
+                           className="scroll-button"
+                           onClick={() =>
+                              scrollContainer(
+                                 "reviews",
+                                 "right",
+                              )
+                           }
+                        >
+                           <CaretRight
+                              size={18}
+                              weight="bold"
+                           />
+                        </button>
+                     </div>
                   </div>
                   <div className="review-list">
                      {/* map all the users reviews */}
@@ -292,6 +344,36 @@ function User() {
                >
                   <div className="activity-header">
                      <h2>My Saved Restaurants</h2>
+                     <div className="scroll-buttons-container">
+                        <button
+                           className="scroll-button"
+                           onClick={() =>
+                              scrollContainer(
+                                 "restaurants",
+                                 "left",
+                              )
+                           }
+                        >
+                           <CaretLeft
+                              size={18}
+                              weight="bold"
+                           />
+                        </button>
+                        <button
+                           className="scroll-button"
+                           onClick={() =>
+                              scrollContainer(
+                                 "restaurants",
+                                 "right",
+                              )
+                           }
+                        >
+                           <CaretRight
+                              size={18}
+                              weight="bold"
+                           />
+                        </button>
+                     </div>
                   </div>
                   <div className="restaurant-list">
                      {/* map all the users favorited restaurants */}
@@ -313,6 +395,36 @@ function User() {
                   <div className="activity-header">
                      <h2>Following</h2>
                      <UserCheck size={32} />
+                     <div className="scroll-buttons-container">
+                        <button
+                           className="scroll-button"
+                           onClick={() =>
+                              scrollContainer(
+                                 "following",
+                                 "left",
+                              )
+                           }
+                        >
+                           <CaretLeft
+                              size={18}
+                              weight="bold"
+                           />
+                        </button>
+                        <button
+                           className="scroll-button"
+                           onClick={() =>
+                              scrollContainer(
+                                 "following",
+                                 "right",
+                              )
+                           }
+                        >
+                           <CaretRight
+                              size={18}
+                              weight="bold"
+                           />
+                        </button>
+                     </div>
                   </div>
                   <div className="following-list">
                      {/* map all the users followed accounts */}

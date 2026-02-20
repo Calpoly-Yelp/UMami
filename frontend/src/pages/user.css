@@ -105,6 +105,32 @@ body {
    display: block;
 }
 
+.scroll-buttons-container {
+   display: flex;
+   gap: 8px;
+   margin-left: auto;
+}
+
+.scroll-button {
+   background-color: #154734;
+   color: #e4e3d3;
+   border: none;
+   border-radius: 50%;
+   width: 32px;
+   height: 32px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-button:hover {
+   transform: scale(1.1);
+   background-color: #0d2e21;
+}
+
 .reviews,
 .restaurants,
 .following {
