@@ -79,6 +79,6 @@ describe("User Profile Page", () => {
       const followedUserCards = document.querySelectorAll(
          ".followed-user-card",
       );
-      expect(followedUserCards.length).toBe(2);
+      expect(followedUserCards.length).toBe(5);
    });
 });

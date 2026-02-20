@@ -7,8 +7,10 @@
    border-radius: 12px;
    background-color: #8e908926;
    width: 160px;
+   height: 240px;
    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
    transition: transform 0.2s ease;
+   box-sizing: border-box;
 }
 
 .followed-user-card:hover {
@@ -16,24 +18,44 @@
 }
 
 .followed-user-pfp {
-   width: 80px;
-   height: 80px;
+   height: 33%;
+   width: auto;
+   aspect-ratio: 1/1;
    border-radius: 50%;
    object-fit: cover;
-   margin-bottom: 12px;
+   margin-bottom: 0;
 }
 
-.followed-user-info {
+.followed-user-name-section {
+   height: 40%;
+   width: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
    text-align: center;
+   padding: 0 10px;
+   box-sizing: border-box;
+   overflow: hidden;
+}
+
+.followed-user-name-section > * {
+   max-width: 100%;
+   min-width: 0;
+}
+
+.followed-user-bottom-section {
+   flex: 1;
+   width: 100%;
    display: flex;
    flex-direction: column;
    align-items: center;
-   margin-bottom: 16px;
+   justify-content: space-between;
 }
 
 .review-count {
    font-size: 0.9rem;
    color: #666;
+   margin-bottom: 4px;
 }
 
 .follow-button {
@@ -54,11 +76,13 @@
 }
 
 .follow-button svg {
-   display: block;
+   display: inline-block;
+   flex: 0 0 auto;
 }
 
 .follow-button.following {
    background-color: #8e908966;
+   justify-content: flex-start;
    color: black;
 }
 

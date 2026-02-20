@@ -177,6 +177,27 @@ function User() {
             "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
          numReviews: 5,
       },
+      {
+         name: "Sarah Jenkins",
+         isVerified: true,
+         profilePicture:
+            "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
+         numReviews: 283,
+      },
+      {
+         name: "This is my name",
+         isVerified: false,
+         profilePicture:
+            "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
+         numReviews: 5,
+      },
+      {
+         name: "Another User",
+         isVerified: true,
+         profilePicture:
+            "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
+         numReviews: 1,
+      },
    ];
 
    return (

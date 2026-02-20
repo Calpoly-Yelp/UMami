@@ -43,6 +43,7 @@
    justify-content: space-between;
    align-items: center;
    flex: 1;
+   min-width: 0;
 }
 
 .restaurant-name {
@@ -50,6 +51,11 @@
    font-weight: 700;
    margin: 0;
    color: black;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   min-width: 0;
+   flex: 1;
 }
 
 .restaurant-rating {

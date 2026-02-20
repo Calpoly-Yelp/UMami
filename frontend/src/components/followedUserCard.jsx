@@ -15,34 +15,34 @@ function FollowedUserCard({ user }) {
             src={user.profilePicture}
             alt={user.name}
          />
-         <div className="followed-user-info">
+         <div className="followed-user-name-section">
             {/* Display users name and optionally a verified badge */}
             <UserName
                name={user.name}
                isVerified={user.isVerified}
+               size={"1rem"}
             />
+         </div>
+         <div className="followed-user-bottom-section">
             {/* Display total number of user reviews */}
             <span className="review-count">
                {user.numReviews} Reviews
             </span>
+            {/* Follow button */}
+            <button
+               className={`follow-button ${isFollowing ? "following" : ""}`}
+               onClick={() => setIsFollowing(!isFollowing)}
+            >
+               {isFollowing ? (
+                  <>
+                     Following
+                     <UserCheck size={16} />
+                  </>
+               ) : (
+                  "Follow"
+               )}
+            </button>
          </div>
-         {/* Follow button */}
-         <button
-            className={`follow-button ${isFollowing ? "following" : ""}`}
-            onClick={() => setIsFollowing(!isFollowing)}
-         >
-            {isFollowing ? (
-               <>
-                  <UserCheck
-                     size={16}
-                     style={{ marginRight: "6px" }}
-                  />
-                  Following
-               </>
-            ) : (
-               "Follow"
-            )}
-         </button>
       </div>
    );
 }

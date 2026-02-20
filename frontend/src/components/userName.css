@@ -6,12 +6,17 @@
    gap: 0.2em;
    font-family: "Poppins", sans-serif;
    color: black;
+   max-width: 100%;
 }
 
 .name h3 {
    margin: 0;
    font-size: 1em;
    font-weight: 600;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   min-width: 0;
 }
 
 .verified-badge {
@@ -24,6 +29,7 @@
    position: relative;
    display: inline-flex;
    align-items: center;
+   flex-shrink: 0;
 }
 
 .verified-wrapper::after {
