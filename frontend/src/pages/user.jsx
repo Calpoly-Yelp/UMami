@@ -8,7 +8,7 @@ import {
    CaretLeft,
    CaretRight,
 } from "@phosphor-icons/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import UserName from "../components/userName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
@@ -18,6 +18,8 @@ import "./user.css";
 function User({
    user: initialUser,
    reviews: initialReviews,
+   restaurants: initialRestaurants,
+   bookmarks: initialBookmarks,
 }) {
    // used to scroll in between pieces of the page
    const handleNavClick = (e, sectionId) => {
@@ -61,10 +63,28 @@ function User({
    const [reviews, setReviews] = useState(
       initialReviews || [],
    );
+   const [restaurants, setRestaurants] = useState(
+      initialRestaurants || [],
+   );
+   const [bookmarkedIds, setBookmarkedIds] = useState(
+      new Set(),
+   );
+   const originalBookmarkedIdsRef = useRef(new Set());
+   const bookmarkedIdsRef = useRef(new Set());
+
+   useEffect(() => {
+      bookmarkedIdsRef.current = bookmarkedIds;
+   }, [bookmarkedIds]);
 
    useEffect(() => {
       // check if we are in testing mode
-      if (initialUser || initialReviews) return;
+      if (
+         initialUser ||
+         initialReviews ||
+         initialRestaurants ||
+         initialBookmarks
+      )
+         return;
 
       const fetchData = async () => {
          try {
@@ -94,6 +114,7 @@ function User({
             if (reviewsResponse.ok) {
                const reviewsData =
                   await reviewsResponse.json();
+               console.log("Fetched reviews:", reviewsData);
 
                // filter reviews for this user
                const userReviews = reviewsData
@@ -116,38 +137,133 @@ function User({
                   }));
 
                setReviews(userReviews);
+            } else {
+               console.error(
+                  "Failed to fetch reviews:",
+                  reviewsResponse.status,
+               );
+            }
+
+            // fetch bookmarks and restaurants for this user
+            console.log(
+               `Fetching bookmarks for user: ${userId}`,
+            );
+            const bookmarksResponse = await fetch(
+               `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
+            );
+            if (bookmarksResponse.ok) {
+               const restaurantsData =
+                  await bookmarksResponse.json();
+               console.log(
+                  "Fetched restaurants data:",
+                  restaurantsData,
+               );
+
+               const mappedRestaurants =
+                  restaurantsData.map((r) => ({
+                     id: r.id,
+                     name: r.name,
+                     image:
+                        r.image_urls?.[0] ||
+                        "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
+                     averageRating: r.avg_rating,
+                     location: r.location,
+                  }));
+
+               console.log(
+                  "Mapped restaurants:",
+                  mappedRestaurants,
+               );
+               setRestaurants(mappedRestaurants);
+
+               const ids = new Set(
+                  mappedRestaurants.map((r) => r.id),
+               );
+               setBookmarkedIds(ids);
+               originalBookmarkedIdsRef.current = new Set(
+                  ids,
+               );
+            } else {
+               console.error(
+                  "Failed to fetch bookmarks:",
+                  bookmarksResponse.status,
+               );
             }
          } catch (error) {
             console.error("Error loading data:", error);
          }
       };
-
       fetchData();
-   }, [initialUser, initialReviews]);
+   }, [
+      initialUser,
+      initialReviews,
+      initialRestaurants,
+      initialBookmarks,
+   ]);
 
-   const testRestaurants = [
-      {
-         name: "Shake Smart",
-         image: "https://placehold.co/300x200/003831/FFFFFF?text=Shake+Smart",
-         averageRating: 4.5,
-         tags: ["Acai", "Smoothies", "Toast"],
-         isBookmarked: true,
-      },
-      {
-         name: "Jamba Juice",
-         image: "https://placehold.co/300x200/003831/FFFFFF?text=Jamba+Juice",
-         averageRating: 4.0,
-         tags: ["Smoothies", "Juice", "Breakfast"],
-         isBookmarked: false,
-      },
-      {
-         name: "Health Shack",
-         image: "https://placehold.co/300x200/003831/FFFFFF?text=Health+Shack",
-         averageRating: 3.5,
-         tags: ["Juice", "Toast", "Acai"],
-         isBookmarked: true,
-      },
-   ];
+   // Sync bookmarks on page refresh
+   useEffect(() => {
+      const syncBookmarks = () => {
+         const original = originalBookmarkedIdsRef.current;
+         const current = bookmarkedIdsRef.current;
+         const userId = user.id;
+
+         if (!userId) return;
+
+         const added = [...current].filter(
+            (id) => !original.has(id),
+         );
+         const removed = [...original].filter(
+            (id) => !current.has(id),
+         );
+
+         if (added.length === 0 && removed.length === 0)
+            return;
+
+         // sync the bookmarked restaurants
+         fetch(
+            "http://localhost:4000/api/restaurants/bookmarks/sync",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  user_id: userId,
+                  added,
+                  removed,
+               }),
+               keepalive: true,
+            },
+         );
+      };
+
+      window.addEventListener(
+         "beforeunload",
+         syncBookmarks,
+      );
+
+      return () => {
+         window.removeEventListener(
+            "beforeunload",
+            syncBookmarks,
+         );
+         syncBookmarks();
+      };
+   }, [user.id]);
+
+   const handleBookmarkToggle = (restaurantId) => {
+      setBookmarkedIds((prev) => {
+         const next = new Set(prev);
+         if (next.has(restaurantId)) {
+            next.delete(restaurantId);
+         } else {
+            next.add(restaurantId);
+         }
+         return next;
+      });
+   };
+
    const testFollowedUsers = [
       {
          name: "Jane",
@@ -350,7 +466,7 @@ function User({
                   </div>
                   <div className="restaurant-list">
                      {/* map all the users favorited restaurants */}
-                     {testRestaurants.map(
+                     {restaurants.map(
                         (restaurant, index) => (
                            <RestaurantCard
                               key={
@@ -358,6 +474,14 @@ function User({
                                  `${restaurant.name ?? "restaurant"}-${index}`
                               }
                               restaurant={restaurant}
+                              isBookmarked={bookmarkedIds.has(
+                                 restaurant.id,
+                              )}
+                              onToggle={() =>
+                                 handleBookmarkToggle(
+                                    restaurant.id,
+                                 )
+                              }
                            />
                         ),
                      )}

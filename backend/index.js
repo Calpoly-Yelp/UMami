@@ -3,6 +3,7 @@ import { supabase } from "./config/supabaseClient.js";
 import dotenv from "dotenv";
 import reviewsRouter from "./routes/reviews.js";
 import usersRouter from "./routes/users.js";
+import restaurantsRouter from "./routes/restaurants.js";
 
 dotenv.config();
 
@@ -24,11 +25,12 @@ app.use((req, res, next) => {
 // Routes
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/restaurants", restaurantsRouter);
 
 // Test Supabase connection
 app.get("/test-supabase", async (req, res) => {
    const { data, error } = await supabase
-      .from("Restaurant")
+      .from("restaurants")
       .select("*")
       .limit(1);
    if (error) {

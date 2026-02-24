@@ -90,7 +90,8 @@
 }
 
 .star.empty {
-   color: #e4e3d3;
+   color: #e4e3d3 !important;
+   text-shadow: 0 0 6px #e4e3d383;
 }
 
 .star.filled {
@@ -108,7 +109,6 @@
    -webkit-text-fill-color: transparent;
    background-clip: text;
    color: transparent;
-   text-shadow: 0 0 6px rgba(242, 199, 92, 0.4);
 }
 
 .bookmark-button {

@@ -10,6 +10,7 @@ import UserPage from "../pages/User.jsx";
 
 // test data
 const testUser = {
+   id: "123",
    name: "Eli Schiffler",
    profilePicture:
       "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
@@ -124,6 +125,48 @@ const testReviews = [
    },
 ];
 
+const testRestaurants = [
+   {
+      id: "101",
+      name: "Shake Smart",
+      image: "https://placehold.co/300x200/003831/FFFFFF?text=Shake+Smart",
+      averageRating: 4.5,
+      tags: ["Acai", "Smoothies", "Toast"],
+      isBookmarked: true,
+   },
+   {
+      id: "102",
+      name: "Jamba Juice",
+      image: "https://placehold.co/300x200/003831/FFFFFF?text=Jamba+Juice",
+      averageRating: 4.0,
+      tags: ["Smoothies", "Juice", "Breakfast"],
+      isBookmarked: false,
+   },
+   {
+      id: "103",
+      name: "Health Shack",
+      image: "https://placehold.co/300x200/003831/FFFFFF?text=Health+Shack",
+      averageRating: 3.5,
+      tags: ["Juice", "Toast", "Acai"],
+      isBookmarked: true,
+   },
+];
+
+const testBookmarks = [
+   {
+      user_id: "123",
+      restaurant_id: "101",
+   },
+   {
+      user_id: "123",
+      restaurant_id: "102",
+   },
+   {
+      user_id: "123",
+      restaurant_id: "103",
+   },
+];
+
 // this beforeAll is neccessary to handle our
 // IntersectionObserver we used in reviewCard.jsx
 beforeAll(() => {
@@ -148,14 +191,23 @@ describe("User Profile Page", () => {
    // checks to see if user page will render
    test("renders the user page", () => {
       render(
-         <UserPage user={testUser} reviews={testReviews} />,
+         <UserPage
+            user={testUser}
+            reviews={testReviews}
+            restaurants={testRestaurants}
+            bookmarks={testBookmarks}
+         />,
       );
    });
 
    // check for header elements
    test("renders header elements", () => {
       render(
-         <UserPage user={testUser} reviews={testReviews} />,
+         <UserPage
+            user={testUser}
+            reviews={testReviews}
+            restaurants={testRestaurants}
+         />,
       );
       const logoElement = document.querySelector(".logo");
       expect(logoElement).toBeInTheDocument();
@@ -168,7 +220,11 @@ describe("User Profile Page", () => {
    // check for user info elements
    test("renders user info", () => {
       render(
-         <UserPage user={testUser} reviews={testReviews} />,
+         <UserPage
+            user={testUser}
+            reviews={testReviews}
+            restaurants={testRestaurants}
+         />,
       );
       const nameElement = document.querySelector(".name");
       expect(nameElement).toBeInTheDocument();
@@ -181,7 +237,11 @@ describe("User Profile Page", () => {
    // check for review card elements
    test("renders review cards", () => {
       render(
-         <UserPage user={testUser} reviews={testReviews} />,
+         <UserPage
+            user={testUser}
+            reviews={testReviews}
+            restaurants={testRestaurants}
+         />,
       );
       const reviewCards =
          document.querySelectorAll(".review-card");
@@ -191,7 +251,11 @@ describe("User Profile Page", () => {
    // check for saved restaurant elements
    test("renders saved restaurants", () => {
       render(
-         <UserPage user={testUser} reviews={testReviews} />,
+         <UserPage
+            user={testUser}
+            reviews={testReviews}
+            restaurants={testRestaurants}
+         />,
       );
       const restaurantCards = document.querySelectorAll(
          ".restaurant-card",
@@ -202,7 +266,11 @@ describe("User Profile Page", () => {
    // check for followed user elements
    test("renders followed users", () => {
       render(
-         <UserPage user={testUser} reviews={testReviews} />,
+         <UserPage
+            user={testUser}
+            reviews={testReviews}
+            restaurants={testRestaurants}
+         />,
       );
       const followedUserCards = document.querySelectorAll(
          ".followed-user-card",
