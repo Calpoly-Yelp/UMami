@@ -1,0 +1,157 @@
+.restaurant-card {
+   width: 100%;
+   height: 320px; 
+   max-width: 100%;
+   overflow: hidden;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+   background-color: #f4f4f4;
+   transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+   cursor: pointer;
+   flex-shrink: 0;
+}
+
+.restaurant-card:hover {
+   transform: translateY(-4px);
+   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.restaurant-image-wrapper {
+   position: relative;
+   width: 100%;
+   height: 50%;
+   overflow: hidden;
+}
+
+.restaurant-image {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+}
+
+.restaurant-content {
+   padding: 8px;
+   height: 50%;
+   box-sizing: border-box;
+   display: flex;
+   flex-direction: column;
+}
+
+.restaurant-name-row {
+   display: flex;
+   flex-direction: row;
+   justify-content: space-between;
+   align-items: center;
+   flex: 1;
+   min-width: 0;
+}
+
+.restaurant-name {
+   font-size: 2rem;
+   font-weight: 700;
+   margin: 0;
+   color: black;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   min-width: 0;
+   flex: 1;
+}
+
+.restaurant-rating {
+   display: flex;
+   gap: 15px;
+   align-items: center;
+   flex: 1;
+}
+
+.restaurant-tags {
+   display: flex;
+   flex-wrap: nowrap;
+   flex: 1;
+   align-items: center;
+   gap: 8px;
+   overflow: hidden;
+}
+
+.tag {
+   color: #54585a;
+   border-color: #54585a;
+   padding: 2px 12px;
+   border-width: 1px;
+   border-style: solid;
+   border-radius: 999px;
+   font-size: 0.9rem;
+}
+
+.star {
+   font-size: 26px;
+   color: #e4e3d3;
+}
+
+.star.empty {
+   color: #e4e3d3;
+}
+
+.star.filled {
+   color: #f2c75c;
+   text-shadow: 0 0 6px rgba(242, 199, 92, 0.4);
+}
+
+.star.half {
+   background: linear-gradient(
+      90deg,
+      #f2c75c 50%,
+      #e4e3d3 50%
+   );
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   background-clip: text;
+   color: transparent;
+   text-shadow: 0 0 6px rgba(242, 199, 92, 0.4);
+}
+
+.bookmark-button {
+   background: none;
+   border: none;
+   display: flex;
+   cursor: pointer;
+   opacity: 0;
+   pointer-events: none;
+
+   transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      filter 0.2s ease,
+      color 0.2s ease;
+}
+
+.bookmark-button svg {
+   width: 40px;
+   height: 40px;
+}
+
+.restaurant-card:hover .bookmark-button {
+   opacity: 1;
+   pointer-events: auto;
+}
+
+.restaurant-card:hover .bookmark-button:not(.bookmarked) {
+   color: #b0b0b0;
+   filter: drop-shadow(0 0 4px rgba(176, 176, 176, 0.6));
+}
+
+.bookmark-button.bookmarked {
+   opacity: 1;
+   pointer-events: auto;
+   color: #bd8b13;
+}
+
+.restaurant-card:hover .bookmark-button.bookmarked {
+   filter: drop-shadow(0 0 6px #bd8a1384);
+}
+
+.bookmark-button:hover {
+   transform: scale(1.1);
+}
