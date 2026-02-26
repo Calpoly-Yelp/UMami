@@ -1,5 +1,5 @@
 import { describe, test, expect } from "@jest/globals";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Header from "../components/header.jsx";
 
@@ -15,12 +15,9 @@ describe("Global Header Component", () => {
    // Verify the Logo is present and contains the correct text
    test("renders the application logo", () => {
       render(<Header />);
-      // The Logo component uses an <h1> tag
-      const logoHeading = screen.getByRole("heading", {
-         level: 1,
-      });
-      expect(logoHeading).toBeInTheDocument();
-      expect(logoHeading).toHaveTextContent("umami");
+      // The Logo is now an image
+      const logoImage = screen.getByRole("img", { name: /umami logo/i });
+      expect(logoImage).toBeInTheDocument();
    });
 
    // Verify the Account Icon is present
@@ -31,5 +28,19 @@ describe("Global Header Component", () => {
          ".app-header svg",
       );
       expect(iconSvg).toBeInTheDocument();
+   });
+
+   // Verify dropdown toggles
+   test("toggles dropdown menu on account icon click", () => {
+      render(<Header />);
+      const iconSvg = document.querySelector(".profile-icon");
+
+      // Dropdown should not be visible initially
+      expect(screen.queryByText("My Account")).not.toBeInTheDocument();
+
+      // Click icon to open
+      fireEvent.click(iconSvg);
+      expect(screen.getByText("My Account")).toBeInTheDocument();
+      expect(screen.getByText("Sign Out")).toBeInTheDocument();
    });
 });
