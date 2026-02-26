@@ -72,8 +72,8 @@
    line-height: 1;
 }
 
-.star.empty {
-   color: #f5f5f2 !important;
+.review-card .star.empty {
+   color: #f5f5f2;
 }
 
 .star.filled {

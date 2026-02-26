@@ -61,8 +61,7 @@ function RestaurantCard({
             <span className="restaurant-rating">
                {/* Stars are precise up to half a star */}
                {[1, 2, 3, 4, 5].map((star) => {
-                  const rating =
-                     restaurant.averageRating || 0;
+                  const rating = restaurant.avg_rating || 0;
 
                   let starType = "empty";
                   if (rating >= star) {

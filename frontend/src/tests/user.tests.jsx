@@ -6,22 +6,21 @@ import {
 } from "@jest/globals";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import UserPage from "../pages/User.jsx";
+import UserPage from "../pages/user.jsx";
 
 // test data
 const testUser = {
    id: "123",
    name: "Eli Schiffler",
-   profilePicture:
+   avatar_url:
       "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
-   isVerified: true,
+   is_verified: true,
 };
-
 const testReviews = [
    {
-      userPfp: testUser.profilePicture,
+      avatar_url: testUser.profilePicture,
       userName: testUser.name,
-      isVerified: testUser.isVerified,
+      is_verified: testUser.is_verified,
       rating: 4,
       date: "2026-02-14",
       comments: "Loved it!",
@@ -32,9 +31,9 @@ const testReviews = [
       ],
    },
    {
-      userPfp: testUser.profilePicture,
+      avatar_url: testUser.profilePicture,
       userName: testUser.name,
-      isVerified: testUser.isVerified,
+      is_verified: testUser.is_verified,
       rating: 3,
       date: "2026-02-16",
       comments:
@@ -46,9 +45,9 @@ const testReviews = [
       ],
    },
    {
-      userPfp: testUser.profilePicture,
+      avatar_url: testUser.profilePicture,
       userName: testUser.name,
-      isVerified: testUser.isVerified,
+      is_verified: testUser.is_verified,
       rating: 5,
       date: "2026-02-18",
       comments:
@@ -60,9 +59,9 @@ const testReviews = [
       ],
    },
    {
-      userPfp: testUser.profilePicture,
+      avatar_url: testUser.profilePicture,
       userName: testUser.name,
-      isVerified: testUser.isVerified,
+      is_verified: testUser.is_verified,
       rating: 4,
       date: "2026-02-19",
       comments: "Great spot.",
@@ -89,9 +88,9 @@ const testReviews = [
       ],
    },
    {
-      userPfp: testUser.profilePicture,
+      avatar_url: testUser.profilePicture,
       userName: testUser.name,
-      isVerified: testUser.isVerified,
+      is_verified: testUser.is_verified,
       rating: 5,
       date: "2026-02-20",
       comments:
@@ -124,7 +123,6 @@ const testReviews = [
       ],
    },
 ];
-
 const testRestaurants = [
    {
       id: "101",
@@ -151,7 +149,6 @@ const testRestaurants = [
       isBookmarked: true,
    },
 ];
-
 const testBookmarks = [
    {
       user_id: "123",
@@ -164,6 +161,43 @@ const testBookmarks = [
    {
       user_id: "123",
       restaurant_id: "103",
+   },
+];
+const testFollowedUsers = [
+   {
+      name: "Jane",
+      is_verified: true,
+      avatar_url:
+         "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
+      numReviews: 10,
+   },
+   {
+      name: "Bob",
+      is_verified: false,
+      avatar_url:
+         "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
+      numReviews: 5,
+   },
+   {
+      name: "Sarah Jenkins",
+      is_verified: true,
+      avatar_url:
+         "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
+      numReviews: 283,
+   },
+   {
+      name: "This is my name",
+      is_verified: false,
+      avatar_url:
+         "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
+      numReviews: 5,
+   },
+   {
+      name: "Another User",
+      is_verified: true,
+      avatar_url:
+         "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
+      numReviews: 1,
    },
 ];
 
@@ -196,6 +230,7 @@ describe("User Profile Page", () => {
             reviews={testReviews}
             restaurants={testRestaurants}
             bookmarks={testBookmarks}
+            followedUsers={testFollowedUsers}
          />,
       );
    });
@@ -270,6 +305,8 @@ describe("User Profile Page", () => {
             user={testUser}
             reviews={testReviews}
             restaurants={testRestaurants}
+            bookmarks={testBookmarks}
+            followedUsers={testFollowedUsers}
          />,
       );
       const followedUserCards = document.querySelectorAll(

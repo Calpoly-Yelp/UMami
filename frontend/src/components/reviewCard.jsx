@@ -6,9 +6,9 @@ import "./reviewCard.css";
 function ReviewCard({ review = {} }) {
    // assign our review object to variables
    const {
-      userPfp,
       userName,
-      isVerified,
+      avatar_url,
+      is_verified,
       rating,
       date,
       comments,
@@ -147,7 +147,7 @@ function ReviewCard({ review = {} }) {
                <img
                   className="review-avatar"
                   src={
-                     userPfp ||
+                     avatar_url ||
                      "https://via.placeholder.com/48"
                   }
                   alt={
@@ -159,7 +159,7 @@ function ReviewCard({ review = {} }) {
                {/* Username with an optional verified badge */}
                <UserName
                   name={userName}
-                  isVerified={isVerified}
+                  is_verified={is_verified}
                />
             </div>
             {/* Display the rating in stars */}

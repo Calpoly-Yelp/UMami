@@ -11,10 +11,12 @@
    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
    transition: transform 0.2s ease;
    box-sizing: border-box;
+   position: relative;
 }
 
 .followed-user-card:hover {
    transform: translateY(-2px);
+   z-index: 5;
 }
 
 .followed-user-pfp {
@@ -35,7 +37,8 @@
    text-align: center;
    padding: 0 10px;
    box-sizing: border-box;
-   overflow: hidden;
+   overflow: visible;
+   position: relative;
 }
 
 .followed-user-name-section > * {
@@ -73,6 +76,7 @@
    justify-content: center;
    gap: 6px;
    width: 100%;
+   margin-top: auto;
 }
 
 .follow-button svg {

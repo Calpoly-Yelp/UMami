@@ -89,8 +89,8 @@
    color: #e4e3d3;
 }
 
-.star.empty {
-   color: #e4e3d3 !important;
+.restaurant-card .star.empty {
+   color: #e4e3d3;
    text-shadow: 0 0 6px #e4e3d383;
 }
 

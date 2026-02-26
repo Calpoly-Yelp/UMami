@@ -20,6 +20,7 @@ function User({
    reviews: initialReviews,
    restaurants: initialRestaurants,
    bookmarks: initialBookmarks,
+   followedUsers: initialFollowing,
 }) {
    // used to scroll in between pieces of the page
    const handleNavClick = (e, sectionId) => {
@@ -71,6 +72,26 @@ function User({
    );
    const originalBookmarkedIdsRef = useRef(new Set());
    const bookmarkedIdsRef = useRef(new Set());
+   const initialFollowingArray = initialFollowing ?? [];
+   const initialFollowingIdsInit = new Set(
+      initialFollowingArray.map((f) => f.id),
+   );
+
+   const [following, setFollowing] = useState(
+      initialFollowingArray,
+   );
+   const [followingIds, setFollowingIds] = useState(
+      () => new Set(initialFollowingIdsInit),
+   );
+
+   const originalFollowingIdsRef = useRef(
+      new Set(initialFollowingIdsInit),
+   );
+   const followingIdsRef = useRef(new Set());
+
+   useEffect(() => {
+      followingIdsRef.current = followingIds;
+   }, [followingIds]);
 
    useEffect(() => {
       bookmarkedIdsRef.current = bookmarkedIds;
@@ -82,10 +103,17 @@ function User({
          initialUser ||
          initialReviews ||
          initialRestaurants ||
-         initialBookmarks
+         initialBookmarks ||
+         initialFollowing
       )
          return;
 
+      //------------Fetch data function---------------
+      // gets all data for webpage
+      // - user data
+      //     - following users data
+      //     - review data
+      //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
             // fetch user
@@ -100,8 +128,9 @@ function User({
                setUser({
                   id: userData.id,
                   name: userData.name || "Anonymous",
-                  profilePicture: userData.avatar_url || "",
-                  isVerified: userData.is_verified || false,
+                  avatar_url: userData.avatar_url || "",
+                  is_verified:
+                     userData.is_verified || false,
                });
             } else {
                console.error("Failed to fetch user");
@@ -125,9 +154,9 @@ function User({
                   )
                   .map((review) => ({
                      id: review.id,
-                     userPfp: userData.avatar_url || "",
+                     avatar_url: userData.avatar_url || "",
                      userName: userData.name || "Anonymous",
-                     isVerified:
+                     is_verified:
                         userData.is_verified || false,
                      rating: review.rating,
                      date: review.created_at,
@@ -166,7 +195,7 @@ function User({
                      image:
                         r.image_urls?.[0] ||
                         "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
-                     averageRating: r.avg_rating,
+                     avg_rating: r.avg_rating,
                      location: r.location,
                   }));
 
@@ -189,6 +218,33 @@ function User({
                   bookmarksResponse.status,
                );
             }
+
+            // fetch our followed users
+            const followingResponse = await fetch(
+               `http://localhost:4000/api/users/${userId}/follows`,
+            );
+            if (followingResponse.ok) {
+               const followingData =
+                  await followingResponse.json();
+               console.log(
+                  "Fetched following data:",
+                  followingData,
+               );
+               setFollowing(followingData);
+
+               const ids = new Set(
+                  followingData.map((f) => f.id),
+               );
+               setFollowingIds(ids);
+               originalFollowingIdsRef.current = new Set(
+                  ids,
+               );
+            } else {
+               console.error(
+                  "Failed to fetch following:",
+                  followingResponse.status,
+               );
+            }
          } catch (error) {
             console.error("Error loading data:", error);
          }
@@ -199,6 +255,7 @@ function User({
       initialReviews,
       initialRestaurants,
       initialBookmarks,
+      initialFollowing,
    ]);
 
    // Sync bookmarks on page refresh
@@ -252,6 +309,54 @@ function User({
       };
    }, [user.id]);
 
+   // Sync following on page refresh
+   useEffect(() => {
+      const syncFollowing = () => {
+         const original = originalFollowingIdsRef.current;
+         const current = followingIdsRef.current;
+         const userId = user.id;
+
+         if (!userId) return;
+
+         const added = [...current].filter(
+            (id) => !original.has(id),
+         );
+         const removed = [...original].filter(
+            (id) => !current.has(id),
+         );
+
+         if (added.length === 0 && removed.length === 0)
+            return;
+
+         fetch(
+            "http://localhost:4000/api/users/follows/sync",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  follower_id: userId,
+                  added,
+                  removed,
+               }),
+               keepalive: true,
+            },
+         );
+      };
+      window.addEventListener(
+         "beforeunload",
+         syncFollowing,
+      );
+      return () => {
+         window.removeEventListener(
+            "beforeunload",
+            syncFollowing,
+         );
+         syncFollowing();
+      };
+   }, [user.id]);
+
    const handleBookmarkToggle = (restaurantId) => {
       setBookmarkedIds((prev) => {
          const next = new Set(prev);
@@ -264,43 +369,17 @@ function User({
       });
    };
 
-   const testFollowedUsers = [
-      {
-         name: "Jane",
-         isVerified: true,
-         profilePicture:
-            "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
-         numReviews: 10,
-      },
-      {
-         name: "Bob",
-         isVerified: false,
-         profilePicture:
-            "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
-         numReviews: 5,
-      },
-      {
-         name: "Sarah Jenkins",
-         isVerified: true,
-         profilePicture:
-            "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
-         numReviews: 283,
-      },
-      {
-         name: "This is my name",
-         isVerified: false,
-         profilePicture:
-            "https://placehold.co/100x100/003831/FFFFFF?text=Green+Fork",
-         numReviews: 5,
-      },
-      {
-         name: "Another User",
-         isVerified: true,
-         profilePicture:
-            "https://placehold.co/100x100/003831/FFFFFF?text=Mustang+Eats",
-         numReviews: 1,
-      },
-   ];
+   const handleFollowToggle = (followedUserId) => {
+      setFollowingIds((prev) => {
+         const next = new Set(prev);
+         if (next.has(followedUserId)) {
+            next.delete(followedUserId);
+         } else {
+            next.add(followedUserId);
+         }
+         return next;
+      });
+   };
 
    return (
       <div className="user-page">
@@ -318,10 +397,10 @@ function User({
                {/* Card Section */}
                <div className="card">
                   {/* If user has a profile picture, display that, otherwise display default image */}
-                  {user.profilePicture ? (
+                  {user.avatar_url ? (
                      <img
                         className="user-profile-picture"
-                        src={user.profilePicture}
+                        src={user.avatar_url}
                         alt={`${user.name}'s profile picture`}
                      />
                   ) : (
@@ -333,7 +412,7 @@ function User({
                   {/* Display users name and optionally a verified badge */}
                   <UserName
                      name={user.name}
-                     isVerified={user.isVerified}
+                     is_verified={user.is_verified}
                   />
                   <div className="edit-icons">
                      <div className="edit-icon-wrapper">
@@ -525,16 +604,30 @@ function User({
                   </div>
                   <div className="following-list">
                      {/* map all the users followed accounts */}
-                     {testFollowedUsers.map(
-                        (user, index) => (
-                           <FollowedUserCard
-                              key={
-                                 user.id ??
-                                 `${user.name ?? "user"}-${index}`
-                              }
-                              user={user}
-                           />
-                        ),
+                     {following.length === 0 ? (
+                        <p className="no-content-message">
+                           Not following anyone yet.
+                        </p>
+                     ) : (
+                        following.map(
+                           (followedUser, index) => (
+                              <FollowedUserCard
+                                 key={
+                                    followedUser.id ??
+                                    `${followedUser.name ?? "user"}-${index}`
+                                 }
+                                 followedUser={followedUser}
+                                 isFollowing={followingIds.has(
+                                    followedUser.id,
+                                 )}
+                                 onToggleFollow={() =>
+                                    handleFollowToggle(
+                                       followedUser.id,
+                                    )
+                                 }
+                              />
+                           ),
+                        )
                      )}
                   </div>
                </div>
