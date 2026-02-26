@@ -113,4 +113,76 @@ describe("Restaurant Endpoints", () => {
       expect(res.statusCode).toBe(404);
       expect(res.body.error).toBe("Restaurant not found");
    });
+
+   it("GET /api/restaurants/bookmarks/:userId should return bookmarked restaurants", async () => {
+      const mockBookmarks = [
+         { restaurant_id: 1 },
+         { restaurant_id: 2 },
+      ];
+      const mockRestaurants = [
+         { id: 1, name: "Restaurant A" },
+         { id: 2, name: "Restaurant B" },
+      ];
+
+      // Mock implementation to handle different table calls
+      supabase.from.mockImplementation((table) => {
+         if (table === "bookmarks") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: mockBookmarks,
+                  error: null,
+               }),
+            };
+         }
+         if (table === "restaurants") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: mockRestaurants,
+                  error: null,
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         "/api/restaurants/bookmarks/user123",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.length).toBe(2);
+      expect(res.body[0].name).toBe("Restaurant A");
+   });
+
+   it("POST /api/restaurants/bookmarks/sync should sync added and removed bookmarks", async () => {
+      // Mock delete and insert chains
+      const mockDelete = jest.fn().mockReturnThis();
+      const mockInsert = jest
+         .fn()
+         .mockResolvedValue({ error: null });
+
+      supabase.from.mockReturnValue({
+         delete: mockDelete,
+         eq: jest.fn().mockReturnThis(),
+         in: jest.fn().mockResolvedValue({ error: null }),
+         insert: mockInsert,
+      });
+
+      const res = await request(app)
+         .post("/api/restaurants/bookmarks/sync")
+         .send({
+            user_id: "user123",
+            added: [101],
+            removed: [202],
+         });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.message).toBe("Sync successful");
+      // Verify delete was called
+      expect(mockDelete).toHaveBeenCalled();
+      // Verify insert was called
+      expect(mockInsert).toHaveBeenCalled();
+   });
 });

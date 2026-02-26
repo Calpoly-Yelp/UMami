@@ -97,4 +97,45 @@ describe("User Endpoints", () => {
 
       expect(res.statusCode).toBe(404);
    });
+
+   it("GET /api/users/:id/follows should return followed users", async () => {
+      const mockFollows = [
+         { following_id: "uuid-2" },
+         { following_id: "uuid-3" },
+      ];
+      const mockFollowingUsers = [
+         { id: "uuid-2", name: "Jane" },
+         { id: "uuid-3", name: "Bob" },
+      ];
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: mockFollows,
+                  error: null,
+               }),
+            };
+         }
+         if (table === "users") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: mockFollowingUsers,
+                  error: null,
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         "/api/users/uuid-1/follows",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.length).toBe(2);
+      expect(res.body[0].name).toBe("Jane");
+   });
 });
