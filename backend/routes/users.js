@@ -4,15 +4,35 @@ import { User } from "../models/userModel.js";
 
 const router = express.Router();
 
+// Get all users
+router.get("/", async (req, res) => {
+   try {
+      const { data, error } = await supabase.from("users").select("*").limit(50);
+      if (error) { throw error; }
+      console.log("Fetched users:", data);
+      res.status(200).json(data);
+   } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: error.message });
+   }
+});
+
 // Get user by ID
 router.get("/:id", async (req, res) => {
    const { id } = req.params;
    try {
-      const { data } = await supabase
+      const { data, error } = await supabase
          .from("users")
          .select("*")
          .eq("id", id)
          .single();
+
+      if (error) {
+         if (error.code === "PGRST116") {
+            return res.status(404).json({ error: "User not found" });
+         }
+         throw error;
+      }
 
       const validatedData = User.parse(data);
 
@@ -27,19 +47,27 @@ router.get("/:id", async (req, res) => {
 router.get("/:id/follows", async (req, res) => {
    const { id } = req.params;
    try {
-      const { data } = await supabase
+      const { data, error } = await supabase
          .from("follows")
          .select("*")
          .eq("follower_id", id);
+
+      if (error) { throw error; }
+
+      if (!data || data.length === 0) {
+         return res.status(200).json([]);
+      }
 
       const followingIds = data.map(
          (follow) => follow.following_id,
       );
 
-      const { data: followingUsers } = await supabase
+      const { data: followingUsers, error: usersError } = await supabase
          .from("users")
          .select("*")
          .in("id", followingIds);
+
+      if (usersError) { throw usersError; }
 
       res.status(200).json(followingUsers);
    } catch (error) {

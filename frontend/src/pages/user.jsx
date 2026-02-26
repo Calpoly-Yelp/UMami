@@ -122,6 +122,17 @@ function User({
             const userResponse = await fetch(
                `http://localhost:4000/api/users/${userId}`,
             );
+            // handle response errors for fetching user
+            if (
+               !userResponse.ok &&
+               userResponse.status !== 404
+            ) {
+               throw new Error(
+                  `Backend error when fetching users: ${userResponse.statusText}`,
+               );
+            }
+
+            // assign user data to object
             let userData = {};
             if (userResponse.ok) {
                userData = await userResponse.json();
@@ -135,11 +146,22 @@ function User({
             } else {
                console.error("Failed to fetch user");
             }
+
             // fetch reviews
             const reviewsResponse = await fetch(
                "http://localhost:4000/api/reviews",
             );
+            // handle response errors
+            if (
+               !reviewsResponse.ok &&
+               reviewsResponse.status !== 404
+            ) {
+               throw new Error(
+                  `Backend error when fetching reviews: ${reviewsResponse.statusText}`,
+               );
+            }
 
+            // assign review data to object
             if (reviewsResponse.ok) {
                const reviewsData =
                   await reviewsResponse.json();
@@ -180,6 +202,7 @@ function User({
             const bookmarksResponse = await fetch(
                `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
             );
+            //
             if (bookmarksResponse.ok) {
                const restaurantsData =
                   await bookmarksResponse.json();

@@ -1,9 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { reviewsRouter } from "./routes/reviews.js";
-import { usersRouter } from "./routes/users.js";
-import { restaurantsRouter } from "./routes/restaurants.js";
+import reviewsRouter from "./routes/reviews.js";
+import usersRouter from "./routes/users.js";
+import restaurantsRouter from "./routes/restaurants.js";
 import { supabase } from "./config/supabaseClient.js";
 
 const app = express();
