@@ -6,7 +6,7 @@ import { MagnifyingGlass } from "@phosphor-icons/react";
 import "./restaurants.css";
 
 const testRestaurants = [
-   {
+    {
       id: 1,
       name: "Starbucks",
       image: "/images/restaurants/starbucks.webp",
