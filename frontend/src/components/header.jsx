@@ -6,7 +6,8 @@ import "./header.css";
 
 function Header() {
    const navigate = useNavigate();
-   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+   const [isDropdownOpen, setIsDropdownOpen] =
+      useState(false);
    const dropdownRef = useRef(null);
 
    const toggleDropdown = () => {
@@ -34,7 +35,10 @@ function Header() {
          }
       };
 
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener(
+         "mousedown",
+         handleClickOutside,
+      );
       return () => {
          document.removeEventListener(
             "mousedown",
@@ -51,7 +55,10 @@ function Header() {
             className="header-logo"
             onClick={() => navigate("/restaurants")}
          />
-         <div className="profile-container" ref={dropdownRef}>
+         <div
+            className="profile-container"
+            ref={dropdownRef}
+         >
             <MdOutlineAccountCircle
                size={60}
                color="#154734"

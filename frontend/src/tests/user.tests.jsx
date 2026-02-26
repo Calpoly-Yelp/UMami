@@ -1,8 +1,10 @@
+import "../test-setup";
 import {
    describe,
    test,
    expect,
    beforeAll,
+   jest,
 } from "@jest/globals";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -205,6 +207,14 @@ beforeAll(() => {
 
    window.requestAnimationFrame = (cb) => setTimeout(cb, 0);
    window.cancelAnimationFrame = (id) => clearTimeout(id);
+
+   global.fetch = jest.fn(() =>
+      Promise.resolve({
+         ok: true,
+         json: () => Promise.resolve({}),
+         status: 200,
+      }),
+   );
 });
 
 describe("User Profile Page", () => {

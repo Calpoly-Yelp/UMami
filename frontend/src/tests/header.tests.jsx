@@ -1,12 +1,23 @@
+import "../test-setup";
+
 import { describe, test, expect } from "@jest/globals";
-import { render, screen, fireEvent } from "@testing-library/react";
+import {
+   render,
+   screen,
+   fireEvent,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { BrowserRouter } from "react-router-dom";
 import Header from "../components/header.jsx";
 
 describe("Global Header Component", () => {
    // Verify the component renders the main container
    test("renders the header container", () => {
-      render(<Header />);
+      render(
+         <BrowserRouter>
+            <Header />
+         </BrowserRouter>,
+      );
       const headerElement =
          document.querySelector(".app-header");
       expect(headerElement).toBeInTheDocument();
@@ -14,15 +25,25 @@ describe("Global Header Component", () => {
 
    // Verify the Logo is present and contains the correct text
    test("renders the application logo", () => {
-      render(<Header />);
+      render(
+         <BrowserRouter>
+            <Header />
+         </BrowserRouter>,
+      );
       // The Logo is now an image
-      const logoImage = screen.getByRole("img", { name: /umami logo/i });
+      const logoImage = screen.getByRole("img", {
+         name: /umami logo/i,
+      });
       expect(logoImage).toBeInTheDocument();
    });
 
    // Verify the Account Icon is present
    test("renders the account profile icon", () => {
-      render(<Header />);
+      render(
+         <BrowserRouter>
+            <Header />
+         </BrowserRouter>,
+      );
       // The icon is rendered as an SVG by react-icons
       const iconSvg = document.querySelector(
          ".app-header svg",
@@ -32,15 +53,26 @@ describe("Global Header Component", () => {
 
    // Verify dropdown toggles
    test("toggles dropdown menu on account icon click", () => {
-      render(<Header />);
-      const iconSvg = document.querySelector(".profile-icon");
+      render(
+         <BrowserRouter>
+            <Header />
+         </BrowserRouter>,
+      );
+      const iconSvg =
+         document.querySelector(".profile-icon");
 
       // Dropdown should not be visible initially
-      expect(screen.queryByText("My Account")).not.toBeInTheDocument();
+      expect(
+         screen.queryByText("My Account"),
+      ).not.toBeInTheDocument();
 
       // Click icon to open
       fireEvent.click(iconSvg);
-      expect(screen.getByText("My Account")).toBeInTheDocument();
-      expect(screen.getByText("Sign Out")).toBeInTheDocument();
+      expect(
+         screen.getByText("My Account"),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByText("Sign Out"),
+      ).toBeInTheDocument();
    });
 });
