@@ -3,11 +3,6 @@ import "./PhotoGallery.css";
 const PhotoGallery = () => {
    return (
       <div className="gallery-page">
-         <header className="gallery-header">
-            <div className="logo">umami</div>
-            <div className="profile-icon"></div>
-         </header>
-
          <div className="hero-section">
             <div className="hero-overlay"></div>
          </div>

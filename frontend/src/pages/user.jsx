@@ -1,4 +1,3 @@
-import Logo from "../assets/logo.jsx";
 import { MdOutlineAccountCircle } from "react-icons/md";
 import ReviewCard from "../components/reviewCard.jsx";
 import RestaurantCard from "../components/restaurantCard.jsx";
@@ -408,14 +407,6 @@ function User({
 
    return (
       <div className="user-page">
-         {/* Header Section */}
-         <div className="user-header">
-            <Logo />
-            <MdOutlineAccountCircle
-               size={60}
-               color="#154734"
-            />
-         </div>
          {/* Content Section */}
          <div className="user-content">
             <div className="user-info">

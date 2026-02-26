@@ -1,0 +1,12 @@
+.app-header {
+   display: flex;
+   flex-direction: row;
+   padding: 0 20px;
+   height: 80px;
+   align-items: center;
+   justify-content: space-between;
+   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+   background-color: #f5f5f2;
+   position: relative;
+   z-index: 10;
+}

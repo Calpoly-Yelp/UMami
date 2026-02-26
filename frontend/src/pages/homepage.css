@@ -4,35 +4,6 @@
    font-family: "Poppins", sans-serif;
 }
 
-.home-header {
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   padding: 20px 40px;
-   background-color: white;
-   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.logo {
-   font-size: 28px;
-   font-weight: bold;
-   color: #2f5d3a;
-}
-
-.nav-buttons button {
-   margin-left: 15px;
-   padding: 8px 16px;
-   border: none;
-   background-color: #2f5d3a;
-   color: white;
-   border-radius: 4px;
-   cursor: pointer;
-}
-
-.nav-buttons button:hover {
-   background-color: #244a2f;
-}
-
 .home-hero {
    text-align: center;
    margin-top: 120px;

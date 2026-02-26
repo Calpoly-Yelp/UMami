@@ -213,17 +213,6 @@ describe("User Profile Page", () => {
       render(<UserPage user={testUser} />);
    });
 
-   // check for header elements
-   test("renders header elements", () => {
-      render(<UserPage user={testUser} />);
-      const logoElement = document.querySelector(".logo");
-      expect(logoElement).toBeInTheDocument();
-      const accountIcon = document.querySelector(
-         ".user-header svg",
-      );
-      expect(accountIcon).toBeInTheDocument();
-   });
-
    // Verify user-specific information (Name, Verified Badge) is displayed correctly
    test("renders user info", () => {
       render(<UserPage user={testUser} />);

@@ -25,20 +25,11 @@ body {
    overflow: hidden;
 }
 
-.user-header,
 .user-content,
 .following-list,
 .restaurant-list {
    display: flex;
    flex-direction: row;
-}
-
-.user-header {
-   padding: 0 20px;
-   height: 80px;
-   align-items: center;
-   justify-content: space-between;
-   border-bottom: gray solid 3px;
 }
 
 .user-content {
