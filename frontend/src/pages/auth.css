@@ -1,110 +1,109 @@
 :root {
-  --umami-green: #6bb56e;
-  --black: #111;
+   --umami-green: #6bb56e;
+   --black: #111;
 }
 
 .auth {
-  position: relative;
-  min-height: 100vh;
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Poppins", sans-serif;
+   position: relative;
+   min-height: 100vh;
+   background-size: cover;
+   background-position: center;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-family: "Poppins", sans-serif;
 }
 
 .auth__overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  /*background: rgba(255, 255, 255, 0.15); */
-
+   position: absolute;
+   inset: 0;
+   background: rgba(0, 0, 0, 0.35);
+   /*background: rgba(255, 255, 255, 0.15); */
 }
 
 .auth__card {
-  position: relative;
-  width: 520px;
-  padding: 40px;
-  border-radius: 24px;
+   position: relative;
+   width: 520px;
+   padding: 40px;
+   border-radius: 24px;
 
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+   background: rgba(255, 255, 255, 0.15);
+   backdrop-filter: blur(18px);
+   -webkit-backdrop-filter: blur(18px);
 
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+   border: 1px solid rgba(255, 255, 255, 0.25);
+   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
 
-  text-align: center;
-  color: white;
+   text-align: center;
+   color: white;
 }
 
 .auth__brand {
-  font-size: 34px;
-  font-weight: 700;
-  color: var(--umami-green);
-  margin-bottom: 10px;
+   font-size: 34px;
+   font-weight: 700;
+   color: var(--umami-green);
+   margin-bottom: 10px;
 }
 
 .auth__title {
-  font-size: 26px;
-  font-weight: 600;
-  margin-bottom: 6px;
+   font-size: 26px;
+   font-weight: 600;
+   margin-bottom: 6px;
 }
 
 .auth__subtitle {
-  font-size: 14px;
-  opacity: 0.85;
-  margin-bottom: 20px;
+   font-size: 14px;
+   opacity: 0.85;
+   margin-bottom: 20px;
 }
 
 .auth__form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+   display: flex;
+   flex-direction: column;
+   gap: 14px;
 }
 
 .auth__input {
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  padding: 0 14px;
-  font-size: 14px;
-  outline: none;
+   height: 44px;
+   border-radius: 12px;
+   border: none;
+   padding: 0 14px;
+   font-size: 14px;
+   outline: none;
 }
 
 .auth__primary {
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  background: black;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s ease;
+   height: 44px;
+   border-radius: 12px;
+   border: none;
+   background: black;
+   color: white;
+   font-weight: 600;
+   cursor: pointer;
+   transition: 0.2s ease;
 }
 
 .auth__primary:hover {
-  background: #222;
+   background: #222;
 }
 
 .auth__divider {
-  font-size: 13px;
-  opacity: 0.8;
-  margin-top: 6px;
+   font-size: 13px;
+   opacity: 0.8;
+   margin-top: 6px;
 }
 
 .auth__secondary {
-  height: 40px;
-  border-radius: 12px;
-  border: none;
-  background: rgba(255, 255, 255, 0.85);
-  font-weight: 600;
-  cursor: pointer;
+   height: 40px;
+   border-radius: 12px;
+   border: none;
+   background: rgba(255, 255, 255, 0.85);
+   font-weight: 600;
+   cursor: pointer;
 }
 
 .auth__legal {
-  font-size: 12px;
-  opacity: 0.8;
-  margin-top: 8px;
+   font-size: 12px;
+   opacity: 0.8;
+   margin-top: 8px;
 }

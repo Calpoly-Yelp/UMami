@@ -3,40 +3,31 @@ import { Bookmark } from "@phosphor-icons/react";
 
 import "./restaurantCard.css";
 
-function RestaurantCard({ restaurant }) {
+function RestaurantCard({
+   restaurant,
+   isBookmarked: propIsBookmarked,
+   onToggle,
+}) {
    // changes whether the restaurant is bookmarked or no
-   const [isBookmarked, setIsBookmarked] = useState(
-      restaurant.isBookmarked || false,
-   );
+   const [localIsBookmarked, setLocalIsBookmarked] =
+      useState(restaurant.isBookmarked || false);
+
+   // Determine if controlled or uncontrolled
+   const isControlled = propIsBookmarked !== undefined;
+   const isBookmarked = isControlled
+      ? propIsBookmarked
+      : localIsBookmarked;
 
    // logic to change bookmarked status when clicked
    const handleBookmarkToggle = (e) => {
       e.stopPropagation();
-      setIsBookmarked((prev) => !prev);
-   };
-
-   // Logic to determine which tags to display based on character length
-   const MAX_TAG_CHARS = 22;
-   let currentChars = 0;
-   let visibleTags = [];
-   let remainingTagsCount = 0;
-
-   if (restaurant.tags) {
-      for (let i = 0; i < restaurant.tags.length; i++) {
-         const tag = restaurant.tags[i];
-         // Always show at least one tag, otherwise check if adding the next tag exceeds the limit
-         if (
-            i === 0 ||
-            currentChars + tag.length <= MAX_TAG_CHARS
-         ) {
-            visibleTags.push(tag);
-            currentChars += tag.length;
-         } else {
-            remainingTagsCount = restaurant.tags.length - i;
-            break;
-         }
+      if (onToggle) {
+         onToggle();
       }
-   }
+      if (!isControlled) {
+         setLocalIsBookmarked((prev) => !prev);
+      }
+   };
 
    return (
       <div className="restaurant-card">
@@ -70,8 +61,7 @@ function RestaurantCard({ restaurant }) {
             <span className="restaurant-rating">
                {/* Stars are precise up to half a star */}
                {[1, 2, 3, 4, 5].map((star) => {
-                  const rating =
-                     restaurant.averageRating || 0;
+                  const rating = restaurant.avg_rating || 0;
 
                   let starType = "empty";
                   if (rating >= star) {
@@ -89,19 +79,12 @@ function RestaurantCard({ restaurant }) {
                   );
                })}
             </span>
-            {/* Display all the restaurants tags up to max 3 */}
-            {visibleTags.length > 0 && (
+            {/* Display the restaurant location */}
+            {restaurant.location && (
                <div className="restaurant-tags">
-                  {visibleTags.map((tag, index) => (
-                     <span key={index} className="tag">
-                        {tag}
-                     </span>
-                  ))}
-                  {remainingTagsCount > 0 && (
-                     <span className="tag">
-                        +{remainingTagsCount}
-                     </span>
-                  )}
+                  <span className="tag">
+                     {restaurant.location}
+                  </span>
                </div>
             )}
          </div>

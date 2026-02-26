@@ -82,6 +82,7 @@
    border-width: 1px;
    border-style: solid;
    border-radius: 999px;
+
    font-size: 0.9rem;
 }
 
@@ -90,7 +91,7 @@
    color: #e4e3d3;
 }
 
-.star.empty {
+.restaurant-card .star.empty {
    color: #e4e3d3;
 }
 

@@ -1,0 +1,199 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap");
+html,
+body {
+   margin: 0;
+   padding: 0;
+   height: 100vh;
+   overflow: hidden;
+}
+
+:root {
+   --primary-gray: #8e9089;
+   --light-gray-bg: #8e908926;
+   --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+   --standard-gap: 20px;
+   --standard-padding-horizontal: 5vw;
+   --standard-padding-vertical: 4vh;
+}
+
+.user-page {
+   margin: 0;
+   font-family: "Poppins", sans-serif;
+   min-height: 100vh;
+   width: 100vw;
+   background: linear-gradient(#f5f5f2, #e4e3d3);
+   overflow: hidden;
+}
+
+.user-header,
+.user-content,
+.following-list,
+.restaurant-list {
+   display: flex;
+   flex-direction: row;
+}
+
+.user-header {
+   padding: 0 20px;
+   height: 80px;
+   align-items: center;
+   justify-content: space-between;
+   border-bottom: gray solid 3px;
+}
+
+.user-content {
+   height: calc(100vh - 80px);
+   overflow: hidden;
+}
+
+.user-info {
+   display: flex;
+   flex-direction: column;
+   width: 20vw;
+   padding: var(--standard-padding-vertical)
+      var(--standard-padding-horizontal);
+}
+
+.card {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: space-evenly;
+   height: 40vh;
+   border-radius: 2vw;
+   background-color: var(--light-gray-bg);
+   box-shadow: var(--card-shadow);
+}
+
+.user-profile-picture {
+   border-radius: 50%;
+   flex-shrink: 0;
+}
+
+.user-profile-picture {
+   width: 8vw;
+   height: auto;
+   object-fit: cover;
+}
+
+.edit-icons {
+   display: flex;
+   gap: var(--standard-gap);
+}
+
+.edit-icon-wrapper {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   cursor: pointer;
+}
+
+.edit-icon-wrapper span {
+   margin-top: 5px;
+   font-size: 0.8rem;
+}
+
+.edit-icons img {
+   width: 6vw;
+   height: auto;
+}
+
+.edit-icons,
+.navigation-links a {
+   color: var(--primary-gray);
+}
+
+.navigation-links a {
+   display: block;
+   padding: 10px 0;
+   text-decoration: none;
+   border-bottom: 1px solid var(--primary-gray);
+}
+
+.navigation-links a:last-child {
+   border-bottom: none;
+}
+
+.user-activity {
+   flex: 1;
+   height: 100%;
+   overflow-y: auto;
+   font-size: 24px;
+   color: #333;
+}
+
+.activity-header {
+   display: flex;
+   margin-bottom: 20px;
+   padding-right: var(--standard-padding-horizontal);
+   font-size: 20px;
+   color: black;
+   align-items: center;
+   margin: 0;
+   gap: 10px;
+}
+
+.activity-header svg {
+   display: block;
+}
+
+.scroll-buttons-container {
+   display: flex;
+   gap: 8px;
+   margin-left: auto;
+}
+
+.scroll-button {
+   background-color: #154734;
+   color: #e4e3d3;
+   border: none;
+   border-radius: 50%;
+   width: 32px;
+   height: 32px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-button:hover {
+   transform: scale(1.1);
+   background-color: #0d2e21;
+}
+
+.reviews,
+.restaurants,
+.following {
+   padding-right: var(--standard-padding-horizontal);
+}
+
+.restaurant-list,
+.following-list {
+   gap: var(--standard-gap);
+   overflow-x: auto;
+   padding: 10px;
+}
+
+.review-list {
+   display: flex;
+   overflow-x: auto;
+   gap: var(--standard-gap);
+   padding: 10px;
+
+   scroll-behavior: smooth;
+   -webkit-overflow-scrolling: touch;
+   scroll-snap-type: x mandatory;
+}
+
+.review-list::-webkit-scrollbar,
+.restaurant-list::-webkit-scrollbar,
+.following-list::-webkit-scrollbar {
+   display: none;
+}
+
+.review-list > * {
+   flex: 0 0 100%;
+   scroll-snap-align: center;
+}

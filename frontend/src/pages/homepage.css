@@ -1,66 +1,65 @@
 .homepage {
-  min-height: 100vh;
-  background-color: #f4f2ea;
-  font-family: "Poppins", sans-serif;
+   min-height: 100vh;
+   background-color: #f4f2ea;
+   font-family: "Poppins", sans-serif;
 }
 
 .home-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-  background-color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 20px 40px;
+   background-color: white;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .logo {
-  font-size: 28px;
-  font-weight: bold;
-  color: #2f5d3a;
+   font-size: 28px;
+   font-weight: bold;
+   color: #2f5d3a;
 }
 
 .nav-buttons button {
-  margin-left: 15px;
-  padding: 8px 16px;
-  border: none;
-  background-color: #2f5d3a;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
+   margin-left: 15px;
+   padding: 8px 16px;
+   border: none;
+   background-color: #2f5d3a;
+   color: white;
+   border-radius: 4px;
+   cursor: pointer;
 }
 
 .nav-buttons button:hover {
-  background-color: #244a2f;
+   background-color: #244a2f;
 }
 
-
 .home-hero {
-  text-align: center;
-  margin-top: 120px;
-  padding: 0 20px;
+   text-align: center;
+   margin-top: 120px;
+   padding: 0 20px;
 }
 
 .home-hero h2 {
-  font-size: 40px;
-  margin-bottom: 20px;
+   font-size: 40px;
+   margin-bottom: 20px;
 }
 
 .home-hero p {
-  font-size: 18px;
-  color: #555;
-  margin-bottom: 30px;
+   font-size: 18px;
+   color: #555;
+   margin-bottom: 30px;
 }
 
 .explore-btn {
-  padding: 12px 24px;
-  font-size: 16px;
-  border: none;
-  background-color: #2f5d3a;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
+   padding: 12px 24px;
+   font-size: 16px;
+   border: none;
+   background-color: #2f5d3a;
+   color: white;
+   border-radius: 6px;
+   cursor: pointer;
 }
 
 .explore-btn:hover {
-  background-color: #244a2f;
+   background-color: #244a2f;
 }
