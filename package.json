@@ -4,7 +4,9 @@
    "description": "Sofware Engineering Group Project",
    "main": "index.js",
    "scripts": {
-      "test": "echo \"No tests\" && exit 0",
+      "test": "npm run test:frontend && npm run test:backend",
+      "test:frontend": "npm --prefix frontend run test",
+      "test:backend": "npm --prefix backend run test",
       "format": "prettier --write .",
       "format:check": "prettier --check .",
       "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
