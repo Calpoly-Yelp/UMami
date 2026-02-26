@@ -1,8 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./auth.css";
-import bgImage from "../assets/signup-bg.jpeg"; 
+import bgImage from "../assets/signup-bg.jpeg";
 
 export default function SignIn() {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignIn = async (e) => {
+    e.preventDefault(); 
+    navigate("/onboarding");
+  };
+
   return (
     <div className="auth" style={{ backgroundImage: `url(${bgImage})` }}>
       <div className="auth__overlay" />
@@ -15,12 +26,15 @@ export default function SignIn() {
           Enter your email and password to sign in
         </p>
 
-        <form className="auth__form">
+        <form className="auth__form" onSubmit={handleSignIn}>
           <input
             className="auth__input"
             type="email"
             placeholder="email@domain.com"
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <input
@@ -28,6 +42,9 @@ export default function SignIn() {
             type="password"
             placeholder="password"
             autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <button className="auth__primary" type="submit">
