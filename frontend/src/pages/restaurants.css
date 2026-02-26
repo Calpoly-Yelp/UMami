@@ -1,133 +1,148 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap");
 
 :root {
-  --bg-top: #f5f5f2;
-  --bg-bottom: #e4e3d3;
-  --green: #154734;
-  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+   --bg-top: #f5f5f2;
+   --bg-bottom: #e4e3d3;
+   --green: #154734;
+   --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .restaurants-page {
-  min-height: 100vh;
-  width: 100%;
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(var(--bg-top), var(--bg-bottom));
+   min-height: 100vh;
+   width: 100%;
+   font-family: "Poppins", sans-serif;
+   background: linear-gradient(
+      var(--bg-top),
+      var(--bg-bottom)
+   );
 }
 
 /* header bar */
 .restaurants-header {
-  height: 80px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+   height: 80px;
+   padding: 0 20px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
 .restaurants-content {
-  padding: 32px 60px 60px;
+   padding: 32px 60px 60px;
 }
 
 .logo-img {
-  height: 120px;
-  object-fit: contain;
+   height: 120px;
+   object-fit: contain;
 }
 
 .profile-img {
-  height: 50px;
-  width: 50px;
-  object-fit: contain;
+   height: 50px;
+   width: 50px;
+   object-fit: contain;
 }
 
 .restaurants-title {
-    color: #000;
-    font-family: Poppins;
-    font-size: 64px;
-    font-style: normal;
-    font-weight: 700;
-    line-height: 150%; 
-    letter-spacing: -0.64px;
+   color: #000;
+   font-family: Poppins;
+   font-size: 64px;
+   font-style: normal;
+   font-weight: 700;
+   line-height: 150%;
+   letter-spacing: -0.64px;
 }
 
 /* search + filter/sort row */
 .restaurants-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 24px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 18px;
+   margin-bottom: 24px;
 }
 
 .search-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 420px;
-  background: white;
-  border-radius: 999px;
-  padding: 10px 14px;
-  box-shadow: var(--shadow);
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   width: 420px;
+   background: white;
+   border-radius: 999px;
+   padding: 10px 14px;
+   box-shadow: var(--shadow);
 }
 
 .search-input {
-  border: none;
-  outline: none;
-  width: 100%;
-  font-size: 16px;
-  font-family: "Poppins", sans-serif;
-  background: transparent;
+   border: none;
+   outline: none;
+   width: 100%;
+   font-size: 16px;
+   font-family: "Poppins", sans-serif;
+   background: transparent;
 }
 
 .controls-right {
-  display: flex;
-  gap: 12px;
+   display: flex;
+   gap: 12px;
 }
 
 /* pills */
 .pill {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: white;
-  border-radius: 999px;
-  padding: 8px 12px;
-  box-shadow: var(--shadow);
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   background: white;
+   border-radius: 999px;
+   padding: 8px 12px;
+   box-shadow: var(--shadow);
 }
 
 .pill-label {
-  font-size: 14px;
-  font-family: "Poppins", sans-serif;
+   font-size: 14px;
+   font-family: "Poppins", sans-serif;
 }
 
 .pill-select {
-  border: none;
-  outline: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-  opacity: 0.75;
-  font-family: "Poppins", sans-serif;
+   border: none;
+   outline: none;
+   background: transparent;
+   cursor: pointer;
+   font-size: 14px;
+   opacity: 0.75;
+   font-family: "Poppins", sans-serif;
 }
 
 /* grid */
 .restaurants-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 40px;
-  align-items: start;
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 40px;
+   align-items: start;
 }
 
 /* responsive */
 @media (max-width: 1100px) {
-  .restaurants-grid {
-    grid-template-columns: repeat(2, 250px);
-  }
+   .restaurants-grid {
+      grid-template-columns: repeat(2, 250px);
+   }
 }
 
 @media (max-width: 750px) {
-  .restaurants-content { padding: 20px; }
-  .restaurants-controls { flex-direction: column; align-items: stretch; }
-  .search-wrap { width: 100%; }
-  .controls-right { justify-content: flex-end; }
-  .restaurants-grid { grid-template-columns: repeat(1, 250px); justify-content: center; }
+   .restaurants-content {
+      padding: 20px;
+   }
+   .restaurants-controls {
+      flex-direction: column;
+      align-items: stretch;
+   }
+   .search-wrap {
+      width: 100%;
+   }
+   .controls-right {
+      justify-content: flex-end;
+   }
+   .restaurants-grid {
+      grid-template-columns: repeat(1, 250px);
+      justify-content: center;
+   }
 }
