@@ -10,10 +10,13 @@ const PORT = process.env.PORT || 4000;
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
+<<<<<<< HEAD
 /* Mount router */
 app.use("/api", routes);
 
 /* Keep temporary debug route (optional) */
+=======
+>>>>>>> prarthana
 app.get("/test-supabase", async (req, res) => {
    const { data, error } = await supabase
       .from("restaurants")

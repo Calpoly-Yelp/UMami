@@ -1,0 +1,235 @@
+:root {
+  --umami-green: #2f8a3b;
+  --card-bg: #f4f2ef;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.ob {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  background: #f6f5f2;
+}
+
+
+.ob__side {
+  position: relative;
+  background: transparent;
+}
+
+.ob__side::before {
+  content: "";
+  position: absolute;
+
+  top: 24px;
+  bottom: 24px;
+  left: 0;          
+  right: 70px;     
+
+  background: var(--umami-green);
+
+ 
+  border-top-right-radius: 110px;
+  border-bottom-right-radius: 110px;
+
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+
+  z-index: 0;
+}
+
+.ob__sideInner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 70px 80px 40px 60px;
+}
+
+.ob__sideTitle {
+  font-size: 32px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 50px;
+}
+
+.ob__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.ob__navItem {
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 6px 0;
+}
+
+.ob__navItem.is-active {
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.ob__navItem.is-done {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+
+.ob__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+}
+
+.ob__card {
+  width: min(1000px, 100%);
+  background: var(--card-bg);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 60px 70px 40px;
+}
+
+.ob__title {
+  font-size: 56px;
+  font-weight: 900;
+  margin-bottom: 14px;
+  color: #111;
+}
+
+.ob__subtitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 36px;
+}
+
+
+
+.ob__content {
+  display: grid;
+  gap: 22px;
+}
+
+.ob__row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #111;
+}
+
+.ob__checkbox {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--umami-green);
+}
+
+.ob__hint {
+  margin-top: 6px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+
+
+.ob__progressWrap {
+  margin-top: 40px;
+}
+
+.ob__progressLabel {
+  display: flex;
+  gap: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.65);
+  margin-bottom: 10px;
+}
+
+.ob__progressPct {
+  color: var(--umami-green);
+  font-weight: 800;
+}
+
+.ob__progressBar {
+  width: 420px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ob__progressFill {
+  height: 100%;
+  background: var(--umami-green);
+  border-radius: 999px;
+}
+
+.ob__footer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ob__footerBtns {
+  display: flex;
+  gap: 16px;
+}
+
+.ob__btn {
+  font-size: 18px;
+  font-weight: 800;
+  padding: 12px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ob__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ob__btnPrimary {
+  background: var(--umami-green);
+  border: 2px solid var(--umami-green);
+  color: white;
+}
+
+.ob__btnOutline {
+  background: transparent;
+  border: 2px solid var(--umami-green);
+  color: var(--umami-green);
+}
+
+.ob__btnGhost {
+  background: transparent;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+
+@media (max-width: 1100px) {
+  .ob {
+    grid-template-columns: 1fr;
+  }
+
+  .ob__side::before {
+    right: 20px;
+    border-top-right-radius: 60px;
+    border-bottom-right-radius: 60px;
+  }
+
+  .ob__main {
+    padding: 40px 30px;
+  }
+
+  .ob__progressBar {
+    width: 100%;
+  }
+}
