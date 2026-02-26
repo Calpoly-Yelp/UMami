@@ -27,9 +27,19 @@ function AppLayout() {
    );
 
    return (
-      <div className="app-container" style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      <div
+         className="app-container"
+         style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+         }}
+      >
          {showHeader && <Header />}
-         <div className="content-container" style={{ flex: 1, overflow: "hidden" }}>
+         <div
+            className="content-container"
+            style={{ flex: 1, overflow: "hidden" }}
+         >
             <Routes>
                <Route path="/" element={<SignUp />} />
                <Route path="/signin" element={<SignIn />} />
@@ -47,7 +57,10 @@ function AppLayout() {
                   element={<PhotoGallery />}
                />
                <Route path="/user" element={<UserPage />} />
-               <Route path="/restaurants" element={<Restaurant />} />
+               <Route
+                  path="/restaurants"
+                  element={<Restaurant />}
+               />
             </Routes>
          </div>
       </div>

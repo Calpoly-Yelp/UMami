@@ -7,7 +7,8 @@ describe("Global Header Component", () => {
    // Verify the component renders the main container
    test("renders the header container", () => {
       render(<Header />);
-      const headerElement = document.querySelector(".app-header");
+      const headerElement =
+         document.querySelector(".app-header");
       expect(headerElement).toBeInTheDocument();
    });
 
@@ -15,7 +16,9 @@ describe("Global Header Component", () => {
    test("renders the application logo", () => {
       render(<Header />);
       // The Logo component uses an <h1> tag
-      const logoHeading = screen.getByRole("heading", { level: 1 });
+      const logoHeading = screen.getByRole("heading", {
+         level: 1,
+      });
       expect(logoHeading).toBeInTheDocument();
       expect(logoHeading).toHaveTextContent("umami");
    });
@@ -24,7 +27,9 @@ describe("Global Header Component", () => {
    test("renders the account profile icon", () => {
       render(<Header />);
       // The icon is rendered as an SVG by react-icons
-      const iconSvg = document.querySelector(".app-header svg");
+      const iconSvg = document.querySelector(
+         ".app-header svg",
+      );
       expect(iconSvg).toBeInTheDocument();
    });
 });
