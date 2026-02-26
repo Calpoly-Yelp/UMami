@@ -1,5 +1,11 @@
 # UMami
 
+## Running Testing:
+
+npm run test
+npm run frontend:test
+npm run backend:test
+
 ## Running Prettier:
 
 npm run format
