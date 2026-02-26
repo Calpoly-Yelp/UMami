@@ -197,3 +197,9 @@ body {
    flex: 0 0 100%;
    scroll-snap-align: center;
 }
+
+.no-content-message {
+   padding: 20px;
+   color: var(--primary-gray);
+   font-style: italic;
+}

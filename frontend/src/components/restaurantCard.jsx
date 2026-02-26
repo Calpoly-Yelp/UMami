@@ -49,6 +49,11 @@ function RestaurantCard({
                <button
                   className={`bookmark-button ${isBookmarked ? "bookmarked" : ""}`}
                   onClick={handleBookmarkToggle}
+                  aria-label={
+                     isBookmarked
+                        ? `Remove bookmark for ${restaurant.name}`
+                        : `Bookmark ${restaurant.name}`
+                  }
                >
                   <Bookmark
                      weight={

@@ -4,11 +4,11 @@ import {
    expect,
    beforeAll,
 } from "@jest/globals";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import UserPage from "../pages/user.jsx";
 
-// test data
+// --- Mock Data Setup ---
 const testUser = {
    id: "123",
    name: "Eli Schiffler",
@@ -149,20 +149,6 @@ const testRestaurants = [
       isBookmarked: true,
    },
 ];
-const testBookmarks = [
-   {
-      user_id: "123",
-      restaurant_id: "101",
-   },
-   {
-      user_id: "123",
-      restaurant_id: "102",
-   },
-   {
-      user_id: "123",
-      restaurant_id: "103",
-   },
-];
 const testFollowedUsers = [
    {
       name: "Jane",
@@ -201,9 +187,9 @@ const testFollowedUsers = [
    },
 ];
 
-// this beforeAll is neccessary to handle our
-// IntersectionObserver we used in reviewCard.jsx
+// --- Test Environment Setup ---
 beforeAll(() => {
+   // Mock IntersectionObserver for components that use it
    window.IntersectionObserver = class IntersectionObserver {
       constructor() {}
       observe() {
@@ -224,26 +210,12 @@ beforeAll(() => {
 describe("User Profile Page", () => {
    // checks to see if user page will render
    test("renders the user page", () => {
-      render(
-         <UserPage
-            user={testUser}
-            reviews={testReviews}
-            restaurants={testRestaurants}
-            bookmarks={testBookmarks}
-            followedUsers={testFollowedUsers}
-         />,
-      );
+      render(<UserPage user={testUser} />);
    });
 
    // check for header elements
    test("renders header elements", () => {
-      render(
-         <UserPage
-            user={testUser}
-            reviews={testReviews}
-            restaurants={testRestaurants}
-         />,
-      );
+      render(<UserPage user={testUser} />);
       const logoElement = document.querySelector(".logo");
       expect(logoElement).toBeInTheDocument();
       const accountIcon = document.querySelector(
@@ -252,15 +224,9 @@ describe("User Profile Page", () => {
       expect(accountIcon).toBeInTheDocument();
    });
 
-   // check for user info elements
+   // Verify user-specific information (Name, Verified Badge) is displayed correctly
    test("renders user info", () => {
-      render(
-         <UserPage
-            user={testUser}
-            reviews={testReviews}
-            restaurants={testRestaurants}
-         />,
-      );
+      render(<UserPage user={testUser} />);
       const nameElement = document.querySelector(".name");
       expect(nameElement).toBeInTheDocument();
       const verifiedBadge = document.querySelector(
@@ -269,26 +235,21 @@ describe("User Profile Page", () => {
       expect(verifiedBadge).toBeInTheDocument();
    });
 
-   // check for review card elements
+   // Verify that the correct number of review cards are rendered based on props
    test("renders review cards", () => {
       render(
-         <UserPage
-            user={testUser}
-            reviews={testReviews}
-            restaurants={testRestaurants}
-         />,
+         <UserPage user={testUser} reviews={testReviews} />,
       );
       const reviewCards =
          document.querySelectorAll(".review-card");
       expect(reviewCards.length).toBe(5);
    });
 
-   // check for saved restaurant elements
+   // Verify that the correct number of restaurant cards are rendered
    test("renders saved restaurants", () => {
       render(
          <UserPage
             user={testUser}
-            reviews={testReviews}
             restaurants={testRestaurants}
          />,
       );
@@ -298,14 +259,11 @@ describe("User Profile Page", () => {
       expect(restaurantCards.length).toBe(3);
    });
 
-   // check for followed user elements
+   // Verify that the correct number of followed user cards are rendered
    test("renders followed users", () => {
       render(
          <UserPage
             user={testUser}
-            reviews={testReviews}
-            restaurants={testRestaurants}
-            bookmarks={testBookmarks}
             followedUsers={testFollowedUsers}
          />,
       );
@@ -313,5 +271,129 @@ describe("User Profile Page", () => {
          ".followed-user-card",
       );
       expect(followedUserCards.length).toBe(5);
+   });
+
+   // Verify that restaurants passed as props are visually marked as bookmarked
+   test("renders saved restaurants as bookmarked", () => {
+      render(
+         <UserPage
+            user={testUser}
+            restaurants={testRestaurants}
+         />,
+      );
+
+      const bookmarkButtons = screen.getAllByRole(
+         "button",
+         {
+            name: /Remove bookmark for/i,
+         },
+      );
+      expect(bookmarkButtons.length).toBe(
+         testRestaurants.length,
+      );
+      bookmarkButtons.forEach((button) =>
+         expect(button).toHaveClass("bookmarked"),
+      );
+   });
+
+   // Verify the presence of the main navigation links (Reviews, Saved, Following)
+   test("renders navigation links", () => {
+      render(<UserPage user={testUser} />);
+      expect(
+         screen.getByRole("link", { name: "My Reviews" }),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByRole("link", {
+            name: "My Saved Restaurants",
+         }),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByRole("link", { name: "Following" }),
+      ).toBeInTheDocument();
+   });
+
+   // Verify the presence of profile management buttons (Add Photo, Edit Profile)
+   test("renders edit profile buttons", () => {
+      render(<UserPage user={testUser} />);
+      expect(
+         screen.getByText("Add Photo"),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByText("Edit Profile"),
+      ).toBeInTheDocument();
+   });
+
+   // Verify that section headings are present for accessibility and structure
+   test("renders section headers", () => {
+      render(<UserPage user={testUser} />);
+      expect(
+         screen.getByRole("heading", {
+            name: "My Reviews",
+         }),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByRole("heading", {
+            name: "My Saved Restaurants",
+         }),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByRole("heading", { name: "Following" }),
+      ).toBeInTheDocument();
+   });
+
+   // Verify that scroll controls (left/right arrows) are rendered for the horizontal lists
+   test("renders scroll buttons for lists", () => {
+      render(<UserPage user={testUser} />);
+      const scrollButtons = document.querySelectorAll(
+         ".scroll-button",
+      );
+      // 2 buttons (left/right) * 3 sections = 6 buttons
+      expect(scrollButtons.length).toBe(6);
+   });
+});
+
+describe("User Profile Page Edge Cases", () => {
+   // Test behavior when the user object lacks an avatar URL (should show default icon)
+   test("renders default avatar when user has no avatar_url", () => {
+      const userWithoutAvatar = {
+         ...testUser,
+         avatar_url: null,
+      };
+      render(<UserPage user={userWithoutAvatar} />);
+
+      const profilePic = document.querySelector(
+         ".user-profile-picture",
+      );
+      expect(profilePic).not.toBeInTheDocument();
+
+      const defaultAvatar =
+         document.querySelector(".card > svg");
+      expect(defaultAvatar).toBeInTheDocument();
+   });
+
+   // Test empty state for reviews section
+   test("displays a message when there are no reviews", () => {
+      render(<UserPage user={testUser} reviews={[]} />);
+      expect(
+         screen.getByText("No reviews yet."),
+      ).toBeInTheDocument();
+   });
+
+   // Test empty state for saved restaurants section
+   test("displays a message when there are no saved restaurants", () => {
+      render(<UserPage user={testUser} restaurants={[]} />);
+      expect(
+         screen.getByText("No saved restaurants yet."),
+      ).toBeInTheDocument();
+   });
+
+   // Test empty state for following section
+   test("displays a message when not following any users", () => {
+      render(
+         <UserPage user={testUser} followedUsers={[]} />,
+      );
+      expect(
+         screen.getByText("Not following anyone yet."),
+      ).toBeInTheDocument();
    });
 });

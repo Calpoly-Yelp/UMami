@@ -19,7 +19,6 @@ function User({
    user: initialUser,
    reviews: initialReviews,
    restaurants: initialRestaurants,
-   bookmarks: initialBookmarks,
    followedUsers: initialFollowing,
 }) {
    // used to scroll in between pieces of the page
@@ -68,9 +67,14 @@ function User({
       initialRestaurants || [],
    );
    const [bookmarkedIds, setBookmarkedIds] = useState(
-      new Set(),
+      () =>
+         new Set(
+            initialRestaurants?.map((r) => r.id) || [],
+         ),
    );
-   const originalBookmarkedIdsRef = useRef(new Set());
+   const originalBookmarkedIdsRef = useRef(
+      new Set(initialRestaurants?.map((r) => r.id) || []),
+   );
    const bookmarkedIdsRef = useRef(new Set());
    const initialFollowingArray = initialFollowing ?? [];
    const initialFollowingIdsInit = new Set(
@@ -103,7 +107,6 @@ function User({
          initialUser ||
          initialReviews ||
          initialRestaurants ||
-         initialBookmarks ||
          initialFollowing
       )
          return;
@@ -277,7 +280,6 @@ function User({
       initialUser,
       initialReviews,
       initialRestaurants,
-      initialBookmarks,
       initialFollowing,
    ]);
 
@@ -517,15 +519,21 @@ function User({
                   </div>
                   <div className="review-list">
                      {/* map all the users reviews */}
-                     {reviews.map((review, index) => (
-                        <ReviewCard
-                           key={
-                              review.id ??
-                              `${review.date ?? "review"}-${index}`
-                           }
-                           review={review}
-                        />
-                     ))}
+                     {reviews.length > 0 ? (
+                        reviews.map((review, index) => (
+                           <ReviewCard
+                              key={
+                                 review.id ??
+                                 `${review.date ?? "review"}-${index}`
+                              }
+                              review={review}
+                           />
+                        ))
+                     ) : (
+                        <p className="no-content-message">
+                           No reviews yet.
+                        </p>
+                     )}
                   </div>
                </div>
                {/* Restaurant Section */}
@@ -568,24 +576,30 @@ function User({
                   </div>
                   <div className="restaurant-list">
                      {/* map all the users favorited restaurants */}
-                     {restaurants.map(
-                        (restaurant, index) => (
-                           <RestaurantCard
-                              key={
-                                 restaurant.id ??
-                                 `${restaurant.name ?? "restaurant"}-${index}`
-                              }
-                              restaurant={restaurant}
-                              isBookmarked={bookmarkedIds.has(
-                                 restaurant.id,
-                              )}
-                              onToggle={() =>
-                                 handleBookmarkToggle(
+                     {restaurants.length > 0 ? (
+                        restaurants.map(
+                           (restaurant, index) => (
+                              <RestaurantCard
+                                 key={
+                                    restaurant.id ??
+                                    `${restaurant.name ?? "restaurant"}-${index}`
+                                 }
+                                 restaurant={restaurant}
+                                 isBookmarked={bookmarkedIds.has(
                                     restaurant.id,
-                                 )
-                              }
-                           />
-                        ),
+                                 )}
+                                 onToggle={() =>
+                                    handleBookmarkToggle(
+                                       restaurant.id,
+                                    )
+                                 }
+                              />
+                           ),
+                        )
+                     ) : (
+                        <p className="no-content-message">
+                           No saved restaurants yet.
+                        </p>
                      )}
                   </div>
                </div>
