@@ -7,8 +7,13 @@ const router = express.Router();
 // Get all users
 router.get("/", async (req, res) => {
    try {
-      const { data, error } = await supabase.from("users").select("*").limit(50);
-      if (error) { throw error; }
+      const { data, error } = await supabase
+         .from("users")
+         .select("*")
+         .limit(50);
+      if (error) {
+         throw error;
+      }
       console.log("Fetched users:", data);
       res.status(200).json(data);
    } catch (error) {
@@ -29,7 +34,9 @@ router.get("/:id", async (req, res) => {
 
       if (error) {
          if (error.code === "PGRST116") {
-            return res.status(404).json({ error: "User not found" });
+            return res
+               .status(404)
+               .json({ error: "User not found" });
          }
          throw error;
       }
@@ -52,7 +59,9 @@ router.get("/:id/follows", async (req, res) => {
          .select("*")
          .eq("follower_id", id);
 
-      if (error) { throw error; }
+      if (error) {
+         throw error;
+      }
 
       if (!data || data.length === 0) {
          return res.status(200).json([]);
@@ -62,12 +71,15 @@ router.get("/:id/follows", async (req, res) => {
          (follow) => follow.following_id,
       );
 
-      const { data: followingUsers, error: usersError } = await supabase
-         .from("users")
-         .select("*")
-         .in("id", followingIds);
+      const { data: followingUsers, error: usersError } =
+         await supabase
+            .from("users")
+            .select("*")
+            .in("id", followingIds);
 
-      if (usersError) { throw usersError; }
+      if (usersError) {
+         throw usersError;
+      }
 
       res.status(200).json(followingUsers);
    } catch (error) {
