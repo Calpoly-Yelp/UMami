@@ -31,7 +31,7 @@ export default defineConfig([
    },
    {
       files: [
-         "src/tests/**/*.{js,jsx}",
+         "src/tests/**/*.test.{js,jsx}",
          "src/test-setup.js",
       ],
       languageOptions: {

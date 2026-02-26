@@ -1,4 +1,4 @@
-import "../test-setup";
+import "../test-setup.js";
 
 import { describe, test, expect } from "@jest/globals";
 import {

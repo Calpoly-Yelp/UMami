@@ -41,13 +41,15 @@ app.get("/test-supabase", async (req, res) => {
    return res.json({ status: "Connected!", data });
 });
 
-app.listen(PORT, () => {
-   console.log(
-      `Server is alive on http://localhost:${PORT}`,
-   );
-   console.log(
-      `Try visiting http://localhost:${PORT}/test-supabase`,
-   );
-});
+if (process.env.NODE_ENV !== "test") {
+   app.listen(PORT, () => {
+      console.log(
+         `Server is alive on http://localhost:${PORT}`,
+      );
+      console.log(
+         `Try visiting http://localhost:${PORT}/test-supabase`,
+      );
+   });
+}
 
 export default app;
