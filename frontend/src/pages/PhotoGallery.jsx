@@ -1,7 +1,6 @@
 import "./PhotoGallery.css";
 
 const PhotoGallery = () => {
-
    return (
       <div className="gallery-page">
          <header className="gallery-header">
