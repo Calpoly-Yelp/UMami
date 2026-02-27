@@ -4,8 +4,8 @@ import {
    describe,
    test,
    expect,
-   beforeEach,
    jest,
+   beforeAll,
 } from "@jest/globals";
 import {
    render,
@@ -17,8 +17,57 @@ import { BrowserRouter } from "react-router-dom";
 import Header from "../components/header.jsx";
 
 describe("Global Header Component", () => {
+   const mockNotifications = [
+      {
+         id: 1,
+         message: "New Friend Request",
+         is_read: false,
+         type: "friend_request",
+      },
+      {
+         id: 2,
+         message: "Menu Update",
+         is_read: false,
+         type: "menu_update",
+      },
+      {
+         id: 3,
+         message: "Review Like",
+         is_read: true,
+         type: "review_like",
+      },
+      {
+         id: 4,
+         message: "System Message",
+         is_read: true,
+         type: "system",
+      },
+      {
+         id: 5,
+         message: "Hidden Message",
+         is_read: true,
+         type: "system",
+      }, // For load more test
+   ];
+
+   beforeAll(() => {
+      global.fetch = jest.fn((url) => {
+         if (url.includes("/notifications")) {
+            return Promise.resolve({
+               ok: true,
+               json: () =>
+                  Promise.resolve(mockNotifications),
+            });
+         }
+         return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({}),
+         });
+      });
+   });
+
    // Verify the component renders the main container
-   test("renders the header container", () => {
+   test("renders the header container", async () => {
       render(
          <BrowserRouter>
             <Header />
@@ -27,10 +76,12 @@ describe("Global Header Component", () => {
       const headerElement =
          document.querySelector(".app-header");
       expect(headerElement).toBeInTheDocument();
+      // Wait for notifications to load to prevent act() warning
+      await screen.findByText("2");
    });
 
    // Verify the Logo is present and contains the correct text
-   test("renders the application logo", () => {
+   test("renders the application logo", async () => {
       render(
          <BrowserRouter>
             <Header />
@@ -41,10 +92,11 @@ describe("Global Header Component", () => {
          name: /umami logo/i,
       });
       expect(logoImage).toBeInTheDocument();
+      await screen.findByText("2");
    });
 
    // Verify the Account Icon is present
-   test("renders the account profile icon", () => {
+   test("renders the account profile icon", async () => {
       render(
          <BrowserRouter>
             <Header />
@@ -55,10 +107,11 @@ describe("Global Header Component", () => {
          ".app-header svg",
       );
       expect(iconSvg).toBeInTheDocument();
+      await screen.findByText("2");
    });
 
    // Verify dropdown toggles
-   test("toggles dropdown menu on account icon click", () => {
+   test("toggles dropdown menu on account icon click", async () => {
       render(
          <BrowserRouter>
             <Header />
@@ -80,59 +133,11 @@ describe("Global Header Component", () => {
       expect(
          screen.getByText("Sign Out"),
       ).toBeInTheDocument();
+      await screen.findByText("2");
    });
 
    // --- Notification Tests ---
    describe("Notification Functionality", () => {
-      const mockNotifications = [
-         {
-            id: 1,
-            message: "New Friend Request",
-            is_read: false,
-            type: "friend_request",
-         },
-         {
-            id: 2,
-            message: "Menu Update",
-            is_read: false,
-            type: "menu_update",
-         },
-         {
-            id: 3,
-            message: "Review Like",
-            is_read: true,
-            type: "review_like",
-         },
-         {
-            id: 4,
-            message: "System Message",
-            is_read: true,
-            type: "system",
-         },
-         {
-            id: 5,
-            message: "Hidden Message",
-            is_read: true,
-            type: "system",
-         }, // For load more test
-      ];
-
-      beforeEach(() => {
-         global.fetch = jest.fn((url) => {
-            if (url.includes("/notifications")) {
-               return Promise.resolve({
-                  ok: true,
-                  json: () =>
-                     Promise.resolve(mockNotifications),
-               });
-            }
-            return Promise.resolve({
-               ok: true,
-               json: () => Promise.resolve({}),
-            });
-         });
-      });
-
       test("renders notification bell with badge count", async () => {
          render(
             <BrowserRouter>

@@ -13,6 +13,7 @@ import Onboarding from "./pages/Onboarding";
 import UserPage from "./pages/user";
 import Restaurant from "./pages/Restaurants";
 import Header from "./components/header";
+import MapSandbox from "./pages/mapSandbox";
 
 function AppLayout() {
    const location = useLocation();
@@ -38,7 +39,7 @@ function AppLayout() {
          {showHeader && <Header />}
          <div
             className="content-container"
-            style={{ flex: 1, overflow: "hidden" }}
+            style={{ flex: 1, overflow: "auto" }}
          >
             <Routes>
                <Route path="/" element={<SignUp />} />
@@ -60,6 +61,11 @@ function AppLayout() {
                <Route
                   path="/restaurants"
                   element={<Restaurant />}
+               />
+               {/* Sandbox route for map component */}
+               <Route
+                  path="/sandbox"
+                  element={<MapSandbox />}
                />
             </Routes>
          </div>

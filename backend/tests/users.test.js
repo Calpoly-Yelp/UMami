@@ -4,6 +4,8 @@ import {
    expect,
    jest,
    beforeEach,
+   beforeAll,
+   afterAll,
 } from "@jest/globals";
 import request from "supertest";
 import app from "../index.js";
@@ -13,6 +15,17 @@ import { supabase } from "../config/supabaseClient.js";
 jest.mock("../config/supabaseClient.js");
 
 describe("User Endpoints", () => {
+   beforeAll(() => {
+      // Suppress console.log during tests to keep output clean
+      jest
+         .spyOn(console, "log")
+         .mockImplementation(() => {});
+   });
+
+   afterAll(() => {
+      console.log.mockRestore();
+   });
+
    beforeEach(() => {
       jest.clearAllMocks();
    });
