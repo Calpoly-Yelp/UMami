@@ -584,6 +584,7 @@ function User({
                                        restaurant.id,
                                     )
                                  }
+                                 className="compact"
                               />
                            ),
                         )

@@ -156,3 +156,31 @@
 .bookmark-button:hover {
    transform: scale(1.1);
 }
+
+/* --- Compact Variant (for User Page) --- */
+.restaurant-card.compact {
+   height: 240px;
+   width: 260px;
+}
+
+.restaurant-card.compact .restaurant-name {
+   font-size: 1.25rem;
+}
+
+.restaurant-card.compact .star {
+   font-size: 18px;
+}
+
+.restaurant-card.compact .restaurant-rating {
+   gap: 5px;
+}
+
+.restaurant-card.compact .bookmark-button svg {
+   width: 28px;
+   height: 28px;
+}
+
+.restaurant-card.compact .tag {
+   font-size: 0.75rem;
+   padding: 2px 8px;
+}

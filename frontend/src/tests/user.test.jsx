@@ -258,6 +258,23 @@ describe("User Profile Page", () => {
       expect(restaurantCards.length).toBe(3);
    });
 
+   // Verify that saved restaurants use the compact layout class
+   test("renders saved restaurants with compact sizing", () => {
+      render(
+         <UserPage
+            user={testUser}
+            restaurants={testRestaurants}
+         />,
+      );
+      const restaurantCards = document.querySelectorAll(
+         ".restaurant-card",
+      );
+      expect(restaurantCards.length).toBe(3);
+      restaurantCards.forEach((card) =>
+         expect(card).toHaveClass("compact"),
+      );
+   });
+
    // Verify that the correct number of followed user cards are rendered
    test("renders followed users", () => {
       render(

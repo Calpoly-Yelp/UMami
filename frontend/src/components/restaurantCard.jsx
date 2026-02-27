@@ -7,6 +7,7 @@ function RestaurantCard({
    restaurant,
    isBookmarked: propIsBookmarked,
    onToggle,
+   className = "",
 }) {
    // changes whether the restaurant is bookmarked or no
    const [localIsBookmarked, setLocalIsBookmarked] =
@@ -30,7 +31,7 @@ function RestaurantCard({
    };
 
    return (
-      <div className="restaurant-card">
+      <div className={`restaurant-card ${className}`}>
          {/* Restaurant Image at top of card */}
          <div className="restaurant-image-wrapper">
             <img
