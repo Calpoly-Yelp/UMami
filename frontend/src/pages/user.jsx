@@ -118,12 +118,30 @@ function User({
       //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
-            // fetch user
             const userId =
                "b677be85-81db-4245-91ca-acb713bd5564";
-            const userResponse = await fetch(
-               `http://localhost:4000/api/users/${userId}`,
-            );
+
+            // Execute all fetches in parallel
+            const [
+               userResponse,
+               reviewsResponse,
+               bookmarksResponse,
+               followingResponse,
+            ] = await Promise.all([
+               fetch(
+                  `http://localhost:4000/api/users/${userId}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/reviews?user_id=${userId}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/users/${userId}/follows`,
+               ),
+            ]);
+
             // handle response errors for fetching user
             if (
                !userResponse.ok &&
@@ -149,10 +167,6 @@ function User({
                console.error("Failed to fetch user");
             }
 
-            // fetch reviews
-            const reviewsResponse = await fetch(
-               "http://localhost:4000/api/reviews",
-            );
             // handle response errors
             if (
                !reviewsResponse.ok &&
@@ -170,13 +184,8 @@ function User({
                console.log("Fetched reviews:", reviewsData);
 
                // filter reviews for this user
-               const userReviews = reviewsData
-                  .filter(
-                     (review) =>
-                        !userData.id ||
-                        review.user_id === userData.id,
-                  )
-                  .map((review) => ({
+               const userReviews = reviewsData.map(
+                  (review) => ({
                      id: review.id,
                      avatar_url: userData.avatar_url || "",
                      userName: userData.name || "Anonymous",
@@ -187,7 +196,8 @@ function User({
                      comments: review.comment || "",
                      tags: review.tags || [],
                      photos: review.photo_urls || [],
-                  }));
+                  }),
+               );
 
                setReviews(userReviews);
             } else {
@@ -201,10 +211,6 @@ function User({
             console.log(
                `Fetching bookmarks for user: ${userId}`,
             );
-            const bookmarksResponse = await fetch(
-               `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
-            );
-            //
             if (bookmarksResponse.ok) {
                const restaurantsData =
                   await bookmarksResponse.json();
@@ -245,9 +251,6 @@ function User({
             }
 
             // fetch our followed users
-            const followingResponse = await fetch(
-               `http://localhost:4000/api/users/${userId}/follows`,
-            );
             if (followingResponse.ok) {
                const followingData =
                   await followingResponse.json();

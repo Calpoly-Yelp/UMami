@@ -4,6 +4,7 @@ import cors from "cors";
 import reviewsRouter from "./routes/reviews.js";
 import usersRouter from "./routes/users.js";
 import restaurantsRouter from "./routes/restaurants.js";
+import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
 
 const app = express();
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/restaurants", restaurantsRouter);
+app.use("/api/notifications", notificationsRouter);
 
 /* Keep temporary debug route (optional) */
 app.get("/test-supabase", async (req, res) => {

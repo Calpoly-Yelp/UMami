@@ -1,6 +1,12 @@
 import "../test-setup.js";
 
-import { describe, test, expect } from "@jest/globals";
+import {
+   describe,
+   test,
+   expect,
+   beforeEach,
+   jest,
+} from "@jest/globals";
 import {
    render,
    screen,
@@ -74,5 +80,148 @@ describe("Global Header Component", () => {
       expect(
          screen.getByText("Sign Out"),
       ).toBeInTheDocument();
+   });
+
+   // --- Notification Tests ---
+   describe("Notification Functionality", () => {
+      const mockNotifications = [
+         {
+            id: 1,
+            message: "New Friend Request",
+            is_read: false,
+            type: "friend_request",
+         },
+         {
+            id: 2,
+            message: "Menu Update",
+            is_read: false,
+            type: "menu_update",
+         },
+         {
+            id: 3,
+            message: "Review Like",
+            is_read: true,
+            type: "review_like",
+         },
+         {
+            id: 4,
+            message: "System Message",
+            is_read: true,
+            type: "system",
+         },
+         {
+            id: 5,
+            message: "Hidden Message",
+            is_read: true,
+            type: "system",
+         }, // For load more test
+      ];
+
+      beforeEach(() => {
+         global.fetch = jest.fn((url) => {
+            if (url.includes("/notifications")) {
+               return Promise.resolve({
+                  ok: true,
+                  json: () =>
+                     Promise.resolve(mockNotifications),
+               });
+            }
+            return Promise.resolve({
+               ok: true,
+               json: () => Promise.resolve({}),
+            });
+         });
+      });
+
+      test("renders notification bell with badge count", async () => {
+         render(
+            <BrowserRouter>
+               <Header />
+            </BrowserRouter>,
+         );
+
+         // Wait for fetch to complete and badge to appear (2 unread)
+         const badge = await screen.findByText("2");
+         expect(badge).toBeInTheDocument();
+         expect(badge).toHaveClass("notification-badge");
+      });
+
+      test("opens notification dropdown and displays items", async () => {
+         render(
+            <BrowserRouter>
+               <Header />
+            </BrowserRouter>,
+         );
+
+         // Open dropdown
+         const bellIcon = document.querySelector(
+            ".notification-icon",
+         );
+         fireEvent.click(bellIcon);
+
+         // Check for items (only 4 visible by default)
+         expect(
+            await screen.findByText("New Friend Request"),
+         ).toBeInTheDocument();
+         expect(
+            screen.getByText("Menu Update"),
+         ).toBeInTheDocument();
+         // The 5th message should be hidden initially
+         expect(
+            screen.queryByText("Hidden Message"),
+         ).not.toBeInTheDocument();
+      });
+
+      test("load more button reveals hidden notifications", async () => {
+         render(
+            <BrowserRouter>
+               <Header />
+            </BrowserRouter>,
+         );
+
+         const bellIcon = document.querySelector(
+            ".notification-icon",
+         );
+         fireEvent.click(bellIcon);
+
+         // Find load more button
+         const loadMoreBtn = await screen.findByText(
+            /\+1 more notifications/,
+         );
+         fireEvent.click(loadMoreBtn);
+
+         // Check if hidden message is now visible
+         expect(
+            screen.getByText("Hidden Message"),
+         ).toBeInTheDocument();
+      });
+
+      test("clicking 'Clear all' removes notifications", async () => {
+         render(
+            <BrowserRouter>
+               <Header />
+            </BrowserRouter>,
+         );
+
+         const bellIcon = document.querySelector(
+            ".notification-icon",
+         );
+         fireEvent.click(bellIcon);
+
+         const clearAllBtn =
+            await screen.findByText("Clear all");
+         fireEvent.click(clearAllBtn);
+
+         // Verify UI update
+         expect(
+            await screen.findByText("No new notifications"),
+         ).toBeInTheDocument();
+
+         // Verify fetch call
+         expect(global.fetch).toHaveBeenCalledWith(
+            expect.stringContaining("/delete-all"),
+            expect.objectContaining({ method: "DELETE" }),
+         );
+      });
    });
 });

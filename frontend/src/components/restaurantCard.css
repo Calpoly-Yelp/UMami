@@ -86,12 +86,12 @@
    font-size: 0.9rem;
 }
 
-.star {
+.restaurant-card.star {
    font-size: 26px;
    color: #e4e3d3;
 }
 
-.restaurant-card .star.empty {
+.star.empty {
    color: #e4e3d3;
 }
 

@@ -40,11 +40,16 @@ describe("Review Endpoints", () => {
             tags: [],
          },
       ];
+
+      // Create a mock query object that supports chaining .eq() and is awaitable
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: mockReviews, error: null }),
+      };
+
       supabase.from.mockReturnValue({
-         select: jest.fn().mockResolvedValue({
-            data: mockReviews,
-            error: null,
-         }),
+         select: jest.fn().mockReturnValue(mockQuery),
       });
 
       const res = await request(app).get("/api/reviews");
@@ -53,5 +58,41 @@ describe("Review Endpoints", () => {
       expect(res.body.length).toBe(2);
       expect(res.body[0].comment).toBe("Great!");
       expect(supabase.from).toHaveBeenCalledWith("reviews");
+   });
+
+   it("GET /api/reviews?user_id=... should filter reviews by user", async () => {
+      const mockReviews = [
+         {
+            id: 1,
+            restaurant_id: 101,
+            user_id: "b677be85-81db-4245-91ca-acb713bd5564",
+            created_at: "2023-01-01",
+            rating: 5,
+            comment: "Great!",
+            photo_urls: [],
+            tags: [],
+         },
+      ];
+
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: mockReviews, error: null }),
+      };
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+      });
+
+      const res = await request(app).get(
+         "/api/reviews?user_id=b677be85-81db-4245-91ca-acb713bd5564",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.length).toBe(1);
+      expect(mockQuery.eq).toHaveBeenCalledWith(
+         "user_id",
+         "b677be85-81db-4245-91ca-acb713bd5564",
+      );
    });
 });
