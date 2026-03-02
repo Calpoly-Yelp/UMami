@@ -33,6 +33,12 @@ router.get("/:id", async (req, res) => {
          .eq("id", id)
          .single();
 
+      // If no data is returned, the restaurant was not found
+      if (!data) {
+         return res
+            .status(404)
+            .json({ error: "Restaurant not found" });
+      }
       const validatedData = Restaurant.parse(data);
 
       res.status(200).json(validatedData);

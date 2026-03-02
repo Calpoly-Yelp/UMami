@@ -19,13 +19,12 @@ body {
 .user-page {
    margin: 0;
    font-family: "Poppins", sans-serif;
-   min-height: 100vh;
-   width: 100vw;
+   height: 100%;
+   width: 100%;
    background: linear-gradient(#f5f5f2, #e4e3d3);
    overflow: hidden;
 }
 
-.user-header,
 .user-content,
 .following-list,
 .restaurant-list {
@@ -33,16 +32,8 @@ body {
    flex-direction: row;
 }
 
-.user-header {
-   padding: 0 20px;
-   height: 80px;
-   align-items: center;
-   justify-content: space-between;
-   border-bottom: gray solid 3px;
-}
-
 .user-content {
-   height: calc(100vh - 80px);
+   height: 100%;
    overflow: hidden;
 }
 
@@ -120,6 +111,7 @@ body {
    overflow-y: auto;
    font-size: 24px;
    color: #333;
+   overscroll-behavior-y: contain;
 }
 
 .activity-header {
@@ -196,4 +188,10 @@ body {
 .review-list > * {
    flex: 0 0 100%;
    scroll-snap-align: center;
+}
+
+.no-content-message {
+   padding: 20px;
+   color: var(--primary-gray);
+   font-style: italic;
 }

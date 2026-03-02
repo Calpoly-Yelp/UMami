@@ -29,4 +29,16 @@ export default defineConfig([
          ],
       },
    },
+   {
+      files: [
+         "src/tests/**/*.test.{js,jsx}",
+         "src/test-setup.js",
+      ],
+      languageOptions: {
+         globals: {
+            ...globals.jest,
+            ...globals.node,
+         },
+      },
+   },
 ]);
