@@ -4,25 +4,6 @@
    font-family: "Poppins", sans-serif;
 }
 
-.gallery-header {
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   padding: 15px 40px;
-   background-color: #f4f4f4;
-}
-
-.logo {
-   font-size: 28px;
-   font-weight: bold;
-   color: #2f5d3a;
-}
-
-.profile-icon {
-   font-size: 24px;
-   cursor: pointer;
-}
-
 .hero-section {
    height: 300px;
    background-image: url("../assets/shakesmart_header.png");

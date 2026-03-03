@@ -1,4 +1,3 @@
-import Logo from "../assets/logo.jsx";
 import { MdOutlineAccountCircle } from "react-icons/md";
 import ReviewCard from "../components/reviewCard.jsx";
 import RestaurantCard from "../components/restaurantCard.jsx";
@@ -19,7 +18,6 @@ function User({
    user: initialUser,
    reviews: initialReviews,
    restaurants: initialRestaurants,
-   bookmarks: initialBookmarks,
    followedUsers: initialFollowing,
 }) {
    // used to scroll in between pieces of the page
@@ -68,9 +66,14 @@ function User({
       initialRestaurants || [],
    );
    const [bookmarkedIds, setBookmarkedIds] = useState(
-      new Set(),
+      () =>
+         new Set(
+            initialRestaurants?.map((r) => r.id) || [],
+         ),
    );
-   const originalBookmarkedIdsRef = useRef(new Set());
+   const originalBookmarkedIdsRef = useRef(
+      new Set(initialRestaurants?.map((r) => r.id) || []),
+   );
    const bookmarkedIdsRef = useRef(new Set());
    const initialFollowingArray = initialFollowing ?? [];
    const initialFollowingIdsInit = new Set(
@@ -103,7 +106,6 @@ function User({
          initialUser ||
          initialReviews ||
          initialRestaurants ||
-         initialBookmarks ||
          initialFollowing
       )
          return;
@@ -116,12 +118,30 @@ function User({
       //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
-            // fetch user
             const userId =
                "b677be85-81db-4245-91ca-acb713bd5564";
-            const userResponse = await fetch(
-               `http://localhost:4000/api/users/${userId}`,
-            );
+
+            // Execute all fetches in parallel
+            const [
+               userResponse,
+               reviewsResponse,
+               bookmarksResponse,
+               followingResponse,
+            ] = await Promise.all([
+               fetch(
+                  `http://localhost:4000/api/users/${userId}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/reviews?user_id=${userId}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/users/${userId}/follows`,
+               ),
+            ]);
+
             // handle response errors for fetching user
             if (
                !userResponse.ok &&
@@ -147,10 +167,6 @@ function User({
                console.error("Failed to fetch user");
             }
 
-            // fetch reviews
-            const reviewsResponse = await fetch(
-               "http://localhost:4000/api/reviews",
-            );
             // handle response errors
             if (
                !reviewsResponse.ok &&
@@ -168,13 +184,8 @@ function User({
                console.log("Fetched reviews:", reviewsData);
 
                // filter reviews for this user
-               const userReviews = reviewsData
-                  .filter(
-                     (review) =>
-                        !userData.id ||
-                        review.user_id === userData.id,
-                  )
-                  .map((review) => ({
+               const userReviews = reviewsData.map(
+                  (review) => ({
                      id: review.id,
                      avatar_url: userData.avatar_url || "",
                      userName: userData.name || "Anonymous",
@@ -185,7 +196,8 @@ function User({
                      comments: review.comment || "",
                      tags: review.tags || [],
                      photos: review.photo_urls || [],
-                  }));
+                  }),
+               );
 
                setReviews(userReviews);
             } else {
@@ -199,10 +211,6 @@ function User({
             console.log(
                `Fetching bookmarks for user: ${userId}`,
             );
-            const bookmarksResponse = await fetch(
-               `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
-            );
-            //
             if (bookmarksResponse.ok) {
                const restaurantsData =
                   await bookmarksResponse.json();
@@ -243,9 +251,6 @@ function User({
             }
 
             // fetch our followed users
-            const followingResponse = await fetch(
-               `http://localhost:4000/api/users/${userId}/follows`,
-            );
             if (followingResponse.ok) {
                const followingData =
                   await followingResponse.json();
@@ -277,7 +282,6 @@ function User({
       initialUser,
       initialReviews,
       initialRestaurants,
-      initialBookmarks,
       initialFollowing,
    ]);
 
@@ -406,14 +410,6 @@ function User({
 
    return (
       <div className="user-page">
-         {/* Header Section */}
-         <div className="user-header">
-            <Logo />
-            <MdOutlineAccountCircle
-               size={60}
-               color="#154734"
-            />
-         </div>
          {/* Content Section */}
          <div className="user-content">
             <div className="user-info">
@@ -517,15 +513,21 @@ function User({
                   </div>
                   <div className="review-list">
                      {/* map all the users reviews */}
-                     {reviews.map((review, index) => (
-                        <ReviewCard
-                           key={
-                              review.id ??
-                              `${review.date ?? "review"}-${index}`
-                           }
-                           review={review}
-                        />
-                     ))}
+                     {reviews.length > 0 ? (
+                        reviews.map((review, index) => (
+                           <ReviewCard
+                              key={
+                                 review.id ??
+                                 `${review.date ?? "review"}-${index}`
+                              }
+                              review={review}
+                           />
+                        ))
+                     ) : (
+                        <p className="no-content-message">
+                           No reviews yet.
+                        </p>
+                     )}
                   </div>
                </div>
                {/* Restaurant Section */}
@@ -568,24 +570,31 @@ function User({
                   </div>
                   <div className="restaurant-list">
                      {/* map all the users favorited restaurants */}
-                     {restaurants.map(
-                        (restaurant, index) => (
-                           <RestaurantCard
-                              key={
-                                 restaurant.id ??
-                                 `${restaurant.name ?? "restaurant"}-${index}`
-                              }
-                              restaurant={restaurant}
-                              isBookmarked={bookmarkedIds.has(
-                                 restaurant.id,
-                              )}
-                              onToggle={() =>
-                                 handleBookmarkToggle(
+                     {restaurants.length > 0 ? (
+                        restaurants.map(
+                           (restaurant, index) => (
+                              <RestaurantCard
+                                 key={
+                                    restaurant.id ??
+                                    `${restaurant.name ?? "restaurant"}-${index}`
+                                 }
+                                 restaurant={restaurant}
+                                 isBookmarked={bookmarkedIds.has(
                                     restaurant.id,
-                                 )
-                              }
-                           />
-                        ),
+                                 )}
+                                 onToggle={() =>
+                                    handleBookmarkToggle(
+                                       restaurant.id,
+                                    )
+                                 }
+                                 className="compact"
+                              />
+                           ),
+                        )
+                     ) : (
+                        <p className="no-content-message">
+                           No saved restaurants yet.
+                        </p>
                      )}
                   </div>
                </div>

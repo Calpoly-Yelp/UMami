@@ -15,7 +15,13 @@
    "license": "ISC",
    "type": "module",
    "jest": {
-      "testEnvironment": "node"
+      "testEnvironment": "node",
+      "transform": {
+         "^.+\\.js$": "babel-jest"
+      },
+      "setupFiles": [
+         "<rootDir>/test-setup.js"
+      ]
    },
    "dependencies": {
       "@supabase/supabase-js": "^2.97.0",

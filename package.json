@@ -4,14 +4,16 @@
    "description": "Sofware Engineering Group Project",
    "main": "index.js",
    "scripts": {
-      "test": "echo \"No tests\" && exit 0",
+      "test": "npm run frontend:test && npm run backend:test",
+      "frontend:test": "npm --prefix frontend run test",
+      "backend:test": "npm --prefix backend run test",
       "format": "prettier --write .",
       "format:check": "prettier --check .",
       "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
       "lint:fix": "npm --prefix frontend run lint:fix && npm --prefix backend run lint:fix",
       "frontend:dev": "npm --prefix frontend run dev",
       "backend:dev": "npm --prefix backend run dev",
-      "dev": "npm --prefix backend run dev & npm --prefix frontend run dev",
+      "dev": "npm run backend:dev & npm run frontend:dev",
       "prepare": "husky"
    },
    "repository": {

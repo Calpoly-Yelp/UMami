@@ -7,20 +7,6 @@ const HomePage = () => {
 
    return (
       <div className="homepage">
-         <header className="home-header">
-            <h1 className="logo">umami</h1>
-
-            <div className="nav-buttons">
-               <button onClick={() => navigate("/gallery")}>
-                  Photo Gallery
-               </button>
-
-               <button onClick={() => navigate("/")}>
-                  Sign Out
-               </button>
-            </div>
-         </header>
-
          <section className="home-hero">
             <h2>Welcome to Umami</h2>
             <p>

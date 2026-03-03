@@ -1,7 +1,5 @@
 import { useState } from "react";
 import RestaurantCard from "../components/restaurantCard.jsx";
-import logo from "../assets/logo.png";
-import profileIcon from "../assets/profileIcon.svg";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import "./restaurants.css";
 
@@ -77,20 +75,6 @@ export default function Restaurants() {
 
    return (
       <div className="restaurants-page">
-         <header className="restaurants-header">
-            <img
-               src={logo}
-               alt="Umami logo"
-               className="logo-img"
-            />
-
-            <img
-               src={profileIcon}
-               alt="Profile"
-               className="profile-img"
-            />
-         </header>
-
          <div className="restaurants-content">
             <h1 className="restaurants-title">
                All Restaurants
