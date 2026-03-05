@@ -19,9 +19,26 @@ describe("Notification Endpoints", () => {
 
    // test endpoint for returning notification based on userid
    it("GET /api/notifications/:userId should return notifications", async () => {
+      const userId = "c788cf96-92ec-5356-a2db-bdc824ce6675";
       const mockNotifications = [
-         { id: 1, message: "Test 1", is_read: false },
-         { id: 2, message: "Test 2", is_read: true },
+         {
+            id: "b677be85-81db-4245-91ca-acb713bd5564",
+            user_id: userId,
+            type: "like",
+            message: "Test 1",
+            related_id: null,
+            is_read: false,
+            created_at: "2023-01-01T00:00:00Z",
+         },
+         {
+            id: "d899df07-03fd-6467-b3ec-ced935df7786",
+            user_id: userId,
+            type: "comment",
+            message: "Test 2",
+            related_id: null,
+            is_read: true,
+            created_at: "2023-01-02T00:00:00Z",
+         },
       ];
       const mockOrder = jest.fn().mockResolvedValue({
          data: mockNotifications,
@@ -37,7 +54,7 @@ describe("Notification Endpoints", () => {
       supabase.from.mockReturnValue({ select: mockSelect });
 
       const res = await request(app).get(
-         "/api/notifications/user123",
+         `/api/notifications/${userId}`,
       );
 
       expect(res.statusCode).toBe(200);
@@ -49,7 +66,17 @@ describe("Notification Endpoints", () => {
 
    // test to see a notification is read or not
    it("PATCH /api/notifications/:id/read should mark as read", async () => {
-      const mockUpdated = [{ id: 1, is_read: true }];
+      const mockUpdated = [
+         {
+            id: "b677be85-81db-4245-91ca-acb713bd5564",
+            user_id: "c788cf96-92ec-5356-a2db-bdc824ce6675",
+            type: "like",
+            message: "Test 1",
+            related_id: null,
+            is_read: true,
+            created_at: "2023-01-01T00:00:00Z",
+         },
+      ];
       const mockSelect = jest.fn().mockResolvedValue({
          data: mockUpdated,
          error: null,
@@ -64,7 +91,7 @@ describe("Notification Endpoints", () => {
       supabase.from.mockReturnValue({ update: mockUpdate });
 
       const res = await request(app).patch(
-         "/api/notifications/1/read",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564/read",
       );
 
       expect(res.statusCode).toBe(200);
@@ -102,7 +129,7 @@ describe("Notification Endpoints", () => {
       supabase.from.mockReturnValue({ delete: mockDelete });
 
       const res = await request(app).delete(
-         "/api/notifications/1",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564",
       );
 
       expect(res.statusCode).toBe(200);

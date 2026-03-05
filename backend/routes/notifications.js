@@ -1,5 +1,7 @@
 import express from "express";
 import { supabase } from "../config/supabaseClient.js";
+import { Notification } from "../models/notificationModel.js";
+import { z } from "zod";
 
 const router = express.Router();
 
@@ -17,7 +19,11 @@ router.get("/:userId", async (req, res) => {
          throw error;
       }
 
-      res.status(200).json(data);
+      const validatedData = z
+         .array(Notification)
+         .parse(data);
+
+      res.status(200).json(validatedData);
    } catch (error) {
       res.status(500).json({ error: error.message });
    }
@@ -79,7 +85,11 @@ router.patch("/:id/read", async (req, res) => {
          throw error;
       }
 
-      res.status(200).json(data[0]);
+      const validatedData = z
+         .array(Notification)
+         .parse(data);
+
+      res.status(200).json(validatedData[0]);
    } catch (error) {
       res.status(500).json({ error: error.message });
    }

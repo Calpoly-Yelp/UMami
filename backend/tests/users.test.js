@@ -112,13 +112,26 @@ describe("User Endpoints", () => {
    });
 
    it("GET /api/users/:id/follows should return followed users", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const followingId1 =
+         "c788cf96-92ec-5356-a2db-bdc824ce6675";
+      const followingId2 =
+         "d899df07-03fd-6467-b3ec-ced935df7786";
+
       const mockFollows = [
-         { following_id: "uuid-2" },
-         { following_id: "uuid-3" },
+         {
+            follower_id: followerId,
+            following_id: followingId1,
+         },
+         {
+            follower_id: followerId,
+            following_id: followingId2,
+         },
       ];
       const mockFollowingUsers = [
-         { id: "uuid-2", name: "Jane" },
-         { id: "uuid-3", name: "Bob" },
+         { id: followingId1, name: "Jane" },
+         { id: followingId2, name: "Bob" },
       ];
 
       supabase.from.mockImplementation((table) => {
@@ -144,11 +157,47 @@ describe("User Endpoints", () => {
       });
 
       const res = await request(app).get(
-         "/api/users/uuid-1/follows",
+         `/api/users/${followerId}/follows`,
       );
 
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBe(2);
       expect(res.body[0].name).toBe("Jane");
+   });
+
+   it("POST /api/users/follows/sync should sync follows", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const added = [
+         "c788cf96-92ec-5356-a2db-bdc824ce6675",
+      ];
+      const removed = [
+         "d899df07-03fd-6467-b3ec-ced935df7786",
+      ];
+
+      const mockInsert = jest
+         .fn()
+         .mockResolvedValue({ error: null });
+      const mockDelete = jest.fn().mockReturnThis();
+      const mockEq = jest.fn().mockReturnThis();
+      const mockIn = jest
+         .fn()
+         .mockResolvedValue({ error: null });
+
+      supabase.from.mockReturnValue({
+         insert: mockInsert,
+         delete: mockDelete,
+         eq: mockEq,
+         in: mockIn,
+      });
+
+      const res = await request(app)
+         .post("/api/users/follows/sync")
+         .send({ follower_id: followerId, added, removed });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.message).toBe(
+         "Follows synced successfully",
+      );
    });
 });

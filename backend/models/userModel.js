@@ -10,3 +10,9 @@ export const User = z.object({
    avatar_url: z.string().nullable(),
    is_verified: z.boolean().nullable(),
 });
+
+// Schema for the 'follows' table
+export const Follow = z.object({
+   follower_id: z.string().uuid(),
+   following_id: z.string().uuid(),
+});

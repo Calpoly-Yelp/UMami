@@ -1,6 +1,7 @@
 import express from "express";
 import { supabase } from "../config/supabaseClient.js";
-import { User } from "../models/userModel.js";
+import { User, Follow } from "../models/userModel.js";
+import { z } from "zod";
 
 const router = express.Router();
 
@@ -67,7 +68,9 @@ router.get("/:id/follows", async (req, res) => {
          return res.status(200).json([]);
       }
 
-      const followingIds = data.map(
+      const validatedFollows = z.array(Follow).parse(data);
+
+      const followingIds = validatedFollows.map(
          (follow) => follow.following_id,
       );
 
