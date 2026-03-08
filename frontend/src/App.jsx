@@ -2,11 +2,80 @@ import {
    BrowserRouter,
    Routes,
    Route,
+   useLocation,
 } from "react-router-dom";
-import Home from "./pages/Home.jsx";
-import "./App.css";
 
-function App() {
+import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
+import SignUpForm from "./pages/SignUpForm";
+import PhotoGallery from "./pages/PhotoGallery";
+import HomePage from "./pages/HomePage";
+import Onboarding from "./pages/Onboarding";
+import UserPage from "./pages/user";
+import Restaurant from "./pages/Restaurants";
+import Review from "./pages/Review";
+import Header from "./components/header";
+import MapSandbox from "./pages/mapSandbox";
+
+function AppLayout() {
+   const location = useLocation();
+   const hideHeaderPaths = [
+      "/",
+      "/signin",
+      "/signup-form",
+      "/onboarding",
+   ];
+   const showHeader = !hideHeaderPaths.includes(
+      location.pathname,
+   );
+
+   return (
+      <div
+         className="app-container"
+         style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+         }}
+      >
+         {showHeader && <Header />}
+         <div
+            className="content-container"
+            style={{ flex: 1, overflow: "auto" }}
+         >
+            <Routes>
+               <Route path="/" element={<SignUp />} />
+               <Route path="/signin" element={<SignIn />} />
+               <Route
+                  path="/signup-form"
+                  element={<SignUpForm />}
+               />
+               <Route path="/home" element={<HomePage />} />
+               <Route
+                  path="/onboarding"
+                  element={<Onboarding />}
+               />
+               <Route
+                  path="/gallery"
+                  element={<PhotoGallery />}
+               />
+               <Route path="/user" element={<UserPage />} />
+               <Route
+                  path="/restaurants"
+                  element={<Restaurant />}
+               />
+               <Route path="/review" element={<Review />} />
+               <Route
+                  path="/sandbox"
+                  element={<MapSandbox />}
+               />
+            </Routes>
+         </div>
+      </div>
+   );
+}
+
+export default function App() {
    return (
       <BrowserRouter>
          <Routes>
@@ -15,5 +84,3 @@ function App() {
       </BrowserRouter>
    );
 }
-
-export default App;
