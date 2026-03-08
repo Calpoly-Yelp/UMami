@@ -4,7 +4,6 @@ import {
    Route,
    useLocation,
 } from "react-router-dom";
-
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import SignUpForm from "./pages/SignUpForm";
@@ -78,9 +77,7 @@ function AppLayout() {
 export default function App() {
    return (
       <BrowserRouter>
-         <Routes>
-            <Route path="/" element={<Home />} />
-         </Routes>
+         <AppLayout />
       </BrowserRouter>
    );
 }

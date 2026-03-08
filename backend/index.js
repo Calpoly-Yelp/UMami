@@ -1,7 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import routes from "./routes/index.js"; // add this
+import reviewsRouter from "./routes/reviews.js";
+import usersRouter from "./routes/users.js";
+import restaurantsRouter from "./routes/restaurants.js";
+import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
 
 const app = express();
@@ -10,8 +13,21 @@ const PORT = process.env.PORT || 4000;
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-/* Mount router */
-app.use("/api", routes);
+// Enable CORS to allow requests from the frontend
+app.use((req, res, next) => {
+   res.header("Access-Control-Allow-Origin", "*");
+   res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept",
+   );
+   next();
+});
+
+// Routes
+app.use("/api/reviews", reviewsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/restaurants", restaurantsRouter);
+app.use("/api/notifications", notificationsRouter);
 
 /* Keep temporary debug route (optional) */
 app.get("/test-supabase", async (req, res) => {
@@ -27,11 +43,15 @@ app.get("/test-supabase", async (req, res) => {
    return res.json({ status: "Connected!", data });
 });
 
-app.listen(PORT, () => {
-   console.log(
-      `Server is alive on http://localhost:${PORT}`,
-   );
-   console.log(
-      `Try visiting http://localhost:${PORT}/test-supabase`,
-   );
-});
+if (process.env.NODE_ENV !== "test") {
+   app.listen(PORT, () => {
+      console.log(
+         `Server is alive on http://localhost:${PORT}`,
+      );
+      console.log(
+         `Try visiting http://localhost:${PORT}/test-supabase`,
+      );
+   });
+}
+
+export default app;

@@ -1,0 +1,95 @@
+.followed-user-card {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   padding: 16px;
+   border: 1px solid #e0e0e0;
+   border-radius: 12px;
+   background-color: #8e908926;
+   width: 160px;
+   height: 240px;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+   transition: transform 0.2s ease;
+   box-sizing: border-box;
+   position: relative;
+}
+
+.followed-user-card:hover {
+   transform: translateY(-2px);
+   z-index: 5;
+}
+
+.followed-user-pfp {
+   height: 33%;
+   width: auto;
+   aspect-ratio: 1/1;
+   border-radius: 50%;
+   object-fit: cover;
+   margin-bottom: 0;
+}
+
+.followed-user-name-section {
+   height: 40%;
+   width: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   text-align: center;
+   padding: 0 10px;
+   box-sizing: border-box;
+   overflow: visible;
+   position: relative;
+}
+
+.followed-user-name-section > * {
+   max-width: 100%;
+   min-width: 0;
+}
+
+.followed-user-bottom-section {
+   flex: 1;
+   width: 100%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: space-between;
+}
+
+.review-count {
+   font-size: 0.9rem;
+   color: #666;
+   margin-bottom: 4px;
+}
+
+.follow-button {
+   padding: 6px 20px;
+   border-radius: 20px;
+   border: 1px solid #8e908966;
+   background-color: #8e908966;
+   color: black;
+   font-weight: 600;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   align-items: center;
+   display: flex;
+   flex-direction: row;
+   justify-content: center;
+   gap: 6px;
+   width: 100%;
+   margin-top: auto;
+}
+
+.follow-button svg {
+   display: inline-block;
+   flex: 0 0 auto;
+}
+
+.follow-button.following {
+   background-color: #8e908966;
+   justify-content: flex-start;
+   color: black;
+}
+
+.follow-button:hover {
+   opacity: 0.9;
+}
