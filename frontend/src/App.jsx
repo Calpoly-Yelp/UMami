@@ -12,8 +12,10 @@ import HomePage from "./pages/HomePage";
 import Onboarding from "./pages/Onboarding";
 import UserPage from "./pages/user";
 import Restaurant from "./pages/Restaurants";
+import Review from "./pages/Review";
 import Header from "./components/header";
 import MapSandbox from "./pages/mapSandbox";
+import AccountSettings from "./pages/AccountSettings";
 
 function AppLayout() {
    const location = useLocation();
@@ -62,10 +64,14 @@ function AppLayout() {
                   path="/restaurants"
                   element={<Restaurant />}
                />
-               {/* Sandbox route for map component */}
+               <Route path="/review" element={<Review />} />
                <Route
                   path="/sandbox"
                   element={<MapSandbox />}
+               />
+               <Route
+                  path="/settings"
+                  element={<AccountSettings />}
                />
             </Routes>
          </div>
