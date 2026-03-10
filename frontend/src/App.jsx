@@ -16,7 +16,7 @@ import Review from "./pages/Review";
 import Header from "./components/header";
 import MapSandbox from "./pages/mapSandbox";
 import AccountSettings from "./pages/AccountSettings";
-
+import ReviewPage from "./pages/ReviewPage";
 function AppLayout() {
    const location = useLocation();
    const hideHeaderPaths = [
@@ -72,6 +72,10 @@ function AppLayout() {
                <Route
                   path="/settings"
                   element={<AccountSettings />}
+               />
+               <Route
+                  path="/reviews"
+                  element={<ReviewPage />}
                />
             </Routes>
          </div>

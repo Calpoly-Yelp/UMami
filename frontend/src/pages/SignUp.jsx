@@ -1,8 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./auth.css";
-import bgImage from "../assets/signup-bg.jpeg";
-
+import logo from "../assets/logo.png";
 export default function SignUp() {
    const navigate = useNavigate();
 

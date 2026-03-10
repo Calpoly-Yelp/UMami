@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import "./onboarding.css";
 import { useNavigate } from "react-router-dom";
-// import { supabase } from "../supabaseClient";
+// rember to import { supabase } from "../supabaseClient";
 
 const STEPS = [
    { key: "role", label: "Who are you?" },
@@ -58,13 +58,22 @@ export default function Onboarding() {
       else finish();
    }
 
-   function prev() {
-      if (stepIdx > 0) setStepIdx((s) => s - 1);
-   }
-
-   function setSingle(name, value) {
-      setForm((p) => ({ ...p, [name]: value }));
-   }
+  async function finish() {
+//rember to also do this
+    // const { data: { user } } = await supabase.auth.getUser();
+    // if (user) {
+    //   await supabase.from("profiles").upsert({
+    //     id: user.id,
+    //     role: form.role,
+    //     budget: form.budget,
+    //     diet: form.diet,
+    //     priorities: form.priorities,
+    //     notifications: form.notifications,
+    //     onboarded: true,
+    //   });
+    // }
+    navigate("/home"); 
+  }
 
    function toggleMulti(name, value, options = {}) {
       const { exclusiveValue, max } = options;
