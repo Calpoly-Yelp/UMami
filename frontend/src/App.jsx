@@ -15,6 +15,7 @@ import Restaurant from "./pages/Restaurants";
 import Review from "./pages/Review";
 import Header from "./components/header";
 import MapSandbox from "./pages/mapSandbox";
+import AccountSettings from "./pages/AccountSettings";
 
 function AppLayout() {
    const location = useLocation();
@@ -67,6 +68,10 @@ function AppLayout() {
                <Route
                   path="/sandbox"
                   element={<MapSandbox />}
+               />
+               <Route
+                  path="/settings"
+                  element={<AccountSettings />}
                />
             </Routes>
          </div>
