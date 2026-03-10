@@ -43,3 +43,19 @@ npm run dev
 3. VS Code will use the repo’s `.vscode/settings.json` to:
    - format on save (Prettier)
    - auto-fix lint issues on save (ESLint)
+
+## Code Coverage
+
+<!-- Screenshot of Terminal Test Coverage -->
+
+![Coverage Screenshot](assets/coverage-screenshot-frontend.png)
+![Coverage Screenshot](assets/coverage-screenshot-backend.png)
+
+<!-- COVERAGE-START -->
+
+| Project  | Lines  | Statements | Functions | Branches |
+| :------- | :----: | :--------: | :-------: | :------: |
+| Frontend | 63.45% |   62.5%    |  59.01%   |  58.77%  |
+| Backend  |  75%   |   75.26%   |   82.6%   |  62.06%  |
+
+<!-- COVERAGE-END -->
