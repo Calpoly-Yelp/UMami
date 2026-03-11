@@ -7,18 +7,24 @@ import logo from "../assets/logo.png";
 export default function SignUpForm() {
    const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    navigate("/onboarding"); 
-  };
+   const handleSubmit = (e) => {
+      e.preventDefault();
+      navigate("/onboarding");
+   };
 
-  return (
-    <div className="signupForm">
-      <div className="signupForm__left">
-<div className="signupForm__brand">
-  <img src={logo} alt="Umami logo" className="signupForm__logo" />
-</div>
-        <h1 className="signupForm__title">Get started now</h1>
+   return (
+      <div className="signupForm">
+         <div className="signupForm__left">
+            <div className="signupForm__brand">
+               <img
+                  src={logo}
+                  alt="Umami logo"
+                  className="signupForm__logo"
+               />
+            </div>
+            <h1 className="signupForm__title">
+               Get started now
+            </h1>
 
             <div
                className="signupForm__icon"
@@ -85,15 +91,18 @@ export default function SignUpForm() {
                   autoComplete="new-password"
                />
 
-          <label className="signupForm__checkRow">
-            <input type="checkbox" />
-            <span>
-              I agree to the{" "}
-              <a href="#" onClick={(e) => e.preventDefault()}>
-                terms &amp; policy
-              </a>
-            </span>
-          </label>
+               <label className="signupForm__checkRow">
+                  <input type="checkbox" />
+                  <span>
+                     I agree to the{" "}
+                     <a
+                        href="#"
+                        onClick={(e) => e.preventDefault()}
+                     >
+                        terms &amp; policy
+                     </a>
+                  </span>
+               </label>
 
                <button
                   className="signupForm__primary"
@@ -115,13 +124,13 @@ export default function SignUpForm() {
             </form>
          </div>
 
-      <div className="signupForm__right">
-        <img
-          className="signupForm__img"
-          src={heroImg}
-          alt="Food preparation"
-        />
+         <div className="signupForm__right">
+            <img
+               className="signupForm__img"
+               src={heroImg}
+               alt="Food preparation"
+            />
+         </div>
       </div>
-    </div>
-  );
+   );
 }
