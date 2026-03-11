@@ -84,7 +84,7 @@ export default function Onboarding() {
   }
 
   async function finish() {
-
+//backend
     // const { data: { user } } = await supabase.auth.getUser();
     // if (user) {
     //   await supabase.from("profiles").upsert({

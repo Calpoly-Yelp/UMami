@@ -14,6 +14,9 @@ const HomePage = () => {
           <button onClick={() => navigate("/gallery")}>
             Photo Gallery
           </button>
+ <button onClick={() => navigate("/reviews")}>
+            Reviews
+          </button>
 
           <button onClick={() => navigate("/")}>
             Sign Out

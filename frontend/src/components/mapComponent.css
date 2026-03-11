@@ -1,0 +1,25 @@
+.map-wrapper {
+   width: 100%;
+   height: 300px; /* Fixed height for the map container */
+   border-radius: 12px;
+   overflow: hidden;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+   border: 1px solid #e0e0e0;
+}
+
+.leaflet-container {
+   width: 100%;
+   height: 100%;
+   z-index: 1; /* Ensure it sits below dropdowns/modals */
+}
+
+.map-popup-content {
+   cursor: pointer;
+   text-align: center;
+}
+
+.map-popup-content span {
+   color: #003831; /* Using your app's green theme */
+   text-decoration: underline;
+   font-size: 0.9em;
+}
