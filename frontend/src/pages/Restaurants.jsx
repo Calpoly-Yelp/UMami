@@ -6,10 +6,10 @@ import "./restaurants.css";
 const testRestaurants = [
    {
       id: 1,
-      name: "Starbucks",
-      image: "/images/restaurants/starbucks.webp",
+      name: "Shake Smart",
+      image: "/images/restaurants/Shakesmart-banner.jpg",
       avg_rating: 5,
-      location: ["University Union"],
+      location: ["Recreation Center"],
       isBookmarked: true,
    },
    {
