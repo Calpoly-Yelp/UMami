@@ -9,6 +9,10 @@ export default function SignUp() {
 
    const handleSubmit = async (e) => {
       e.preventDefault();
+
+      // Ensure form is valid before processing (handling JSDOM/Browser edge cases)
+      if (!e.target.checkValidity()) return;
+
       const formData = new FormData(e.target);
 
       const newUser = {

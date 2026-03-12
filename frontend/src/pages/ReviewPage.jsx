@@ -36,7 +36,8 @@ export default function Review() {
             { day: "Sunday", time: "9am - 9pm" },
          ],
          locationLabel: "Recreation Center",
-         address: "Cal Poly Campus, San Luis Obispo, CA",
+         address:
+            "Shake Smart, Recreation Center, 1 Grand Ave, San Luis Obispo, CA 93407",
          lat: 35.3007,
          lng: -120.6603,
          menuImages: [
