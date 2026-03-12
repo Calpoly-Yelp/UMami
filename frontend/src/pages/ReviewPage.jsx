@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MapComponent from "../components/mapComponent";
+import Map from "../components/Map";
 import "./reviewpage.css";
 import heroImg from "../assets/shakesmartheader.jpg";
 import avatarMusty from "../assets/avatar-musty.jpeg";
@@ -264,7 +264,7 @@ export default function Review() {
                   </div>
 
                   <div className="review__mapBlock">
-                     <MapComponent
+                     <Map
                         lat={restaurant.lat}
                         lng={restaurant.lng}
                         name={restaurant.name}

@@ -5,7 +5,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import Modal from "../components/modal";
+import Modal from "../components/Modal";
 
 describe("Modal component", () => {
    test("renders nothing when open is false", () => {

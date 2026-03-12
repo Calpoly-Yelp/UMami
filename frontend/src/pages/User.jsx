@@ -1,14 +1,14 @@
 import { MdOutlineAccountCircle } from "react-icons/md";
-import ReviewCard from "../components/reviewCard.jsx";
-import RestaurantCard from "../components/restaurantCard.jsx";
-import FollowedUserCard from "../components/followedUserCard.jsx";
+import ReviewCard from "../components/ReviewCard.jsx";
+import RestaurantCard from "../components/RestaurantCard.jsx";
+import FollowedUserCard from "../components/FollowUserCard.jsx";
 import {
    UserCheck,
    CaretLeft,
    CaretRight,
 } from "@phosphor-icons/react";
 import { useState, useEffect, useRef } from "react";
-import UserName from "../components/userName.jsx";
+import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
 import "./user.css";

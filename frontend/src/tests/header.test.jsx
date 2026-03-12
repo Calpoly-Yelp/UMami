@@ -14,7 +14,7 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { BrowserRouter } from "react-router-dom";
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 
 describe("Global Header Component", () => {
    const mockNotifications = [

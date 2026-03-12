@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import WriteReview from "../components/writeReview";
+import WriteReview from "../components/WriteReview";
 
-jest.mock("../components/modal", () => {
+jest.mock("../components/Modal", () => {
    return function MockModal({ open, children }) {
       return open ? (
          <div data-testid="modal">{children}</div>
@@ -11,7 +11,7 @@ jest.mock("../components/modal", () => {
    };
 });
 
-jest.mock("../components/photoUpload", () => {
+jest.mock("../components/PhotoUpload", () => {
    return function MockPhotoUpload() {
       return <div>PhotoUpload</div>;
    };

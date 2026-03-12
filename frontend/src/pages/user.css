@@ -45,7 +45,7 @@ body {
       var(--standard-padding-horizontal);
 }
 
-.card {
+.user-content .card {
    display: flex;
    flex-direction: column;
    align-items: center;

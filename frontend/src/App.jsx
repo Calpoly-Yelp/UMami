@@ -8,10 +8,10 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import PhotoGallery from "./pages/PhotoGallery";
 import Onboarding from "./pages/Onboarding";
-import UserPage from "./pages/user";
+import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import Review from "./pages/Review";
-import Header from "./components/header";
+import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
 import ReviewPage from "./pages/ReviewPage";
 function AppLayout() {
