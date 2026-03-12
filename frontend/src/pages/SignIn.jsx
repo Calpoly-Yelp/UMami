@@ -1,17 +1,32 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import "./auth.css";
-import logo from "../assets/logo.png";
+import { useNavigate } from "react-router-dom";
+import "./SignIn.css";
 import bgImage from "../assets/signup-bg.jpeg";
+
 export default function SignIn() {
    const navigate = useNavigate();
 
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
 
-   const handleSignIn = (e) => {
+   const handleSignIn = async (e) => {
       e.preventDefault();
-      navigate("/onboarding");
+      // Simulate login by fetching the specific test user from the database
+      try {
+         const response = await fetch(
+            "http://localhost:4000/api/users/b677be85-81db-4245-91ca-acb713bd5564",
+         );
+         if (response.ok) {
+            const userData = await response.json();
+            localStorage.setItem(
+               "user",
+               JSON.stringify(userData),
+            );
+            navigate("/restaurants");
+         }
+      } catch (error) {
+         console.error("Login failed", error);
+      }
    };
 
    return (
@@ -26,13 +41,7 @@ export default function SignIn() {
             role="dialog"
             aria-label="Sign in"
          >
-            <div className="auth__brand">
-               <img
-                  src={logo}
-                  alt="Umami logo"
-                  className="auth__logo"
-               />
-            </div>
+            <div className="auth__brand">umami</div>
 
             <h1 className="auth__title">
                Sign into your account
@@ -53,7 +62,6 @@ export default function SignIn() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  aria-label="Email"
                />
 
                <input
@@ -66,7 +74,6 @@ export default function SignIn() {
                      setPassword(e.target.value)
                   }
                   required
-                  aria-label="Password"
                />
 
                <button
@@ -80,12 +87,13 @@ export default function SignIn() {
                   <span>Don't have an account?</span>
                </div>
 
-               <Link
-                  to="/signup-form"
+               <button
                   className="auth__secondary"
+                  type="button"
+                  onClick={() => navigate("/signup")}
                >
                   Sign Up
-               </Link>
+               </button>
 
                <p className="auth__legal">
                   By continuing, you agree to our{" "}

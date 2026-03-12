@@ -6,6 +6,8 @@ import {
    expect,
    jest,
    beforeAll,
+   beforeEach,
+   afterEach,
 } from "@jest/globals";
 import {
    render,
@@ -14,7 +16,7 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { BrowserRouter } from "react-router-dom";
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 
 describe("Global Header Component", () => {
    const mockNotifications = [
@@ -50,6 +52,12 @@ describe("Global Header Component", () => {
       }, // For load more test
    ];
 
+   const mockUser = {
+      id: "b677be85-81db-4245-91ca-acb713bd5564",
+      name: "Test User",
+      avatar_url: "https://example.com/avatar.jpg",
+   };
+
    beforeAll(() => {
       global.fetch = jest.fn((url) => {
          if (url.includes("/notifications")) {
@@ -64,6 +72,19 @@ describe("Global Header Component", () => {
             json: () => Promise.resolve({}),
          });
       });
+   });
+
+   beforeEach(() => {
+      // Populate localStorage so Header doesn't wait 500ms or try to fetch user
+      localStorage.setItem(
+         "user",
+         JSON.stringify(mockUser),
+      );
+      jest.clearAllMocks();
+   });
+
+   afterEach(() => {
+      localStorage.clear();
    });
 
    // Verify the component renders the main container

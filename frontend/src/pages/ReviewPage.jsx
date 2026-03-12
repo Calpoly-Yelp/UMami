@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MapComponent from "../components/mapComponent";
-import "./reviewpage.css";
-import logo from "../assets/logo.png";
+import Map from "../components/Map";
+import "./ReviewPage.css";
 import heroImg from "../assets/shakesmartheader.jpg";
 import avatarMusty from "../assets/avatar-musty.jpeg";
 import avatarCarol from "../assets/avatar-carol.jpeg";
@@ -106,29 +105,6 @@ export default function Review() {
 
    return (
       <div className="review">
-         <header className="review__topbar">
-            <button
-               className="review__logoBtn"
-               onClick={() => navigate("/home")}
-               aria-label="Go home"
-            >
-               <img
-                  className="review__logoImg"
-                  src={logo}
-                  alt="umami logo"
-               />
-            </button>
-
-            <button
-               className="review__profile"
-               aria-label="Profile"
-            >
-               <span className="review__profileIcon">
-                  👤
-               </span>
-            </button>
-         </header>
-
          <section
             className="review__hero"
             style={{
@@ -200,7 +176,10 @@ export default function Review() {
             >
                <div className="review__sectionHeaderRow">
                   <div className="review__actions">
-                     <button className="pillBtn">
+                     <button
+                        className="pillBtn"
+                        onClick={() => navigate("/review")}
+                     >
                         ✎ <span>write review</span>
                      </button>
                      <button className="pillBtn">
@@ -285,7 +264,7 @@ export default function Review() {
                   </div>
 
                   <div className="review__mapBlock">
-                     <MapComponent
+                     <Map
                         lat={restaurant.lat}
                         lng={restaurant.lng}
                         name={restaurant.name}
@@ -362,7 +341,12 @@ export default function Review() {
                      <h2 className="review__h2">Reviews</h2>
 
                      <div className="review__reviewsControls">
-                        <button className="pillBtn">
+                        <button
+                           className="pillBtn"
+                           onClick={() =>
+                              navigate("/review")
+                           }
+                        >
                            ✎ write review
                         </button>
                         <button className="pillBtn pillBtn--ghost">

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "./onboarding.css";
+import "./Onboarding.css";
 import { useNavigate } from "react-router-dom";
 // remember to import { supabase } from "../supabaseClient";
 
@@ -80,7 +80,7 @@ export default function Onboarding() {
       //     onboarded: true,
       //   });
       // }
-      navigate("/home");
+      navigate("/restaurants");
    }
 
    function toggleMulti(name, value, options = {}) {
@@ -168,7 +168,7 @@ export default function Onboarding() {
                               type="button"
                               className="ob__btn ob__btnGhost"
                               onClick={() =>
-                                 navigate("/home")
+                                 navigate("/restaurants")
                               }
                            >
                               Skip Survey

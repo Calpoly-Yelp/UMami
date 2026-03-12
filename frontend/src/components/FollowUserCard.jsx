@@ -1,6 +1,6 @@
 import { UserCheck } from "@phosphor-icons/react";
-import UserName from "./userName.jsx";
-import "./followedUserCard.css";
+import UserName from "./UserName.jsx";
+import "./FollowedUserCard.css";
 
 function FollowedUserCard({
    followedUser,

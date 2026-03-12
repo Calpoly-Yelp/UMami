@@ -8,7 +8,7 @@ import {
 } from "@jest/globals";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import UserPage from "../pages/user.jsx";
+import UserPage from "../pages/User.jsx";
 
 // --- Mock Data Setup ---
 const testUser = {
@@ -382,8 +382,9 @@ describe("User Profile Page Edge Cases", () => {
       );
       expect(profilePic).not.toBeInTheDocument();
 
-      const defaultAvatar =
-         document.querySelector(".card > svg");
+      const defaultAvatar = document.querySelector(
+         ".user-card > svg",
+      );
       expect(defaultAvatar).toBeInTheDocument();
    });
 

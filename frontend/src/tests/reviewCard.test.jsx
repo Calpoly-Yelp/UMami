@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import ReviewCard from "../components/reviewCard";
+import ReviewCard from "../components/ReviewCard";
 
-jest.mock("../components/userName.jsx", () => {
+jest.mock("../components/UserName.jsx", () => {
    return function MockUserName({ name, is_verified }) {
       return (
          <div>

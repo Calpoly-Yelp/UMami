@@ -5,7 +5,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import PhotoUpload from "../components/photoUpload";
+import PhotoUpload from "../components/PhotoUpload";
 
 describe("PhotoUpload component", () => {
    beforeEach(() => {

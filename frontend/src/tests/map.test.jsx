@@ -14,7 +14,7 @@ import {
    fireEvent,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import MapComponent from "../components/mapComponent.jsx";
+import Map from "../components/Map.jsx";
 
 // Mock Leaflet to handle the L.icon call and prototype modification in the component
 jest.mock("leaflet", () => ({
@@ -45,7 +45,7 @@ jest.mock("react-leaflet", () => ({
    ),
 }));
 
-describe("MapComponent", () => {
+describe("Map", () => {
    // Mock window.open
    const originalOpen = window.open;
    const mockOpen = jest.fn();
@@ -63,7 +63,7 @@ describe("MapComponent", () => {
    });
 
    test("renders the map container and marker", () => {
-      render(<MapComponent />);
+      render(<Map />);
       expect(
          screen.getByTestId("map-container"),
       ).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe("MapComponent", () => {
 
    test("displays the location name in the popup", () => {
       const testName = "Test Restaurant";
-      render(<MapComponent name={testName} />);
+      render(<Map name={testName} />);
       expect(
          screen.getByText(testName),
       ).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe("MapComponent", () => {
          lat: 10,
          lng: 10,
       };
-      render(<MapComponent {...props} />);
+      render(<Map {...props} />);
 
       const marker = screen.getByTestId("marker");
       fireEvent.click(marker);
@@ -109,7 +109,7 @@ describe("MapComponent", () => {
          lat: 35.5,
          lng: -120.5,
       };
-      render(<MapComponent {...props} />);
+      render(<Map {...props} />);
 
       const marker = screen.getByTestId("marker");
       fireEvent.click(marker);
@@ -128,7 +128,7 @@ describe("MapComponent", () => {
          name: "Popup Click Test",
          address: "456 Elm St",
       };
-      render(<MapComponent {...props} />);
+      render(<Map {...props} />);
 
       // Find the clickable content inside the popup
       const popupContent = screen.getByText(

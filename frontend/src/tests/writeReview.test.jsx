@@ -1,9 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import WriteReview from "../components/writeReview";
+import WriteReview from "../components/WriteReview";
 
-jest.mock("../components/modal", () => {
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => ({
+   useNavigate: () => mockNavigate,
+}));
+
+jest.mock("../components/Modal", () => {
    return function MockModal({ open, children }) {
       return open ? (
          <div data-testid="modal">{children}</div>
@@ -11,13 +16,17 @@ jest.mock("../components/modal", () => {
    };
 });
 
-jest.mock("../components/photoUpload", () => {
+jest.mock("../components/PhotoUpload", () => {
    return function MockPhotoUpload() {
       return <div>PhotoUpload</div>;
    };
 });
 
 describe("WriteReview component", () => {
+   beforeEach(() => {
+      mockNavigate.mockClear();
+   });
+
    test("renders the title", () => {
       render(<WriteReview />);
 
@@ -72,5 +81,17 @@ describe("WriteReview component", () => {
       expect(
          screen.getByTestId("modal"),
       ).toBeInTheDocument();
+   });
+
+   test("navigates to /reviews when submit button is clicked", async () => {
+      const user = userEvent.setup();
+      render(<WriteReview />);
+
+      const submitButton = screen.getByRole("button", {
+         name: /submit review/i,
+      });
+      await user.click(submitButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/reviews");
    });
 });

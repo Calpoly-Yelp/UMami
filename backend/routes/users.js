@@ -1,6 +1,7 @@
 import express from "express";
 import { supabase } from "../config/supabaseClient.js";
-import { User } from "../models/userModel.js";
+import { User, Follow } from "../models/userModel.js";
+import { z } from "zod";
 
 const router = express.Router();
 
@@ -18,6 +19,25 @@ router.get("/", async (req, res) => {
       res.status(200).json(data);
    } catch (error) {
       console.error("Error fetching users:", error);
+      res.status(500).json({ error: error.message });
+   }
+});
+
+// Create a new user
+router.post("/", async (req, res) => {
+   try {
+      const { data, error } = await supabase
+         .from("users")
+         .insert([req.body])
+         .select()
+         .single();
+
+      if (error) {
+         throw error;
+      }
+
+      res.status(201).json(data);
+   } catch (error) {
       res.status(500).json({ error: error.message });
    }
 });
@@ -67,7 +87,9 @@ router.get("/:id/follows", async (req, res) => {
          return res.status(200).json([]);
       }
 
-      const followingIds = data.map(
+      const validatedFollows = z.array(Follow).parse(data);
+
+      const followingIds = validatedFollows.map(
          (follow) => follow.following_id,
       );
 

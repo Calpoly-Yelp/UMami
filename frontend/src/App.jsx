@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
    BrowserRouter,
    Routes,
@@ -6,15 +7,12 @@ import {
 } from "react-router-dom";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
-import SignUpForm from "./pages/SignUpForm";
 import PhotoGallery from "./pages/PhotoGallery";
-import HomePage from "./pages/HomePage";
 import Onboarding from "./pages/Onboarding";
-import UserPage from "./pages/user";
+import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import Review from "./pages/Review";
-import Header from "./components/header";
-import MapSandbox from "./pages/mapSandbox";
+import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
 import ReviewPage from "./pages/ReviewPage";
 function AppLayout() {
@@ -22,12 +20,37 @@ function AppLayout() {
    const hideHeaderPaths = [
       "/",
       "/signin",
+      "/signup",
       "/signup-form",
       "/onboarding",
    ];
    const showHeader = !hideHeaderPaths.includes(
       location.pathname,
    );
+
+   useEffect(() => {
+      // Initialize dummy user session for the specific user we want to persist
+      const targetId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const fetchUser = async () => {
+         const storedUser = localStorage.getItem("user");
+         const parsedUser = storedUser
+            ? JSON.parse(storedUser)
+            : null;
+
+         if (!parsedUser || !parsedUser.id) {
+            const response = await fetch(
+               `http://localhost:4000/api/users/${targetId}`,
+            );
+            const userData = await response.json();
+            localStorage.setItem(
+               "user",
+               JSON.stringify(userData),
+            );
+         }
+      };
+      fetchUser();
+   }, []);
 
    return (
       <div
@@ -44,13 +67,9 @@ function AppLayout() {
             style={{ flex: 1, overflow: "auto" }}
          >
             <Routes>
-               <Route path="/" element={<SignUp />} />
+               <Route path="/" element={<SignIn />} />
                <Route path="/signin" element={<SignIn />} />
-               <Route
-                  path="/signup-form"
-                  element={<SignUpForm />}
-               />
-               <Route path="/home" element={<HomePage />} />
+               <Route path="/signup" element={<SignUp />} />
                <Route
                   path="/onboarding"
                   element={<Onboarding />}
@@ -65,10 +84,6 @@ function AppLayout() {
                   element={<Restaurant />}
                />
                <Route path="/review" element={<Review />} />
-               <Route
-                  path="/sandbox"
-                  element={<MapSandbox />}
-               />
                <Route
                   path="/settings"
                   element={<AccountSettings />}

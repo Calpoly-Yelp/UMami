@@ -8,7 +8,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import "./mapComponent.css";
+import "./Map.css";
 
 // default marker
 let DefaultIcon = L.icon({
@@ -21,7 +21,7 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-function MapComponent({
+function Map({
    lat = 35.2828, // default to San Luis Obispo
    lng = -120.6596,
    name = "Restaurant Location",
@@ -76,4 +76,4 @@ function MapComponent({
    );
 }
 
-export default MapComponent;
+export default Map;

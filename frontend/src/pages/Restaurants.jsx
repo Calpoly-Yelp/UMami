@@ -1,7 +1,8 @@
 import { useState } from "react";
-import RestaurantCard from "../components/restaurantCard.jsx";
+import { useNavigate } from "react-router-dom";
+import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import "./restaurants.css";
+import "./Restaurants.css";
 
 const testRestaurants = [
    {
@@ -72,6 +73,14 @@ const testRestaurants = [
 
 export default function Restaurants() {
    const [query, setQuery] = useState("");
+   const navigate = useNavigate();
+
+   const handleCardClick = (restaurant) => {
+      // go to reviews page if shake smart card is clicked
+      if (restaurant.name === "Shake Smart") {
+         navigate("/reviews");
+      }
+   };
 
    return (
       <div className="restaurants-page">
@@ -126,10 +135,18 @@ export default function Restaurants() {
 
             <div className="restaurants-grid">
                {testRestaurants.map((r) => (
-                  <RestaurantCard
+                  <div
                      key={r.id}
-                     restaurant={r}
-                  />
+                     onClick={() => handleCardClick(r)}
+                     style={{
+                        cursor:
+                           r.name === "Shake Smart"
+                              ? "pointer"
+                              : "default",
+                     }}
+                  >
+                     <RestaurantCard restaurant={r} />
+                  </div>
                ))}
             </div>
          </div>
