@@ -23,30 +23,6 @@ router.get("/", async (req, res) => {
    }
 });
 
-// Get restaurant by id
-router.get("/:id", async (req, res) => {
-   try {
-      const { id } = req.params;
-      const { data } = await supabase
-         .from("restaurants")
-         .select("*")
-         .eq("id", id)
-         .single();
-
-      // If no data is returned, the restaurant was not found
-      if (!data) {
-         return res
-            .status(404)
-            .json({ error: "Restaurant not found" });
-      }
-      const validatedData = Restaurant.parse(data);
-
-      res.status(200).json(validatedData);
-   } catch (error) {
-      res.status(500).json({ error: error.message });
-   }
-});
-
 // Get bookmarks for a specific user
 router.get("/bookmarks/:userId", async (req, res) => {
    const { userId } = req.params;
@@ -112,11 +88,14 @@ router.post("/bookmarks/sync", async (req, res) => {
    try {
       // Handle removals
       if (removed && removed.length > 0) {
-         await supabase
+         const { error } = await supabase
             .from("bookmarks")
             .delete()
             .eq("user_id", user_id)
             .in("restaurant_id", removed);
+         if (error) {
+            throw error;
+         }
       }
 
       // Handle additions
@@ -125,10 +104,43 @@ router.post("/bookmarks/sync", async (req, res) => {
             user_id,
             restaurant_id: rid,
          }));
-         await supabase.from("bookmarks").insert(rowsToAdd);
+         const { error } = await supabase
+            .from("bookmarks")
+            .insert(rowsToAdd);
+         if (error) {
+            throw error;
+         }
       }
 
       res.status(200).json({ message: "Sync successful" });
+   } catch (error) {
+      res.status(500).json({ error: error.message });
+   }
+});
+
+// Get restaurant by id
+router.get("/:id", async (req, res) => {
+   try {
+      const { id } = req.params;
+      const { data, error } = await supabase
+         .from("restaurants")
+         .select("*")
+         .eq("id", id)
+         .single();
+
+      if (error) {
+         throw error;
+      }
+
+      // If no data is returned, the restaurant was not found
+      if (!data) {
+         return res
+            .status(404)
+            .json({ error: "Restaurant not found" });
+      }
+      const validatedData = Restaurant.parse(data);
+
+      res.status(200).json(validatedData);
    } catch (error) {
       res.status(500).json({ error: error.message });
    }

@@ -17,6 +17,8 @@ describe("Review Endpoints", () => {
       jest.clearAllMocks();
    });
 
+   // --- Success Tests ---
+
    it("GET /api/reviews should return a list of reviews", async () => {
       const mockReviews = [
          {
@@ -94,5 +96,24 @@ describe("Review Endpoints", () => {
          "user_id",
          "b677be85-81db-4245-91ca-acb713bd5564",
       );
+   });
+
+   // --- Error Handling Tests ---
+
+   it("GET /api/reviews should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "DB Error" },
+         }),
+         then: (resolve) =>
+            resolve({
+               data: null,
+               error: { message: "DB Error" },
+            }),
+      });
+      const res = await request(app).get("/api/reviews");
+      expect(res.statusCode).toBe(500);
    });
 });

@@ -17,6 +17,8 @@ describe("Notification Endpoints", () => {
       jest.clearAllMocks();
    });
 
+   // --- Success Tests ---
+
    // test endpoint for returning notification based on userid
    it("GET /api/notifications/:userId should return notifications", async () => {
       const userId = "c788cf96-92ec-5356-a2db-bdc824ce6675";
@@ -151,5 +153,88 @@ describe("Notification Endpoints", () => {
       );
 
       expect(res.statusCode).toBe(200);
+   });
+
+   // --- Error Handling Tests ---
+
+   it("GET /api/notifications/:userId should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         order: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "DB Error" },
+         }),
+      });
+
+      const res = await request(app).get(
+         "/api/notifications/user1",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "DB Error" });
+   });
+
+   it("PATCH /api/notifications/:userId/read-all should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         update: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockResolvedValue({
+            error: { message: "Update Error" },
+         }),
+      });
+
+      const res = await request(app).patch(
+         "/api/notifications/user1/read-all",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Update Error" });
+   });
+
+   it("DELETE /api/notifications/:userId/delete-all should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         delete: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockResolvedValue({
+            error: { message: "Delete Error" },
+         }),
+      });
+
+      const res = await request(app).delete(
+         "/api/notifications/user1/delete-all",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Delete Error" });
+   });
+
+   it("PATCH /api/notifications/:id/read should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         update: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         select: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Read Error" },
+         }),
+      });
+
+      const res = await request(app).patch(
+         "/api/notifications/notif1/read",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Read Error" });
+   });
+
+   it("DELETE /api/notifications/:id should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         delete: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockResolvedValue({
+            error: { message: "Delete One Error" },
+         }),
+      });
+
+      const res = await request(app).delete(
+         "/api/notifications/notif1",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({
+         error: "Delete One Error",
+      });
    });
 });

@@ -20,15 +20,21 @@ describe("User Endpoints", () => {
       jest
          .spyOn(console, "log")
          .mockImplementation(() => {});
+      jest
+         .spyOn(console, "error")
+         .mockImplementation(() => {});
    });
 
    afterAll(() => {
+      console.error.mockRestore();
       console.log.mockRestore();
    });
 
    beforeEach(() => {
       jest.clearAllMocks();
    });
+
+   // --- Success Tests ---
 
    it("GET /api/users should return a list of users", async () => {
       const mockUsers = [
@@ -67,6 +73,49 @@ describe("User Endpoints", () => {
       expect(supabase.from).toHaveBeenCalledWith("users");
    });
 
+   it("GET /api/users should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         limit: jest
+            .fn()
+            .mockRejectedValue(new Error("Database error")),
+      });
+
+      const res = await request(app).get("/api/users");
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Database error" });
+   });
+
+   it("GET /api/users should throw on returned DB error", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         limit: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: " returned error" },
+         }),
+      });
+
+      const res = await request(app).get("/api/users");
+      expect(res.statusCode).toBe(500);
+   });
+
+   // Covers line 16 (error in GET /)
+   it("GET /api/users should catch unexpected errors", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         limit: jest.fn().mockImplementation(() => {
+            throw new Error("Unexpected error");
+         }),
+      });
+
+      const res = await request(app).get("/api/users");
+
+      expect(res.statusCode).toBe(500);
+      // The console.error is mocked, so we just check response
+      expect(res.body.error).toBe("Unexpected error");
+   });
+
    it("POST /api/users should create a new user", async () => {
       const newUser = {
          id: "new-user-id",
@@ -91,6 +140,32 @@ describe("User Endpoints", () => {
 
       expect(res.statusCode).toBe(201);
       expect(res.body).toEqual(newUser);
+   });
+
+   it("POST /api/users should handle creation errors", async () => {
+      const newUser = {
+         id: "new-user-id",
+         email: "new@example.com",
+         name: "New User",
+         avatar_url: null,
+         is_verified: false,
+      };
+
+      supabase.from.mockReturnValue({
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Creation error" },
+         }),
+      });
+
+      const res = await request(app)
+         .post("/api/users")
+         .send(newUser);
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Creation error" });
    });
 
    it("GET /api/users/:id should return a single user", async () => {
@@ -135,6 +210,23 @@ describe("User Endpoints", () => {
       );
 
       expect(res.statusCode).toBe(404);
+   });
+
+   it("GET /api/users/:id should handle generic errors", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Generic error" },
+         }),
+      });
+
+      const res = await request(app).get(
+         "/api/users/generic-error-id",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Generic error" });
    });
 
    it("GET /api/users/:id/follows should return followed users", async () => {
@@ -191,6 +283,97 @@ describe("User Endpoints", () => {
       expect(res.body[0].name).toBe("Jane");
    });
 
+   it("GET /api/users/:id/follows should handle fetch follows error", async () => {
+      const followerId = "user-id";
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: "Fetch follows error" },
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         `/api/users/${followerId}/follows`,
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({
+         error: "Fetch follows error",
+      });
+   });
+
+   it("GET /api/users/:id/follows should return empty list if no follows", async () => {
+      const followerId = "user-id";
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: [],
+                  error: null,
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         `/api/users/${followerId}/follows`,
+      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual([]);
+   });
+
+   it("GET /api/users/:id/follows should handle fetch users error", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const followingId =
+         "c788cf96-92ec-5356-a2db-bdc824ce6675";
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: [
+                     {
+                        follower_id: followerId,
+                        following_id: followingId,
+                     },
+                  ],
+                  error: null,
+               }),
+            };
+         }
+         if (table === "users") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: "Fetch users error" },
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         `/api/users/${followerId}/follows`,
+      );
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({
+         error: "Fetch users error",
+      });
+   });
+
    it("POST /api/users/follows/sync should sync follows", async () => {
       const followerId =
          "b677be85-81db-4245-91ca-acb713bd5564";
@@ -225,5 +408,92 @@ describe("User Endpoints", () => {
       expect(res.body.message).toBe(
          "Follows synced successfully",
       );
+   });
+
+   it("POST /api/users/follows/sync should sync only added", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const added = [
+         "c788cf96-92ec-5356-a2db-bdc824ce6675",
+      ];
+
+      const mockInsert = jest
+         .fn()
+         .mockResolvedValue({ error: null });
+
+      supabase.from.mockReturnValue({
+         insert: mockInsert,
+         delete: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         in: jest.fn().mockResolvedValue({ error: null }),
+      });
+
+      const res = await request(app)
+         .post("/api/users/follows/sync")
+         .send({ follower_id: followerId, added });
+
+      expect(res.statusCode).toBe(200);
+      expect(mockInsert).toHaveBeenCalled();
+   });
+
+   it("POST /api/users/follows/sync should sync only removed", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const removed = [
+         "d899df07-03fd-6467-b3ec-ced935df7786",
+      ];
+
+      const mockDelete = jest.fn().mockReturnThis();
+      const mockEq = jest.fn().mockReturnThis();
+      const mockIn = jest
+         .fn()
+         .mockResolvedValue({ error: null });
+
+      supabase.from.mockReturnValue({
+         insert: jest
+            .fn()
+            .mockResolvedValue({ error: null }),
+         delete: mockDelete,
+         eq: mockEq,
+         in: mockIn,
+      });
+
+      const res = await request(app)
+         .post("/api/users/follows/sync")
+         .send({ follower_id: followerId, removed });
+
+      expect(res.statusCode).toBe(200);
+      expect(mockDelete).toHaveBeenCalled();
+      expect(mockEq).toHaveBeenCalledWith(
+         "follower_id",
+         followerId,
+      );
+      expect(mockIn).toHaveBeenCalledWith(
+         "following_id",
+         removed,
+      );
+   });
+
+   it("POST /api/users/follows/sync should handle errors", async () => {
+      const followerId = "user-id";
+      const added = ["id1"];
+
+      const mockInsert = jest
+         .fn()
+         .mockRejectedValue(new Error("Sync error"));
+
+      supabase.from.mockReturnValue({
+         insert: mockInsert,
+         delete: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         in: jest.fn().mockResolvedValue({ error: null }),
+      });
+
+      const res = await request(app)
+         .post("/api/users/follows/sync")
+         .send({ follower_id: followerId, added });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Sync error" });
    });
 });
