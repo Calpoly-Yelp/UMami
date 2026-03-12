@@ -142,7 +142,6 @@
    border-bottom-left-radius: 52px;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
    .signupForm {
       grid-template-columns: 1fr;
@@ -163,4 +162,10 @@
    .signupForm__left {
       padding: 36px 22px;
    }
+}
+.signupForm__logo {
+   height: 64px;
+   width: auto;
+   display: block;
+   margin: 0 auto;
 }

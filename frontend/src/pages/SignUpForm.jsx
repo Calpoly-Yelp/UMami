@@ -2,19 +2,26 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./signupForm.css";
 import heroImg from "../assets/signup2.jpg";
+import logo from "../assets/logo.png";
 
 export default function SignUpForm() {
    const navigate = useNavigate();
 
    const handleSubmit = (e) => {
       e.preventDefault();
+      navigate("/onboarding");
    };
 
    return (
       <div className="signupForm">
          <div className="signupForm__left">
-            <div className="signupForm__brand">umami</div>
-
+            <div className="signupForm__brand">
+               <img
+                  src={logo}
+                  alt="Umami logo"
+                  className="signupForm__logo"
+               />
+            </div>
             <h1 className="signupForm__title">
                Get started now
             </h1>
