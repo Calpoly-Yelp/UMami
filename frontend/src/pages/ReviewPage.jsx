@@ -176,7 +176,10 @@ export default function Review() {
             >
                <div className="review__sectionHeaderRow">
                   <div className="review__actions">
-                     <button className="pillBtn">
+                     <button
+                        className="pillBtn"
+                        onClick={() => navigate("/review")}
+                     >
                         ✎ <span>write review</span>
                      </button>
                      <button className="pillBtn">
@@ -338,7 +341,12 @@ export default function Review() {
                      <h2 className="review__h2">Reviews</h2>
 
                      <div className="review__reviewsControls">
-                        <button className="pillBtn">
+                        <button
+                           className="pillBtn"
+                           onClick={() =>
+                              navigate("/review")
+                           }
+                        >
                            ✎ write review
                         </button>
                         <button className="pillBtn pillBtn--ghost">
