@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./WriteReview.css";
 import Modal from "./Modal";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 
 function WriteReview() {
+   const navigate = useNavigate();
    const [rating, setRating] = useState(0);
    const [category, setCategory] = useState("Service");
    const [text, setText] = useState("");
@@ -117,6 +119,7 @@ function WriteReview() {
                      <button
                         type="button"
                         className="wr-submit"
+                        onClick={() => navigate("/reviews")}
                      >
                         Submit review
                      </button>
