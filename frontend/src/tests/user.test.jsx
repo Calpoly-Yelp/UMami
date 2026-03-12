@@ -382,8 +382,9 @@ describe("User Profile Page Edge Cases", () => {
       );
       expect(profilePic).not.toBeInTheDocument();
 
-      const defaultAvatar =
-         document.querySelector(".card > svg");
+      const defaultAvatar = document.querySelector(
+         ".user-card > svg",
+      );
       expect(defaultAvatar).toBeInTheDocument();
    });
 

@@ -16,6 +16,7 @@ function Header() {
       useState(false);
    const [notifications, setNotifications] = useState([]);
    const [visibleCount, setVisibleCount] = useState(4);
+   const [user, setUser] = useState(null);
    const dropdownRef = useRef(null);
    const notificationRef = useRef(null);
 
@@ -37,32 +38,13 @@ function Header() {
       setIsDropdownOpen(false);
    };
    const handleSignOut = () => {
+      localStorage.removeItem("user");
+      setUser(null);
       navigate("/");
       setIsDropdownOpen(false);
    };
 
    const handleNotificationClick = async (notification) => {
-      {
-         /* implement logic to redirect users to the notification reference 
-      switch (notification.type) {
-         case "friend_request":
-         case "friend_accept":
-            navigate("/user#following");
-            break;
-         case "menu_update":
-         case "restaurant_promo":
-            navigate("/restaurants");
-            break;
-         case "review_like":
-         case "review_comment":
-            navigate("/user#reviews");
-            break;
-         default:
-            break;
-      }
-      */
-      }
-
       setIsNotificationsOpen(false);
 
       // If notification already read, stop here (don't sync)
@@ -161,10 +143,27 @@ function Header() {
 
    // logic for fetching notifications from database
    useEffect(() => {
-      // harcode our test users userID
-      const userId = "b677be85-81db-4245-91ca-acb713bd5564";
+      const loadUserAndNotifications = async () => {
+         // Try to get user from storage
+         let storedUser = localStorage.getItem("user");
 
-      const fetchNotifications = async () => {
+         // If not found, wait briefly for App.jsx to populate it (race condition fix)
+         if (!storedUser) {
+            await new Promise((resolve) =>
+               setTimeout(resolve, 500),
+            );
+            storedUser = localStorage.getItem("user");
+         }
+
+         let userId =
+            "b677be85-81db-4245-91ca-acb713bd5564";
+
+         if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            if (parsedUser.id) userId = parsedUser.id;
+         }
+
          try {
             const response = await fetch(
                `http://localhost:4000/api/notifications/${userId}`,
@@ -181,7 +180,7 @@ function Header() {
          }
       };
 
-      fetchNotifications();
+      loadUserAndNotifications();
    }, []);
 
    const unreadCount = notifications.filter(
@@ -329,12 +328,28 @@ function Header() {
                className="profile-container"
                ref={dropdownRef}
             >
-               <MdOutlineAccountCircle
-                  size={60}
-                  color="#154734"
-                  className="profile-icon"
-                  onClick={toggleDropdown}
-               />
+               {user?.avatar_url ? (
+                  <img
+                     src={user.avatar_url}
+                     alt="Profile"
+                     className="profile-icon"
+                     style={{
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        cursor: "pointer",
+                     }}
+                     onClick={toggleDropdown}
+                  />
+               ) : (
+                  <MdOutlineAccountCircle
+                     size={60}
+                     color="#154734"
+                     className="profile-icon"
+                     onClick={toggleDropdown}
+                  />
+               )}
                {isDropdownOpen && (
                   <div className="dropdown-menu">
                      <button

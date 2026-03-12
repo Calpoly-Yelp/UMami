@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "./onboarding.css";
+import "./Onboarding.css";
 import { useNavigate } from "react-router-dom";
 // remember to import { supabase } from "../supabaseClient";
 

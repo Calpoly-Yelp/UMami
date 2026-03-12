@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
    BrowserRouter,
    Routes,
@@ -26,6 +27,34 @@ function AppLayout() {
    const showHeader = !hideHeaderPaths.includes(
       location.pathname,
    );
+
+   useEffect(() => {
+      // Initialize dummy user session for the specific user we want to persist
+      const targetId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const fetchUser = async () => {
+         const storedUser = localStorage.getItem("user");
+         const parsedUser = storedUser
+            ? JSON.parse(storedUser)
+            : null;
+
+         if (
+            !parsedUser ||
+            parsedUser.id !== targetId ||
+            !parsedUser.name
+         ) {
+            const response = await fetch(
+               `http://localhost:4000/api/users/${targetId}`,
+            );
+            const userData = await response.json();
+            localStorage.setItem(
+               "user",
+               JSON.stringify(userData),
+            );
+         }
+      };
+      fetchUser();
+   }, []);
 
    return (
       <div

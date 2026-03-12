@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import "./restaurants.css";
+import "./Restaurants.css";
 
 const testRestaurants = [
    {

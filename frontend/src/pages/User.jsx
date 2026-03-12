@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
-import "./user.css";
+import "./User.css";
 
 // This is our user page layout
 function User({
@@ -118,44 +118,14 @@ function User({
       //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
-            const userId =
-               "b677be85-81db-4245-91ca-acb713bd5564";
-
-            // Execute all fetches in parallel
-            const [
-               userResponse,
-               reviewsResponse,
-               bookmarksResponse,
-               followingResponse,
-            ] = await Promise.all([
-               fetch(
-                  `http://localhost:4000/api/users/${userId}`,
-               ),
-               fetch(
-                  `http://localhost:4000/api/reviews?user_id=${userId}`,
-               ),
-               fetch(
-                  `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
-               ),
-               fetch(
-                  `http://localhost:4000/api/users/${userId}/follows`,
-               ),
-            ]);
-
-            // handle response errors for fetching user
-            if (
-               !userResponse.ok &&
-               userResponse.status !== 404
-            ) {
-               throw new Error(
-                  `Backend error when fetching users: ${userResponse.statusText}`,
-               );
-            }
+            const storedUser = JSON.parse(
+               localStorage.getItem("user"),
+            );
 
             // assign user data to object
-            let userData = {};
-            if (userResponse.ok) {
-               userData = await userResponse.json();
+            const userData =
+               storedUser || initialUser || {};
+            if (userData.id) {
                setUser({
                   id: userData.id,
                   name: userData.name || "Anonymous",
@@ -163,9 +133,24 @@ function User({
                   is_verified:
                      userData.is_verified || false,
                });
-            } else {
-               console.error("Failed to fetch user");
             }
+
+            // Execute all fetches in parallel
+            const [
+               reviewsResponse,
+               bookmarksResponse,
+               followingResponse,
+            ] = await Promise.all([
+               fetch(
+                  `http://localhost:4000/api/reviews?user_id=${userData.id}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/restaurants/bookmarks/${userData.id}`,
+               ),
+               fetch(
+                  `http://localhost:4000/api/users/${userData.id}/follows`,
+               ),
+            ]);
 
             // handle response errors
             if (
@@ -209,7 +194,7 @@ function User({
 
             // fetch bookmarks and restaurants for this user
             console.log(
-               `Fetching bookmarks for user: ${userId}`,
+               `Fetching bookmarks for user: ${userData.id}`,
             );
             if (bookmarksResponse.ok) {
                const restaurantsData =
@@ -414,7 +399,7 @@ function User({
          <div className="user-content">
             <div className="user-info">
                {/* Card Section */}
-               <div className="card">
+               <div className="user-card">
                   {/* If user has a profile picture, display that, otherwise display default image */}
                   {user.avatar_url ? (
                      <img

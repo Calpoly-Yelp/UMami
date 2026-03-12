@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Map from "../components/Map";
-import "./reviewpage.css";
+import "./ReviewPage.css";
 import heroImg from "../assets/shakesmartheader.jpg";
 import avatarMusty from "../assets/avatar-musty.jpeg";
 import avatarCarol from "../assets/avatar-carol.jpeg";
