@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import "./onboarding.css";
 import { useNavigate } from "react-router-dom";
-// import { supabase } from "../supabaseClient";
+// remember to import { supabase } from "../supabaseClient";
 
 const STEPS = [
    { key: "role", label: "Who are you?" },
@@ -66,6 +66,23 @@ export default function Onboarding() {
       setForm((p) => ({ ...p, [name]: value }));
    }
 
+   async function finish() {
+      // remember to also do this
+      // const { data: { user } } = await supabase.auth.getUser();
+      // if (user) {
+      //   await supabase.from("profiles").upsert({
+      //     id: user.id,
+      //     role: form.role,
+      //     budget: form.budget,
+      //     diet: form.diet,
+      //     priorities: form.priorities,
+      //     notifications: form.notifications,
+      //     onboarded: true,
+      //   });
+      // }
+      navigate("/home");
+   }
+
    function toggleMulti(name, value, options = {}) {
       const { exclusiveValue, max } = options;
 
@@ -74,9 +91,11 @@ export default function Onboarding() {
          let nextArr = Array.isArray(current)
             ? [...current]
             : [];
+
          if (exclusiveValue && value === exclusiveValue) {
             return { ...p, [name]: [exclusiveValue] };
          }
+
          if (
             exclusiveValue &&
             nextArr.includes(exclusiveValue)
@@ -92,24 +111,9 @@ export default function Onboarding() {
             if (max && nextArr.length >= max) return p;
             nextArr.push(value);
          }
+
          return { ...p, [name]: nextArr };
       });
-   }
-
-   async function finish() {
-      // const { data: { user } } = await supabase.auth.getUser();
-      // if (user) {
-      //   await supabase.from("profiles").upsert({
-      //     id: user.id,
-      //     role: form.role,
-      //     budget: form.budget,
-      //     diet: form.diet,
-      //     priorities: form.priorities,
-      //     notifications: form.notifications,
-      //     onboarded: true,
-      //   });
-      // }
-      navigate("/home");
    }
 
    return (
@@ -161,6 +165,7 @@ export default function Onboarding() {
                      footerRight={
                         <div className="ob__footerBtns">
                            <button
+                              type="button"
                               className="ob__btn ob__btnGhost"
                               onClick={() =>
                                  navigate("/home")
@@ -169,6 +174,7 @@ export default function Onboarding() {
                               Skip Survey
                            </button>
                            <button
+                              type="button"
                               className="ob__btn ob__btnPrimary"
                               disabled={!canGoNext}
                               onClick={next}
@@ -212,6 +218,7 @@ export default function Onboarding() {
                      progress={progressPct}
                      footerLeft={
                         <button
+                           type="button"
                            className="ob__btn ob__btnOutline"
                            onClick={prev}
                         >
@@ -220,6 +227,7 @@ export default function Onboarding() {
                      }
                      footerRight={
                         <button
+                           type="button"
                            className="ob__btn ob__btnPrimary"
                            disabled={!canGoNext}
                            onClick={next}
@@ -270,6 +278,7 @@ export default function Onboarding() {
                      progress={progressPct}
                      footerLeft={
                         <button
+                           type="button"
                            className="ob__btn ob__btnOutline"
                            onClick={prev}
                         >
@@ -278,6 +287,7 @@ export default function Onboarding() {
                      }
                      footerRight={
                         <button
+                           type="button"
                            className="ob__btn ob__btnPrimary"
                            disabled={!canGoNext}
                            onClick={next}
@@ -355,6 +365,7 @@ export default function Onboarding() {
                      progress={progressPct}
                      footerLeft={
                         <button
+                           type="button"
                            className="ob__btn ob__btnOutline"
                            onClick={prev}
                         >
@@ -363,6 +374,7 @@ export default function Onboarding() {
                      }
                      footerRight={
                         <button
+                           type="button"
                            className="ob__btn ob__btnPrimary"
                            disabled={!canGoNext}
                            onClick={next}
@@ -436,6 +448,7 @@ export default function Onboarding() {
                            )
                         }
                      />
+
                      {form.priorities.length >= 2 && (
                         <div className="ob__hint">
                            You’ve selected 2. Uncheck one to
@@ -452,6 +465,7 @@ export default function Onboarding() {
                      progress={progressPct}
                      footerLeft={
                         <button
+                           type="button"
                            className="ob__btn ob__btnOutline"
                            onClick={prev}
                         >
@@ -460,6 +474,7 @@ export default function Onboarding() {
                      }
                      footerRight={
                         <button
+                           type="button"
                            className="ob__btn ob__btnPrimary"
                            disabled={!canGoNext}
                            onClick={next}
@@ -477,7 +492,9 @@ export default function Onboarding() {
                            toggleMulti(
                               "notifications",
                               "menu",
-                              { exclusiveValue: "none" },
+                              {
+                                 exclusiveValue: "none",
+                              },
                            )
                         }
                      />
@@ -490,7 +507,9 @@ export default function Onboarding() {
                            toggleMulti(
                               "notifications",
                               "besttimes",
-                              { exclusiveValue: "none" },
+                              {
+                                 exclusiveValue: "none",
+                              },
                            )
                         }
                      />
@@ -503,7 +522,9 @@ export default function Onboarding() {
                            toggleMulti(
                               "notifications",
                               "friends",
-                              { exclusiveValue: "none" },
+                              {
+                                 exclusiveValue: "none",
+                              },
                            )
                         }
                      />
@@ -516,7 +537,9 @@ export default function Onboarding() {
                            toggleMulti(
                               "notifications",
                               "none",
-                              { exclusiveValue: "none" },
+                              {
+                                 exclusiveValue: "none",
+                              },
                            )
                         }
                      />
@@ -544,6 +567,7 @@ function Step({
          ) : (
             <div className="ob__subtitle" />
          )}
+
          <div className="ob__content">{children}</div>
 
          <div className="ob__progressWrap">
