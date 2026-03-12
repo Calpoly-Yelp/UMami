@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MapComponent from "../components/mapComponent";
 import "./reviewpage.css";
-import logo from "../assets/logo.png";
 import heroImg from "../assets/shakesmartheader.jpg";
 import avatarMusty from "../assets/avatar-musty.jpeg";
 import avatarCarol from "../assets/avatar-carol.jpeg";
@@ -106,29 +105,6 @@ export default function Review() {
 
    return (
       <div className="review">
-         <header className="review__topbar">
-            <button
-               className="review__logoBtn"
-               onClick={() => navigate("/home")}
-               aria-label="Go home"
-            >
-               <img
-                  className="review__logoImg"
-                  src={logo}
-                  alt="umami logo"
-               />
-            </button>
-
-            <button
-               className="review__profile"
-               aria-label="Profile"
-            >
-               <span className="review__profileIcon">
-                  👤
-               </span>
-            </button>
-         </header>
-
          <section
             className="review__hero"
             style={{

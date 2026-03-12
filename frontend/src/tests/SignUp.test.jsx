@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import SignUpForm from "../pages/SignUpForm";
+import SignUp from "../pages/SignUp";
 
 jest.mock("../assets/signup2.jpg", () => "mock-image");
 
@@ -11,13 +11,13 @@ jest.mock("react-router-dom", () => ({
    useNavigate: () => mockNavigate,
 }));
 
-describe("SignUpForm component", () => {
+describe("SignUp component", () => {
    beforeEach(() => {
       mockNavigate.mockClear();
    });
 
    test("renders the sign up form", () => {
-      render(<SignUpForm />);
+      render(<SignUp />);
 
       expect(
          screen.getByText(/get started now/i),
@@ -44,7 +44,7 @@ describe("SignUpForm component", () => {
 
    test("allows the user to type into the form inputs", async () => {
       const user = userEvent.setup();
-      render(<SignUpForm />);
+      render(<SignUp />);
 
       const nameInput = screen.getByLabelText(/name/i);
       const emailInput =
@@ -63,7 +63,7 @@ describe("SignUpForm component", () => {
 
    test("allows the user to check the terms checkbox", async () => {
       const user = userEvent.setup();
-      render(<SignUpForm />);
+      render(<SignUp />);
 
       const checkbox = screen.getByRole("checkbox");
       expect(checkbox).not.toBeChecked();
@@ -75,7 +75,7 @@ describe("SignUpForm component", () => {
 
    test("does not navigate when sign up is submitted", async () => {
       const user = userEvent.setup();
-      render(<SignUpForm />);
+      render(<SignUp />);
 
       const submitButton = screen.getByRole("button", {
          name: /sign up/i,
@@ -88,7 +88,7 @@ describe("SignUpForm component", () => {
 
    test("navigates to /signin when sign in button is clicked", async () => {
       const user = userEvent.setup();
-      render(<SignUpForm />);
+      render(<SignUp />);
 
       const signInButton = screen.getByRole("button", {
          name: /sign in/i,
