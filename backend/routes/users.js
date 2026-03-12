@@ -23,6 +23,25 @@ router.get("/", async (req, res) => {
    }
 });
 
+// Create a new user
+router.post("/", async (req, res) => {
+   try {
+      const { data, error } = await supabase
+         .from("users")
+         .insert([req.body])
+         .select()
+         .single();
+
+      if (error) {
+         throw error;
+      }
+
+      res.status(201).json(data);
+   } catch (error) {
+      res.status(500).json({ error: error.message });
+   }
+});
+
 // Get user by ID
 router.get("/:id", async (req, res) => {
    const { id } = req.params;

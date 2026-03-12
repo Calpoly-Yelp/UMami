@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./auth.css";
+import "./SignIn.css";
 import bgImage from "../assets/signup-bg.jpeg";
 
 export default function SignIn() {
@@ -11,7 +11,22 @@ export default function SignIn() {
 
    const handleSignIn = async (e) => {
       e.preventDefault();
-      navigate("/restaurants");
+      // Simulate login by fetching the specific test user from the database
+      try {
+         const response = await fetch(
+            "http://localhost:4000/api/users/b677be85-81db-4245-91ca-acb713bd5564",
+         );
+         if (response.ok) {
+            const userData = await response.json();
+            localStorage.setItem(
+               "user",
+               JSON.stringify(userData),
+            );
+            navigate("/restaurants");
+         }
+      } catch (error) {
+         console.error("Login failed", error);
+      }
    };
 
    return (

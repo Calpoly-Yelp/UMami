@@ -67,6 +67,32 @@ describe("User Endpoints", () => {
       expect(supabase.from).toHaveBeenCalledWith("users");
    });
 
+   it("POST /api/users should create a new user", async () => {
+      const newUser = {
+         id: "new-user-id",
+         email: "new@example.com",
+         name: "New User",
+         avatar_url: null,
+         is_verified: false,
+      };
+
+      supabase.from.mockReturnValue({
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: newUser,
+            error: null,
+         }),
+      });
+
+      const res = await request(app)
+         .post("/api/users")
+         .send(newUser);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body).toEqual(newUser);
+   });
+
    it("GET /api/users/:id should return a single user", async () => {
       const mockUser = {
          id: "b677be85-81db-4245-91ca-acb713bd5564",

@@ -80,7 +80,7 @@ export default function Onboarding() {
       //     onboarded: true,
       //   });
       // }
-      navigate("/home");
+      navigate("/restaurants");
    }
 
    function toggleMulti(name, value, options = {}) {
@@ -168,7 +168,7 @@ export default function Onboarding() {
                               type="button"
                               className="ob__btn ob__btnGhost"
                               onClick={() =>
-                                 navigate("/home")
+                                 navigate("/restaurants")
                               }
                            >
                               Skip Survey

@@ -7,9 +7,32 @@ import logo from "../assets/logo.png";
 export default function SignUp() {
    const navigate = useNavigate();
 
-   const handleSubmit = (e) => {
+   const handleSubmit = async (e) => {
       e.preventDefault();
-      navigate("/onboarding");
+      const formData = new FormData(e.target);
+
+      const newUser = {
+         id: crypto.randomUUID(),
+         name: formData.get("name"),
+         email: formData.get("email"),
+         avatar_url: "", // Default empty avatar
+         is_verified: false,
+      };
+
+      try {
+         await fetch("http://localhost:4000/api/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newUser),
+         });
+         localStorage.setItem(
+            "user",
+            JSON.stringify(newUser),
+         );
+         navigate("/onboarding");
+      } catch (error) {
+         console.error("Sign up failed", error);
+      }
    };
 
    return (

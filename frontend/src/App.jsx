@@ -38,11 +38,7 @@ function AppLayout() {
             ? JSON.parse(storedUser)
             : null;
 
-         if (
-            !parsedUser ||
-            parsedUser.id !== targetId ||
-            !parsedUser.name
-         ) {
+         if (!parsedUser || !parsedUser.id) {
             const response = await fetch(
                `http://localhost:4000/api/users/${targetId}`,
             );
