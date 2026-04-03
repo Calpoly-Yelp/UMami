@@ -1,15 +1,9 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Map from "../components/Map";
+import ReviewCard from "../components/ReviewCard";
 import "./ReviewPage.css";
 import heroImg from "../assets/shakesmartheader.jpg";
-import avatarMusty from "../assets/avatar-musty.jpeg";
-import avatarCarol from "../assets/avatar-carol.jpeg";
-import avatarArnold from "../assets/avatar-arnold.jpeg";
-
-import rev1 from "../assets/rev1.jpeg";
-import rev2 from "../assets/rev2.jpeg";
-import rev3 from "../assets/rev3.jpeg";
 
 export default function Review() {
    const navigate = useNavigate();
@@ -50,44 +44,45 @@ export default function Review() {
       [],
    );
 
-   const reviews = useMemo(
-      () => [
-         {
-            id: 1,
-            author: "Musty the Mustang",
-            avatar: avatarMusty,
-            verified: true,
-            date: "Dec. 25, 2025",
-            rating: 4,
-            text: "Lovely customer service! Had my bowl ready quickly and was so good! Going to make it a habit to continue to go to shakesmart!",
-            tags: ["smoothie", "service", "bowl"],
-            images: [rev1, rev2],
-         },
-         {
-            id: 2,
-            author: "Carol Fisher",
-            avatar: avatarCarol,
-            verified: false,
-            date: "Mar. 21, 2025",
-            rating: 5,
-            text: "Great people who work here, always happy to see everyone. Excellent food and shakes. Love their vegan options.",
-            tags: ["vegan", "quality"],
-            images: [rev3],
-         },
-         {
-            id: 3,
-            author: "Arnold Smith",
-            avatar: avatarArnold,
-            verified: true,
-            date: "Jan. 18, 2025",
-            rating: 3,
-            text: "Pretty good smoothies. Service could be better.",
-            tags: ["smoothie", "service"],
-            images: [],
-         },
-      ],
-      [],
-   );
+   const [reviews, setReviews] = useState([]);
+
+   useEffect(() => {
+      const fetchReviews = async () => {
+         try {
+            // Hardcoding restaurant ID to 107
+            const response = await fetch(
+               "http://localhost:4000/api/reviews?restaurant_id=108",
+            );
+            if (response.ok) {
+               const data = await response.json();
+
+               // Map the backend ReviewModel to the frontend ReviewCard props
+               const formattedReviews = data.map((rev) => ({
+                  id: rev.id,
+                  userName:
+                     rev.users?.name || "Anonymous User",
+                  avatar_url: rev.users?.avatar_url || null,
+                  is_verified:
+                     rev.users?.is_verified || false,
+                  rating: rev.rating || 0,
+                  date: rev.created_at,
+                  comments: rev.comment,
+                  tags: rev.tags || [],
+                  photos: rev.photo_urls || [],
+               }));
+
+               setReviews(formattedReviews);
+            }
+         } catch (error) {
+            console.error(
+               "Failed to fetch reviews:",
+               error,
+            );
+         }
+      };
+
+      fetchReviews();
+   }, []);
 
    const ratingCounts = useMemo(
       () => ({ 5: 26, 4: 15, 3: 8, 2: 3, 1: 2 }),
@@ -417,73 +412,6 @@ function StarRow({ value }) {
             );
          })}
       </div>
-   );
-}
-
-function ReviewCard({ review }) {
-   return (
-      <article className="reviewCard">
-         <div className="reviewCard__top">
-            <div className="reviewCard__left">
-               <img
-                  className="reviewCard__avatar"
-                  src={review.avatar}
-                  alt={`${review.author} avatar`}
-                  onError={(e) => {
-                     e.currentTarget.src =
-                        "/assets/avatar-fallback.png";
-                  }}
-               />
-               <div>
-                  <div className="reviewCard__nameRow">
-                     <span className="reviewCard__name">
-                        {review.author}
-                     </span>
-                     {review.verified && (
-                        <span className="badge badge--verified">
-                           Verified Cal Poly Account
-                        </span>
-                     )}
-                  </div>
-                  <div className="reviewCard__meta">
-                     <StarRow value={review.rating} />
-                     <span className="reviewCard__date">
-                        {review.date}
-                     </span>
-                  </div>
-               </div>
-            </div>
-
-            <button
-               className="reviewCard__helpful"
-               aria-label="Helpful"
-            >
-               👍 <span>helpful</span>
-            </button>
-         </div>
-
-         <p className="reviewCard__text">{review.text}</p>
-
-         <div className="reviewCard__tags">
-            {review.tags.map((t) => (
-               <span key={t} className="chip chip--tag">
-                  {t}
-               </span>
-            ))}
-         </div>
-
-         {review.images.length > 0 && (
-            <div className="reviewCard__imgs">
-               {review.images.map((src, idx) => (
-                  <img
-                     key={idx}
-                     src={src}
-                     alt={`review photo ${idx + 1}`}
-                  />
-               ))}
-            </div>
-         )}
-      </article>
    );
 }
 

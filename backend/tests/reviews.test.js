@@ -98,6 +98,42 @@ describe("Review Endpoints", () => {
       );
    });
 
+   it("GET /api/reviews?restaurant_id=... should filter reviews by restaurant", async () => {
+      const mockReviews = [
+         {
+            id: 1,
+            restaurant_id: 101,
+            user_id: "b677be85-81db-4245-91ca-acb713bd5564",
+            created_at: "2023-01-01",
+            rating: 5,
+            comment: "Great!",
+            photo_urls: [],
+            tags: [],
+         },
+      ];
+
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: mockReviews, error: null }),
+      };
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+      });
+
+      const res = await request(app).get(
+         "/api/reviews?restaurant_id=101",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.length).toBe(1);
+      expect(mockQuery.eq).toHaveBeenCalledWith(
+         "restaurant_id",
+         "101",
+      );
+   });
+
    // --- Error Handling Tests ---
 
    it("GET /api/reviews should handle errors", async () => {
