@@ -7,6 +7,8 @@ export const Restaurant = z.object({
    name: z.string().nullable(),
    category: z.array(z.string()).nullable(),
    avg_rating: z.number().nullable(),
+   rating_count: z.number().nullable(),
+   rating_sum: z.number().nullable(),
    hours: z.array(z.string()).nullable(),
    image_urls: z.array(z.string()).nullable(),
 });
