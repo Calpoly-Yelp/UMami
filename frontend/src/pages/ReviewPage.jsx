@@ -8,14 +8,16 @@ import heroImg from "../assets/shakesmartheader.jpg";
 export default function Review() {
    const navigate = useNavigate();
    const [activeTab, setActiveTab] = useState("menu");
+   const [dbRestaurant, setDbRestaurant] = useState(null);
+   const [ratingFilter, setRatingFilter] = useState(null);
 
    const restaurant = useMemo(
       () => ({
          name: "Shake Smart",
          heroImage: heroImg,
          tags: ["acai", "smoothies"],
-         rating: 4.5,
-         ratingCount: 54,
+         rating: dbRestaurant?.avg_rating ?? 4.5,
+         ratingCount: dbRestaurant?.rating_count ?? 54,
          hours: [
             { day: "Monday", time: "7am - 10pm" },
             {
@@ -41,15 +43,36 @@ export default function Review() {
             "/gallery/ss_food_4.jpg",
          ],
       }),
-      [],
+      [dbRestaurant],
    );
 
    const [reviews, setReviews] = useState([]);
 
    useEffect(() => {
+      // Fetches the restaurant's data
+      const fetchRestaurant = async () => {
+         try {
+            // Hardcoding restaurant ID to 108
+            // TODO: Update this to dynamically grab the ID from the URL parameters
+            const response = await fetch(
+               "http://localhost:4000/api/restaurants/108",
+            );
+            if (response.ok) {
+               const data = await response.json();
+               setDbRestaurant(data);
+            }
+         } catch (error) {
+            console.error(
+               "Failed to fetch restaurant:",
+               error,
+            );
+         }
+      };
+
+      // Fetches all the individual reviews associated with this restaurant
       const fetchReviews = async () => {
          try {
-            // Hardcoding restaurant ID to 107
+            // Hardcoding restaurant ID to 108
             const response = await fetch(
                "http://localhost:4000/api/reviews?restaurant_id=108",
             );
@@ -81,13 +104,42 @@ export default function Review() {
          }
       };
 
+      fetchRestaurant();
       fetchReviews();
    }, []);
 
-   const ratingCounts = useMemo(
-      () => ({ 5: 26, 4: 15, 3: 8, 2: 3, 1: 2 }),
-      [],
-   );
+   // Calculates the total count of each star rating (1-5) from the fetched reviews array.
+   // This is used to populate the filled percentages on the "Overall Rating" bar chart.
+   const computedRatings = useMemo(() => {
+      const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+      reviews.forEach((r) => {
+         // Only count valid number ratings between 1 and 5
+         if (typeof r.rating === "number" && r.rating > 0) {
+            const roundedRating = Math.max(
+               1,
+               Math.min(5, Math.round(r.rating)),
+            );
+            counts[roundedRating] += 1;
+         }
+      });
+
+      return { counts };
+   }, [reviews]);
+
+   // Filters the reviews based on the selected star rating filter
+   const filteredReviews = useMemo(() => {
+      if (!ratingFilter) return reviews;
+      return reviews.filter((r) => {
+         if (typeof r.rating !== "number" || r.rating <= 0)
+            return false;
+         const roundedRating = Math.max(
+            1,
+            Math.min(5, Math.round(r.rating)),
+         );
+         return roundedRating === ratingFilter;
+      });
+   }, [reviews, ratingFilter]);
 
    const scrollTo = (key) => {
       setActiveTab(key);
@@ -352,9 +404,24 @@ export default function Review() {
                   </div>
 
                   <div className="review__reviewList">
-                     {reviews.map((r) => (
-                        <ReviewCard key={r.id} review={r} />
-                     ))}
+                     {filteredReviews.length > 0 ? (
+                        filteredReviews.map((r) => (
+                           <ReviewCard
+                              key={r.id}
+                              review={r}
+                           />
+                        ))
+                     ) : (
+                        <div
+                           style={{
+                              textAlign: "center",
+                              padding: "40px 0",
+                              color: "var(--muted)",
+                           }}
+                        >
+                           No reviews found for this rating.
+                        </div>
+                     )}
                   </div>
 
                   <div className="review__pagination">
@@ -383,8 +450,14 @@ export default function Review() {
                         <RatingBar
                            key={s}
                            star={s}
-                           count={ratingCounts[s]}
-                           max={ratingCounts[5]}
+                           count={computedRatings.counts[s]}
+                           total={restaurant.ratingCount}
+                           isActive={ratingFilter === s}
+                           onClick={() =>
+                              setRatingFilter((prev) =>
+                                 prev === s ? null : s,
+                              )
+                           }
                         />
                      ))}
                   </div>
@@ -394,11 +467,16 @@ export default function Review() {
       </div>
    );
 }
+
+// Renders a visual row of 5 stars based on a numeric value
 function StarRow({ value }) {
+   // Calculate number of completely filled stars
    const full = Math.floor(value);
+   // Determine if a half-filled star is needed
    const half = value - full >= 0.5;
    return (
       <div className="stars" aria-label={`Rating ${value}`}>
+         {/* Generate exactly 5 stars */}
          {Array.from({ length: 5 }).map((_, i) => {
             const isFull = i < full;
             const isHalf = i === full && half;
@@ -415,16 +493,37 @@ function StarRow({ value }) {
    );
 }
 
-function RatingBar({ star, count, max }) {
-   const pct = Math.round((count / Math.max(max, 1)) * 100);
+// Renders a single horizontal bar in the rating histogram
+function RatingBar({
+   star,
+   count,
+   total,
+   isActive,
+   onClick,
+}) {
+   // Calculate what percentage of total reviews this star rating makes up
+   const totalPct =
+      total > 0 ? Math.round((count / total) * 100) : 0;
    return (
-      <div className="ratingRow">
+      <div
+         className={`ratingRow ${isActive ? "is-active" : ""}`}
+         onClick={onClick}
+         role="button"
+         tabIndex={0}
+         onKeyDown={(e) =>
+            (e.key === "Enter" || e.key === " ") &&
+            onClick()
+         }
+      >
          <div className="ratingRow__star">{star}</div>
          <div className="ratingRow__track">
             <div
                className="ratingRow__fill"
-               style={{ width: `${pct}%` }}
+               style={{ width: `${totalPct}%` }}
             />
+         </div>
+         <div className="ratingRow__percent">
+            {totalPct}%
          </div>
       </div>
    );
