@@ -73,8 +73,12 @@ export default function Review() {
       const fetchReviews = async () => {
          try {
             // Hardcoding restaurant ID to 108
+            // You'll want to replace this dummy ID with your actual logged-in user ID later
+            const CURRENT_USER_ID =
+               "b677be85-81db-4245-91ca-acb713bd5564";
+
             const response = await fetch(
-               "http://localhost:4000/api/reviews?restaurant_id=108",
+               `http://localhost:4000/api/reviews?restaurant_id=108&current_user_id=${CURRENT_USER_ID}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -92,6 +96,9 @@ export default function Review() {
                   comments: rev.comment,
                   tags: rev.tags || [],
                   photos: rev.photo_urls || [],
+                  helpfulCount: rev.helpful_count || 0,
+                  hasVotedHelpful:
+                     rev.has_voted_helpful || false,
                }));
 
                setReviews(formattedReviews);
@@ -409,6 +416,7 @@ export default function Review() {
                            <ReviewCard
                               key={r.id}
                               review={r}
+                              showHelpful={true}
                            />
                         ))
                      ) : (

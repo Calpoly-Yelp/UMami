@@ -10,6 +10,8 @@ export const Review = z.object({
    comment: z.string().nullable(),
    photo_urls: z.array(z.string()).nullable(),
    tags: z.array(z.string()).nullable(),
+   helpful_count: z.number().nullable().optional(),
+   has_voted_helpful: z.boolean().optional(),
    users: z
       .object({
          name: z.string().nullable(),
