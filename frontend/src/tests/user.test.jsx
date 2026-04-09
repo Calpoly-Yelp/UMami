@@ -6,9 +6,17 @@ import {
    beforeAll,
    jest,
 } from "@jest/globals";
-import { render, screen } from "@testing-library/react";
+import {
+   render as rtlRender,
+   screen,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { MemoryRouter } from "react-router-dom";
 import UserPage from "../pages/User.jsx";
+
+// Custom render function that wraps components in MemoryRouter so React Router hooks work
+const render = (ui, options) =>
+   rtlRender(ui, { wrapper: MemoryRouter, ...options });
 
 // --- Mock Data Setup ---
 const testUser = {

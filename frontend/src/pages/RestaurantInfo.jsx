@@ -1,37 +1,57 @@
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Map from "../components/Map";
 import ReviewCard from "../components/ReviewCard";
-import "./ReviewPage.css";
-import heroImg from "../assets/shakesmartheader.jpg";
+import "./RestaurantInfo.css";
 
 export default function Review() {
    const navigate = useNavigate();
+   const { id } = useParams();
    const [activeTab, setActiveTab] = useState("menu");
    const [dbRestaurant, setDbRestaurant] = useState(null);
    const [ratingFilter, setRatingFilter] = useState(null);
 
-   const restaurant = useMemo(
-      () => ({
-         name: "Shake Smart",
-         heroImage: heroImg,
+   const restaurant = useMemo(() => {
+      // Helper to format database time
+      const formatTime = (timeStr) => {
+         if (!timeStr) return "";
+         const [hourStr, minuteStr] = timeStr.split(":");
+         const hour = parseInt(hourStr, 10);
+         const ampm = hour >= 12 ? "pm" : "am";
+         const formattedHour = hour % 12 || 12;
+         const formattedMinute =
+            minuteStr === "00" ? "" : `:${minuteStr}`;
+         return `${formattedHour}${formattedMinute}${ampm}`;
+      };
+
+      const timeString =
+         dbRestaurant?.hours?.length === 2
+            ? `${formatTime(dbRestaurant.hours[0])} - ${formatTime(
+                 dbRestaurant.hours[1],
+              )}`
+            : "Loading...";
+
+      return {
+         name: dbRestaurant?.name || "Loading...",
+         banner: dbRestaurant?.image_urls?.[0] || null,
          tags: ["acai", "smoothies"],
-         rating: dbRestaurant?.avg_rating ?? 4.5,
-         ratingCount: dbRestaurant?.rating_count ?? 54,
+         rating: dbRestaurant?.avg_rating ?? 0,
+         ratingCount: dbRestaurant?.rating_count ?? 0,
          hours: [
-            { day: "Monday", time: "7am - 10pm" },
+            { day: "Monday", time: timeString },
             {
                day: "Tuesday",
-               time: "7am - 10pm",
+               time: timeString,
                open: true,
             },
-            { day: "Wednesday", time: "7am - 10pm" },
-            { day: "Thursday", time: "7am - 10pm" },
-            { day: "Friday", time: "7am - 10pm" },
-            { day: "Saturday", time: "9am - 9pm" },
-            { day: "Sunday", time: "9am - 9pm" },
+            { day: "Wednesday", time: timeString },
+            { day: "Thursday", time: timeString },
+            { day: "Friday", time: timeString },
+            { day: "Saturday", time: timeString },
+            { day: "Sunday", time: timeString },
          ],
-         locationLabel: "Recreation Center",
+         locationLabel:
+            dbRestaurant?.location || "Loading...",
          address:
             "Shake Smart, Recreation Center, 1 Grand Ave, San Luis Obispo, CA 93407",
          lat: 35.3007,
@@ -42,9 +62,8 @@ export default function Review() {
             "/gallery/ss_food_3.jpg",
             "/gallery/ss_food_4.jpg",
          ],
-      }),
-      [dbRestaurant],
-   );
+      };
+   }, [dbRestaurant]);
 
    const [reviews, setReviews] = useState([]);
 
@@ -52,10 +71,8 @@ export default function Review() {
       // Fetches the restaurant's data
       const fetchRestaurant = async () => {
          try {
-            // Hardcoding restaurant ID to 108
-            // TODO: Update this to dynamically grab the ID from the URL parameters
             const response = await fetch(
-               "http://localhost:4000/api/restaurants/108",
+               `http://localhost:4000/api/restaurants/${id}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -72,13 +89,12 @@ export default function Review() {
       // Fetches all the individual reviews associated with this restaurant
       const fetchReviews = async () => {
          try {
-            // Hardcoding restaurant ID to 108
             // You'll want to replace this dummy ID with your actual logged-in user ID later
             const CURRENT_USER_ID =
                "b677be85-81db-4245-91ca-acb713bd5564";
 
             const response = await fetch(
-               `http://localhost:4000/api/reviews?restaurant_id=108&current_user_id=${CURRENT_USER_ID}`,
+               `http://localhost:4000/api/reviews?restaurant_id=${id}&current_user_id=${CURRENT_USER_ID}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -113,7 +129,7 @@ export default function Review() {
 
       fetchRestaurant();
       fetchReviews();
-   }, []);
+   }, [id]);
 
    // Calculates the total count of each star rating (1-5) from the fetched reviews array.
    // This is used to populate the filled percentages on the "Overall Rating" bar chart.
@@ -163,7 +179,9 @@ export default function Review() {
          <section
             className="review__hero"
             style={{
-               backgroundImage: `url(${restaurant.heroImage})`,
+               backgroundImage: restaurant.banner
+                  ? `url(${restaurant.banner})`
+                  : "none",
             }}
             aria-label={`${restaurant.name} hero`}
          >
@@ -301,14 +319,19 @@ export default function Review() {
                               <span className="review__day">
                                  {h.day}
                               </span>
+                              <span
+                                 className="review__open"
+                                 style={{
+                                    visibility: h.open
+                                       ? "visible"
+                                       : "hidden",
+                                 }}
+                              >
+                                 open
+                              </span>
                               <span className="review__time">
                                  {h.time}
                               </span>
-                              {h.open && (
-                                 <span className="review__open">
-                                    open
-                                 </span>
-                              )}
                            </div>
                         ))}
                      </div>

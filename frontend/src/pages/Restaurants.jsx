@@ -6,7 +6,7 @@ import "./Restaurants.css";
 
 const testRestaurants = [
    {
-      id: 1,
+      id: 108,
       name: "Shake Smart",
       image: "/images/restaurants/Shakesmart-banner.jpg",
       avg_rating: 5,
@@ -14,7 +14,7 @@ const testRestaurants = [
       isBookmarked: true,
    },
    {
-      id: 2,
+      id: 107,
       name: "Chick-fil-a",
       image: "/images/restaurants/chickfila.jpg",
       avg_rating: 5,
@@ -22,7 +22,7 @@ const testRestaurants = [
       isBookmarked: true,
    },
    {
-      id: 3,
+      id: 104,
       name: "Taco Bell",
       image: "/images/restaurants/tacobell.webp",
       avg_rating: 5,
@@ -30,15 +30,7 @@ const testRestaurants = [
       isBookmarked: true,
    },
    {
-      id: 4,
-      name: "Jamba Juice",
-      image: "/images/restaurants/tacobell.webp",
-      avg_rating: 4.5,
-      location: ["Vista Grande Market"],
-      isBookmarked: false,
-   },
-   {
-      id: 5,
+      id: 106,
       name: "Subway",
       image: "/images/restaurants/subway1.jpg",
       avg_rating: 3.5,
@@ -46,15 +38,7 @@ const testRestaurants = [
       isBookmarked: false,
    },
    {
-      id: 6,
-      name: "Subway",
-      image: "/images/restaurants/subway2.jpg",
-      avg_rating: 3,
-      location: ["Poly Canyon Village"],
-      isBookmarked: false,
-   },
-   {
-      id: 7,
+      id: 101,
       name: "Panda Express",
       image: "/images/restaurants/pandaexpress.jpeg",
       avg_rating: 3,
@@ -62,7 +46,7 @@ const testRestaurants = [
       isBookmarked: false,
    },
    {
-      id: 8,
+      id: 105,
       name: "Einstein Bro's Bagels",
       image: "/images/restaurants/einsteinbros.jpeg",
       avg_rating: 3,
@@ -76,10 +60,7 @@ export default function Restaurants() {
    const navigate = useNavigate();
 
    const handleCardClick = (restaurant) => {
-      // go to reviews page if shake smart card is clicked
-      if (restaurant.name === "Shake Smart") {
-         navigate("/reviews");
-      }
+      navigate(`/restaurants/${restaurant.id}`);
    };
 
    return (
@@ -138,12 +119,7 @@ export default function Restaurants() {
                   <div
                      key={r.id}
                      onClick={() => handleCardClick(r)}
-                     style={{
-                        cursor:
-                           r.name === "Shake Smart"
-                              ? "pointer"
-                              : "default",
-                     }}
+                     style={{ cursor: "pointer" }}
                   >
                      <RestaurantCard restaurant={r} />
                   </div>
