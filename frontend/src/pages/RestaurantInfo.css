@@ -616,6 +616,8 @@
 
 .review__ratingCard {
    align-self: start;
+   position: sticky;
+   top: 18px;
 }
 
 .review__ratingTop {
