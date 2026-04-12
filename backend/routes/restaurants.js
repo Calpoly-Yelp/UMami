@@ -118,6 +118,33 @@ router.post("/bookmarks/sync", async (req, res) => {
    }
 });
 
+// Get tags by restaurant id
+router.get("/:id/tags", async (req, res) => {
+   try {
+      const { id } = req.params;
+      const { data, error } = await supabase
+         .from("restaurants")
+         .select("tags")
+         .eq("id", id)
+         .single();
+
+      if (error) {
+         throw error;
+      }
+
+      // If no data is returned, the restaurant was not found
+      if (!data) {
+         return res
+            .status(404)
+            .json({ error: "Restaurant not found" });
+      }
+
+      res.status(200).json(data.tags || []);
+   } catch (error) {
+      res.status(500).json({ error: error.message });
+   }
+});
+
 // Get restaurant by id
 router.get("/:id", async (req, res) => {
    try {

@@ -8,7 +8,8 @@ export default function Review() {
    const navigate = useNavigate();
    const { id } = useParams();
    const [activeTab, setActiveTab] = useState("menu");
-   const [dbRestaurant, setDbRestaurant] = useState(null);
+   const [restaurantInfo, setRestaurantInfo] =
+      useState(null);
    const [ratingFilter, setRatingFilter] = useState(null);
 
    const restaurant = useMemo(() => {
@@ -25,18 +26,18 @@ export default function Review() {
       };
 
       const timeString =
-         dbRestaurant?.hours?.length === 2
-            ? `${formatTime(dbRestaurant.hours[0])} - ${formatTime(
-                 dbRestaurant.hours[1],
+         restaurantInfo?.hours?.length === 2
+            ? `${formatTime(restaurantInfo.hours[0])} - ${formatTime(
+                 restaurantInfo.hours[1],
               )}`
             : "Loading...";
 
       return {
-         name: dbRestaurant?.name || "Loading...",
-         banner: dbRestaurant?.image_urls?.[0] || null,
-         tags: ["acai", "smoothies"],
-         rating: dbRestaurant?.avg_rating ?? 0,
-         ratingCount: dbRestaurant?.rating_count ?? 0,
+         name: restaurantInfo?.name || "Loading...",
+         banner: restaurantInfo?.image_urls?.[0] || null,
+         tags: restaurantInfo?.tags || [],
+         rating: restaurantInfo?.avg_rating ?? 0,
+         ratingCount: restaurantInfo?.rating_count ?? 0,
          hours: [
             { day: "Monday", time: timeString },
             {
@@ -51,7 +52,7 @@ export default function Review() {
             { day: "Sunday", time: timeString },
          ],
          locationLabel:
-            dbRestaurant?.location || "Loading...",
+            restaurantInfo?.location || "Loading...",
          address:
             "Shake Smart, Recreation Center, 1 Grand Ave, San Luis Obispo, CA 93407",
          lat: 35.3007,
@@ -63,7 +64,7 @@ export default function Review() {
             "/gallery/ss_food_4.jpg",
          ],
       };
-   }, [dbRestaurant]);
+   }, [restaurantInfo]);
 
    const [reviews, setReviews] = useState([]);
 
@@ -76,7 +77,7 @@ export default function Review() {
             );
             if (response.ok) {
                const data = await response.json();
-               setDbRestaurant(data);
+               setRestaurantInfo(data);
             }
          } catch (error) {
             console.error(
