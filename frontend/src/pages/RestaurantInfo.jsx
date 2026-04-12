@@ -288,7 +288,12 @@ export default function Review() {
                   </button>
                </div>
 
-               <button className="pillBtn pillBtn--ghost">
+               <button
+                  className="pillBtn pillBtn--ghost"
+                  onClick={() =>
+                     navigate(`/restaurants/${id}/menu`)
+                  }
+               >
                   👁 view menu and nutrition
                </button>
             </section>

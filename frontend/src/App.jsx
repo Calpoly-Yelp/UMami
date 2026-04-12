@@ -13,6 +13,7 @@ import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import RestaurantInfo from "./pages/RestaurantInfo";
 import Review from "./pages/Review";
+import RestaurantMenu from "./pages/RestaurantMenu";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
 function AppLayout() {
@@ -86,6 +87,10 @@ function AppLayout() {
                <Route
                   path="/restaurants/:id"
                   element={<RestaurantInfo />}
+               />
+               <Route
+                  path="/restaurants/:id/menu"
+                  element={<RestaurantMenu />}
                />
                <Route path="/review" element={<Review />} />
 
