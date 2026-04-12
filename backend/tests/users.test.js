@@ -252,6 +252,12 @@ describe("User Endpoints", () => {
          { id: followingId2, name: "Bob" },
       ];
 
+      const mockReviews = [
+         { user_id: followingId1 },
+         { user_id: followingId1 },
+         { user_id: followingId2 },
+      ];
+
       supabase.from.mockImplementation((table) => {
          if (table === "follows") {
             return {
@@ -271,6 +277,15 @@ describe("User Endpoints", () => {
                }),
             };
          }
+         if (table === "reviews") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: mockReviews,
+                  error: null,
+               }),
+            };
+         }
          return { select: jest.fn() };
       });
 
@@ -281,6 +296,59 @@ describe("User Endpoints", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBe(2);
       expect(res.body[0].name).toBe("Jane");
+      expect(res.body[0].numReviews).toBe(2);
+      expect(res.body[1].name).toBe("Bob");
+      expect(res.body[1].numReviews).toBe(1);
+   });
+
+   it("GET /api/users/:id/follows should return 0 for numReviews if a user has no reviews", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const followingId =
+         "c788cf96-92ec-5356-a2db-bdc824ce6675";
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: [
+                     {
+                        follower_id: followerId,
+                        following_id: followingId,
+                     },
+                  ],
+                  error: null,
+               }),
+            };
+         }
+         if (table === "users") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: [{ id: followingId, name: "Jane" }],
+                  error: null,
+               }),
+            };
+         }
+         if (table === "reviews") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: [], // Simulate no reviews
+                  error: null,
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         `/api/users/${followerId}/follows`,
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body[0].numReviews).toBe(0);
    });
 
    it("GET /api/users/:id/follows should handle fetch follows error", async () => {
@@ -371,6 +439,58 @@ describe("User Endpoints", () => {
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({
          error: "Fetch users error",
+      });
+   });
+
+   it("GET /api/users/:id/follows should handle fetch reviews error", async () => {
+      const followerId =
+         "b677be85-81db-4245-91ca-acb713bd5564";
+      const followingId =
+         "c788cf96-92ec-5356-a2db-bdc824ce6675";
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: [
+                     {
+                        follower_id: followerId,
+                        following_id: followingId,
+                     },
+                  ],
+                  error: null,
+               }),
+            };
+         }
+         if (table === "users") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: [{ id: followingId, name: "Jane" }],
+                  error: null,
+               }),
+            };
+         }
+         if (table === "reviews") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               in: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: "Fetch reviews error" },
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         `/api/users/${followerId}/follows`,
+      );
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({
+         error: "Fetch reviews error",
       });
    });
 

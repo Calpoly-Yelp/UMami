@@ -103,7 +103,35 @@ router.get("/:id/follows", async (req, res) => {
          throw usersError;
       }
 
-      res.status(200).json(followingUsers);
+      const { data: reviewsData, error: reviewsError } =
+         await supabase
+            .from("reviews")
+            .select("user_id")
+            .in("user_id", followingIds);
+
+      if (reviewsError) {
+         throw reviewsError;
+      }
+
+      const reviewCounts = reviewsData.reduce(
+         (acc, review) => {
+            acc[review.user_id] =
+               (acc[review.user_id] || 0) + 1;
+            return acc;
+         },
+         {},
+      );
+
+      const usersWithReviewCounts = followingUsers.map(
+         (user) => {
+            return {
+               ...user,
+               numReviews: reviewCounts[user.id] || 0,
+            };
+         },
+      );
+
+      res.status(200).json(usersWithReviewCounts);
    } catch (error) {
       res.status(500).json({ error: error.message });
    }

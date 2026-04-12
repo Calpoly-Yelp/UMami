@@ -297,6 +297,22 @@ describe("User Profile Page", () => {
       expect(followedUserCards.length).toBe(5);
    });
 
+   // Verify that the number of reviews are displayed on the followed user cards
+   test("renders number of reviews for followed users", () => {
+      render(
+         <UserPage
+            user={testUser}
+            followedUsers={testFollowedUsers}
+         />,
+      );
+      expect(
+         screen.getByText("10 Reviews"),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByText("283 Reviews"),
+      ).toBeInTheDocument();
+   });
+
    // Verify that restaurants passed as props are visually marked as bookmarked
    test("renders saved restaurants as bookmarked", () => {
       render(
