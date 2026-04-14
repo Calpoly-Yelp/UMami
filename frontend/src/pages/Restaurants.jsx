@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import {
+   useState,
+   useEffect,
+   useRef,
+   useMemo,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import "./Restaurants.css";
 
-function Restaurants({
-   restaurants: initialRestaurants,
-}) {
+function Restaurants({ restaurants: initialRestaurants }) {
    const [query, setQuery] = useState("");
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
@@ -51,8 +54,7 @@ function Restaurants({
             );
 
             if (!restaurantsResponse.ok) {
-               let message =
-                  "Failed to fetch restaurants";
+               let message = "Failed to fetch restaurants";
                try {
                   const err =
                      await restaurantsResponse.json();
@@ -66,8 +68,8 @@ function Restaurants({
             const restaurantsData =
                await restaurantsResponse.json();
 
-            const mappedRestaurants =
-               restaurantsData.map((r) => ({
+            const mappedRestaurants = restaurantsData.map(
+               (r) => ({
                   id: r.id,
                   name: r.name || "Unnamed Restaurant",
                   image:
@@ -79,7 +81,8 @@ function Restaurants({
                   hours: r.hours || [],
                   rating_count: r.rating_count ?? 0,
                   rating_sum: r.rating_sum ?? 0,
-               }));
+               }),
+            );
 
             setRestaurants(mappedRestaurants);
 
@@ -96,20 +99,16 @@ function Restaurants({
                      bookmarkedRestaurants.map((r) => ({
                         id: r.id,
                         name:
-                           r.name ||
-                           "Unnamed Restaurant",
+                           r.name || "Unnamed Restaurant",
                         image:
                            r.image_urls?.[0] ||
                            "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
-                        avg_rating:
-                           r.avg_rating ?? 0,
+                        avg_rating: r.avg_rating ?? 0,
                         location: r.location || "",
                         tags: r.tags || [],
                         hours: r.hours || [],
-                        rating_count:
-                           r.rating_count ?? 0,
-                        rating_sum:
-                           r.rating_sum ?? 0,
+                        rating_count: r.rating_count ?? 0,
+                        rating_sum: r.rating_sum ?? 0,
                      }));
 
                   const ids = new Set(
@@ -126,8 +125,7 @@ function Restaurants({
          } catch (err) {
             console.error("Error loading data:", err);
             setError(
-               err.message ||
-                  "Failed to load restaurants.",
+               err.message || "Failed to load restaurants.",
             );
          } finally {
             setLoading(false);
@@ -218,15 +216,11 @@ function Restaurants({
             ?.toLowerCase()
             .includes(lowerQuery);
 
-         const tagsMatch = (
-            restaurant.tags || []
-         ).some((tag) =>
-            tag.toLowerCase().includes(lowerQuery),
+         const tagsMatch = (restaurant.tags || []).some(
+            (tag) => tag.toLowerCase().includes(lowerQuery),
          );
 
-         return (
-            nameMatch || locationMatch || tagsMatch
-         );
+         return nameMatch || locationMatch || tagsMatch;
       });
    }, [restaurants, query]);
 
