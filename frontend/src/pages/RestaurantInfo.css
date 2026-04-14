@@ -137,10 +137,19 @@
 }
 .star.is-full {
    color: #f6c04b;
+   text-shadow: 0 0 6px rgba(246, 192, 75, 0.4);
 }
 .star.is-half {
-   color: #f6c04b;
-   opacity: 0.75;
+   background: linear-gradient(
+      90deg,
+      #f6c04b 50%,
+      rgba(255, 255, 255, 0.5) 50%
+   );
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   background-clip: text;
+   color: transparent;
+   text-shadow: 0 0 6px rgba(246, 192, 75, 0.4);
 }
 
 .review__chips {
