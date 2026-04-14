@@ -1,86 +1,234 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import "./Restaurants.css";
 
-const testRestaurants = [
-   {
-      id: 1,
-      name: "Shake Smart",
-      image: "/images/restaurants/Shakesmart-banner.jpg",
-      avg_rating: 5,
-      location: ["Recreation Center"],
-      isBookmarked: true,
-   },
-   {
-      id: 2,
-      name: "Chick-fil-a",
-      image: "/images/restaurants/chickfila.jpg",
-      avg_rating: 5,
-      location: ["1901 Marketplace"],
-      isBookmarked: true,
-   },
-   {
-      id: 3,
-      name: "Taco Bell",
-      image: "/images/restaurants/tacobell.webp",
-      avg_rating: 5,
-      location: ["Poly Canyon Village"],
-      isBookmarked: true,
-   },
-   {
-      id: 4,
-      name: "Jamba Juice",
-      image: "/images/restaurants/tacobell.webp",
-      avg_rating: 4.5,
-      location: ["Vista Grande Market"],
-      isBookmarked: false,
-   },
-   {
-      id: 5,
-      name: "Subway",
-      image: "/images/restaurants/subway1.jpg",
-      avg_rating: 3.5,
-      location: ["Dexter Lawn"],
-      isBookmarked: false,
-   },
-   {
-      id: 6,
-      name: "Subway",
-      image: "/images/restaurants/subway2.jpg",
-      avg_rating: 3,
-      location: ["Poly Canyon Village"],
-      isBookmarked: false,
-   },
-   {
-      id: 7,
-      name: "Panda Express",
-      image: "/images/restaurants/pandaexpress.jpeg",
-      avg_rating: 3,
-      location: ["1901 Marketplace"],
-      isBookmarked: false,
-   },
-   {
-      id: 8,
-      name: "Einstein Bro's Bagels",
-      image: "/images/restaurants/einsteinbros.jpeg",
-      avg_rating: 3,
-      location: ["Poly Canyon Village"],
-      isBookmarked: false,
-   },
-];
-
-export default function Restaurants() {
+function Restaurants({
+   restaurants: initialRestaurants,
+}) {
    const [query, setQuery] = useState("");
+   const [restaurants, setRestaurants] = useState(
+      initialRestaurants || [],
+   );
+   const [bookmarkedIds, setBookmarkedIds] = useState(
+      () =>
+         new Set(
+            initialRestaurants?.map((r) => r.id) || [],
+         ),
+   );
+   const [loading, setLoading] = useState(
+      !initialRestaurants,
+   );
+   const [error, setError] = useState("");
+
    const navigate = useNavigate();
 
-   const handleCardClick = (restaurant) => {
-      // go to reviews page if shake smart card is clicked
-      if (restaurant.name === "Shake Smart") {
-         navigate("/reviews");
-      }
+   const originalBookmarkedIdsRef = useRef(
+      new Set(initialRestaurants?.map((r) => r.id) || []),
+   );
+   const bookmarkedIdsRef = useRef(new Set());
+
+   useEffect(() => {
+      bookmarkedIdsRef.current = bookmarkedIds;
+   }, [bookmarkedIds]);
+
+   useEffect(() => {
+      if (initialRestaurants) return;
+
+      const fetchData = async () => {
+         try {
+            setLoading(true);
+            setError("");
+
+            const storedUser = JSON.parse(
+               localStorage.getItem("user"),
+            );
+            const userId = storedUser?.id;
+
+            const restaurantsResponse = await fetch(
+               "http://localhost:4000/api/restaurants",
+            );
+
+            if (!restaurantsResponse.ok) {
+               let message =
+                  "Failed to fetch restaurants";
+               try {
+                  const err =
+                     await restaurantsResponse.json();
+                  message = err.error || message;
+               } catch {
+                  // ignore
+               }
+               throw new Error(message);
+            }
+
+            const restaurantsData =
+               await restaurantsResponse.json();
+
+            const mappedRestaurants =
+               restaurantsData.map((r) => ({
+                  id: r.id,
+                  name: r.name || "Unnamed Restaurant",
+                  image:
+                     r.image_urls?.[0] ||
+                     "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
+                  avg_rating: r.avg_rating ?? 0,
+                  location: r.location || "",
+                  tags: r.tags || [],
+                  hours: r.hours || [],
+                  rating_count: r.rating_count ?? 0,
+                  rating_sum: r.rating_sum ?? 0,
+               }));
+
+            setRestaurants(mappedRestaurants);
+
+            if (userId) {
+               const bookmarksResponse = await fetch(
+                  `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
+               );
+
+               if (bookmarksResponse.ok) {
+                  const bookmarkedRestaurants =
+                     await bookmarksResponse.json();
+
+                  const mappedBookmarkedRestaurants =
+                     bookmarkedRestaurants.map((r) => ({
+                        id: r.id,
+                        name:
+                           r.name ||
+                           "Unnamed Restaurant",
+                        image:
+                           r.image_urls?.[0] ||
+                           "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
+                        avg_rating:
+                           r.avg_rating ?? 0,
+                        location: r.location || "",
+                        tags: r.tags || [],
+                        hours: r.hours || [],
+                        rating_count:
+                           r.rating_count ?? 0,
+                        rating_sum:
+                           r.rating_sum ?? 0,
+                     }));
+
+                  const ids = new Set(
+                     mappedBookmarkedRestaurants.map(
+                        (r) => r.id,
+                     ),
+                  );
+
+                  setBookmarkedIds(ids);
+                  originalBookmarkedIdsRef.current =
+                     new Set(ids);
+               }
+            }
+         } catch (err) {
+            console.error("Error loading data:", err);
+            setError(
+               err.message ||
+                  "Failed to load restaurants.",
+            );
+         } finally {
+            setLoading(false);
+         }
+      };
+
+      fetchData();
+   }, [initialRestaurants]);
+
+   useEffect(() => {
+      const syncBookmarks = () => {
+         const storedUser = JSON.parse(
+            localStorage.getItem("user"),
+         );
+         const userId = storedUser?.id;
+
+         if (!userId) return;
+
+         const original = originalBookmarkedIdsRef.current;
+         const current = bookmarkedIdsRef.current;
+
+         const added = [...current].filter(
+            (id) => !original.has(id),
+         );
+         const removed = [...original].filter(
+            (id) => !current.has(id),
+         );
+
+         if (added.length === 0 && removed.length === 0)
+            return;
+
+         fetch(
+            "http://localhost:4000/api/restaurants/bookmarks/sync",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  user_id: userId,
+                  added,
+                  removed,
+               }),
+               keepalive: true,
+            },
+         );
+      };
+
+      window.addEventListener(
+         "beforeunload",
+         syncBookmarks,
+      );
+
+      return () => {
+         window.removeEventListener(
+            "beforeunload",
+            syncBookmarks,
+         );
+         syncBookmarks();
+      };
+   }, []);
+
+   const handleBookmarkToggle = (restaurantId) => {
+      setBookmarkedIds((prev) => {
+         const next = new Set(prev);
+         if (next.has(restaurantId)) {
+            next.delete(restaurantId);
+         } else {
+            next.add(restaurantId);
+         }
+         return next;
+      });
    };
+
+   const handleCardClick = (restaurant) => {
+      navigate(`/restaurants/${restaurant.id}`);
+   };
+
+   const visibleRestaurants = useMemo(() => {
+      const lowerQuery = query.toLowerCase();
+
+      return restaurants.filter((restaurant) => {
+         const nameMatch = restaurant.name
+            ?.toLowerCase()
+            .includes(lowerQuery);
+
+         const locationMatch = restaurant.location
+            ?.toLowerCase()
+            .includes(lowerQuery);
+
+         const tagsMatch = (
+            restaurant.tags || []
+         ).some((tag) =>
+            tag.toLowerCase().includes(lowerQuery),
+         );
+
+         return (
+            nameMatch || locationMatch || tagsMatch
+         );
+      });
+   }, [restaurants, query]);
 
    return (
       <div className="restaurants-page">
@@ -105,51 +253,47 @@ export default function Restaurants() {
                      }
                   />
                </div>
-
-               <div className="controls-right">
-                  <div className="pill">
-                     <span className="pill-label">
-                        filter
-                     </span>
-                     <select className="pill-select">
-                        <option>all</option>
-                        <option>saved</option>
-                        <option>open now</option>
-                     </select>
-                  </div>
-
-                  <div className="pill">
-                     <span className="pill-label">
-                        sort
-                     </span>
-                     <select className="pill-select">
-                        <option>recommended</option>
-                        <option>highest rating</option>
-                        <option>nearest</option>
-                        <option>price: low to high</option>
-                        <option>price: high to low</option>
-                     </select>
-                  </div>
-               </div>
             </div>
 
+            {loading && <p>Loading restaurants...</p>}
+            {!loading && error && <p>{error}</p>}
+            {!loading &&
+               !error &&
+               visibleRestaurants.length === 0 && (
+                  <p>No restaurants found.</p>
+               )}
+
             <div className="restaurants-grid">
-               {testRestaurants.map((r) => (
-                  <div
-                     key={r.id}
-                     onClick={() => handleCardClick(r)}
-                     style={{
-                        cursor:
-                           r.name === "Shake Smart"
-                              ? "pointer"
-                              : "default",
-                     }}
-                  >
-                     <RestaurantCard restaurant={r} />
-                  </div>
-               ))}
+               {visibleRestaurants.map(
+                  (restaurant, index) => (
+                     <div
+                        key={
+                           restaurant.id ??
+                           `${restaurant.name ?? "restaurant"}-${index}`
+                        }
+                        onClick={() =>
+                           handleCardClick(restaurant)
+                        }
+                        style={{ cursor: "pointer" }}
+                     >
+                        <RestaurantCard
+                           restaurant={restaurant}
+                           isBookmarked={bookmarkedIds.has(
+                              restaurant.id,
+                           )}
+                           onToggle={() =>
+                              handleBookmarkToggle(
+                                 restaurant.id,
+                              )
+                           }
+                        />
+                     </div>
+                  ),
+               )}
             </div>
          </div>
       </div>
    );
 }
+
+export default Restaurants;
