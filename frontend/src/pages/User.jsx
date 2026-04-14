@@ -8,6 +8,7 @@ import {
    CaretRight,
 } from "@phosphor-icons/react";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
@@ -20,6 +21,8 @@ function User({
    restaurants: initialRestaurants,
    followedUsers: initialFollowing,
 }) {
+   const navigate = useNavigate();
+
    // used to scroll in between pieces of the page
    const handleNavClick = (e, sectionId) => {
       e.preventDefault();
@@ -558,22 +561,33 @@ function User({
                      {restaurants.length > 0 ? (
                         restaurants.map(
                            (restaurant, index) => (
-                              <RestaurantCard
+                              <div
                                  key={
                                     restaurant.id ??
                                     `${restaurant.name ?? "restaurant"}-${index}`
                                  }
-                                 restaurant={restaurant}
-                                 isBookmarked={bookmarkedIds.has(
-                                    restaurant.id,
-                                 )}
-                                 onToggle={() =>
-                                    handleBookmarkToggle(
-                                       restaurant.id,
+                                 onClick={() =>
+                                    navigate(
+                                       `/restaurants/${restaurant.id}`,
                                     )
                                  }
-                                 className="compact"
-                              />
+                                 style={{
+                                    cursor: "pointer",
+                                 }}
+                              >
+                                 <RestaurantCard
+                                    restaurant={restaurant}
+                                    isBookmarked={bookmarkedIds.has(
+                                       restaurant.id,
+                                    )}
+                                    onToggle={() =>
+                                       handleBookmarkToggle(
+                                          restaurant.id,
+                                       )
+                                    }
+                                    className="compact"
+                                 />
+                              </div>
                            ),
                         )
                      ) : (

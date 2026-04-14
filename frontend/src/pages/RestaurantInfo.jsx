@@ -1,41 +1,58 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Map from "../components/Map";
-import "./ReviewPage.css";
-import heroImg from "../assets/shakesmartheader.jpg";
-import avatarMusty from "../assets/avatar-musty.jpeg";
-import avatarCarol from "../assets/avatar-carol.jpeg";
-import avatarArnold from "../assets/avatar-arnold.jpeg";
-
-import rev1 from "../assets/rev1.jpeg";
-import rev2 from "../assets/rev2.jpeg";
-import rev3 from "../assets/rev3.jpeg";
+import ReviewCard from "../components/ReviewCard";
+import "./RestaurantInfo.css";
 
 export default function Review() {
    const navigate = useNavigate();
+   const { id } = useParams();
    const [activeTab, setActiveTab] = useState("menu");
+   const [restaurantInfo, setRestaurantInfo] =
+      useState(null);
+   const [ratingFilter, setRatingFilter] = useState(null);
 
-   const restaurant = useMemo(
-      () => ({
-         name: "Shake Smart",
-         heroImage: heroImg,
-         tags: ["acai", "smoothies"],
-         rating: 4.5,
-         ratingCount: 54,
+   const restaurant = useMemo(() => {
+      // Helper to format database time
+      const formatTime = (timeStr) => {
+         if (!timeStr) return "";
+         const [hourStr, minuteStr] = timeStr.split(":");
+         const hour = parseInt(hourStr, 10);
+         const ampm = hour >= 12 ? "pm" : "am";
+         const formattedHour = hour % 12 || 12;
+         const formattedMinute =
+            minuteStr === "00" ? "" : `:${minuteStr}`;
+         return `${formattedHour}${formattedMinute}${ampm}`;
+      };
+
+      const timeString =
+         restaurantInfo?.hours?.length === 2
+            ? `${formatTime(restaurantInfo.hours[0])} - ${formatTime(
+                 restaurantInfo.hours[1],
+              )}`
+            : "Loading...";
+
+      return {
+         name: restaurantInfo?.name || "Loading...",
+         banner: restaurantInfo?.image_urls?.[0] || null,
+         tags: restaurantInfo?.tags || [],
+         rating: restaurantInfo?.avg_rating ?? 0,
+         ratingCount: restaurantInfo?.rating_count ?? 0,
          hours: [
-            { day: "Monday", time: "7am - 10pm" },
+            { day: "Monday", time: timeString },
             {
                day: "Tuesday",
-               time: "7am - 10pm",
+               time: timeString,
                open: true,
             },
-            { day: "Wednesday", time: "7am - 10pm" },
-            { day: "Thursday", time: "7am - 10pm" },
-            { day: "Friday", time: "7am - 10pm" },
-            { day: "Saturday", time: "9am - 9pm" },
-            { day: "Sunday", time: "9am - 9pm" },
+            { day: "Wednesday", time: timeString },
+            { day: "Thursday", time: timeString },
+            { day: "Friday", time: timeString },
+            { day: "Saturday", time: timeString },
+            { day: "Sunday", time: timeString },
          ],
-         locationLabel: "Recreation Center",
+         locationLabel:
+            restaurantInfo?.location || "Loading...",
          address:
             "Shake Smart, Recreation Center, 1 Grand Ave, San Luis Obispo, CA 93407",
          lat: 35.3007,
@@ -46,53 +63,107 @@ export default function Review() {
             "/gallery/ss_food_3.jpg",
             "/gallery/ss_food_4.jpg",
          ],
-      }),
-      [],
-   );
+      };
+   }, [restaurantInfo]);
 
-   const reviews = useMemo(
-      () => [
-         {
-            id: 1,
-            author: "Musty the Mustang",
-            avatar: avatarMusty,
-            verified: true,
-            date: "Dec. 25, 2025",
-            rating: 4,
-            text: "Lovely customer service! Had my bowl ready quickly and was so good! Going to make it a habit to continue to go to shakesmart!",
-            tags: ["smoothie", "service", "bowl"],
-            images: [rev1, rev2],
-         },
-         {
-            id: 2,
-            author: "Carol Fisher",
-            avatar: avatarCarol,
-            verified: false,
-            date: "Mar. 21, 2025",
-            rating: 5,
-            text: "Great people who work here, always happy to see everyone. Excellent food and shakes. Love their vegan options.",
-            tags: ["vegan", "quality"],
-            images: [rev3],
-         },
-         {
-            id: 3,
-            author: "Arnold Smith",
-            avatar: avatarArnold,
-            verified: true,
-            date: "Jan. 18, 2025",
-            rating: 3,
-            text: "Pretty good smoothies. Service could be better.",
-            tags: ["smoothie", "service"],
-            images: [],
-         },
-      ],
-      [],
-   );
+   const [reviews, setReviews] = useState([]);
 
-   const ratingCounts = useMemo(
-      () => ({ 5: 26, 4: 15, 3: 8, 2: 3, 1: 2 }),
-      [],
-   );
+   useEffect(() => {
+      // Fetches the restaurant's data
+      const fetchRestaurant = async () => {
+         try {
+            const response = await fetch(
+               `http://localhost:4000/api/restaurants/${id}`,
+            );
+            if (response.ok) {
+               const data = await response.json();
+               setRestaurantInfo(data);
+            }
+         } catch (error) {
+            console.error(
+               "Failed to fetch restaurant:",
+               error,
+            );
+         }
+      };
+
+      // Fetches all the individual reviews associated with this restaurant
+      const fetchReviews = async () => {
+         try {
+            // You'll want to replace this dummy ID with your actual logged-in user ID later
+            const CURRENT_USER_ID =
+               "b677be85-81db-4245-91ca-acb713bd5564";
+
+            const response = await fetch(
+               `http://localhost:4000/api/reviews?restaurant_id=${id}&current_user_id=${CURRENT_USER_ID}`,
+            );
+            if (response.ok) {
+               const data = await response.json();
+
+               // Map the backend ReviewModel to the frontend ReviewCard props
+               const formattedReviews = data.map((rev) => ({
+                  id: rev.id,
+                  userName:
+                     rev.users?.name || "Anonymous User",
+                  avatar_url: rev.users?.avatar_url || null,
+                  is_verified:
+                     rev.users?.is_verified || false,
+                  rating: rev.rating || 0,
+                  date: rev.created_at,
+                  comments: rev.comment,
+                  tags: rev.tags || [],
+                  photos: rev.photo_urls || [],
+                  helpfulCount: rev.helpful_count || 0,
+                  hasVotedHelpful:
+                     rev.has_voted_helpful || false,
+               }));
+
+               setReviews(formattedReviews);
+            }
+         } catch (error) {
+            console.error(
+               "Failed to fetch reviews:",
+               error,
+            );
+         }
+      };
+
+      fetchRestaurant();
+      fetchReviews();
+   }, [id]);
+
+   // Calculates the total count of each star rating (1-5) from the fetched reviews array.
+   // This is used to populate the filled percentages on the "Overall Rating" bar chart.
+   const computedRatings = useMemo(() => {
+      const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+      reviews.forEach((r) => {
+         // Only count valid number ratings between 1 and 5
+         if (typeof r.rating === "number" && r.rating > 0) {
+            const roundedRating = Math.max(
+               1,
+               Math.min(5, Math.round(r.rating)),
+            );
+            counts[roundedRating] += 1;
+         }
+      });
+
+      return { counts };
+   }, [reviews]);
+
+   // Filters the reviews based on the selected star rating filter
+   const filteredReviews = useMemo(() => {
+      if (!ratingFilter) return reviews;
+      return reviews.filter((r) => {
+         if (typeof r.rating !== "number" || r.rating <= 0)
+            return false;
+         const roundedRating = Math.max(
+            1,
+            Math.min(5, Math.round(r.rating)),
+         );
+         return roundedRating === ratingFilter;
+      });
+   }, [reviews, ratingFilter]);
 
    const scrollTo = (key) => {
       setActiveTab(key);
@@ -109,7 +180,9 @@ export default function Review() {
          <section
             className="review__hero"
             style={{
-               backgroundImage: `url(${restaurant.heroImage})`,
+               backgroundImage: restaurant.banner
+                  ? `url(${restaurant.banner})`
+                  : "none",
             }}
             aria-label={`${restaurant.name} hero`}
          >
@@ -216,7 +289,12 @@ export default function Review() {
                   </button>
                </div>
 
-               <button className="pillBtn pillBtn--ghost">
+               <button
+                  className="pillBtn pillBtn--ghost"
+                  onClick={() =>
+                     navigate(`/restaurants/${id}/menu`)
+                  }
+               >
                   👁 view menu and nutrition
                </button>
             </section>
@@ -247,14 +325,19 @@ export default function Review() {
                               <span className="review__day">
                                  {h.day}
                               </span>
+                              <span
+                                 className="review__open"
+                                 style={{
+                                    visibility: h.open
+                                       ? "visible"
+                                       : "hidden",
+                                 }}
+                              >
+                                 open
+                              </span>
                               <span className="review__time">
                                  {h.time}
                               </span>
-                              {h.open && (
-                                 <span className="review__open">
-                                    open
-                                 </span>
-                              )}
                            </div>
                         ))}
                      </div>
@@ -357,9 +440,25 @@ export default function Review() {
                   </div>
 
                   <div className="review__reviewList">
-                     {reviews.map((r) => (
-                        <ReviewCard key={r.id} review={r} />
-                     ))}
+                     {filteredReviews.length > 0 ? (
+                        filteredReviews.map((r) => (
+                           <ReviewCard
+                              key={r.id}
+                              review={r}
+                              showHelpful={true}
+                           />
+                        ))
+                     ) : (
+                        <div
+                           style={{
+                              textAlign: "center",
+                              padding: "40px 0",
+                              color: "var(--muted)",
+                           }}
+                        >
+                           No reviews found for this rating.
+                        </div>
+                     )}
                   </div>
 
                   <div className="review__pagination">
@@ -388,8 +487,14 @@ export default function Review() {
                         <RatingBar
                            key={s}
                            star={s}
-                           count={ratingCounts[s]}
-                           max={ratingCounts[5]}
+                           count={computedRatings.counts[s]}
+                           total={restaurant.ratingCount}
+                           isActive={ratingFilter === s}
+                           onClick={() =>
+                              setRatingFilter((prev) =>
+                                 prev === s ? null : s,
+                              )
+                           }
                         />
                      ))}
                   </div>
@@ -399,11 +504,16 @@ export default function Review() {
       </div>
    );
 }
+
+// Renders a visual row of 5 stars based on a numeric value
 function StarRow({ value }) {
+   // Calculate number of completely filled stars
    const full = Math.floor(value);
+   // Determine if a half-filled star is needed
    const half = value - full >= 0.5;
    return (
       <div className="stars" aria-label={`Rating ${value}`}>
+         {/* Generate exactly 5 stars */}
          {Array.from({ length: 5 }).map((_, i) => {
             const isFull = i < full;
             const isHalf = i === full && half;
@@ -420,83 +530,37 @@ function StarRow({ value }) {
    );
 }
 
-function ReviewCard({ review }) {
+// Renders a single horizontal bar in the rating histogram
+function RatingBar({
+   star,
+   count,
+   total,
+   isActive,
+   onClick,
+}) {
+   // Calculate what percentage of total reviews this star rating makes up
+   const totalPct =
+      total > 0 ? Math.round((count / total) * 100) : 0;
    return (
-      <article className="reviewCard">
-         <div className="reviewCard__top">
-            <div className="reviewCard__left">
-               <img
-                  className="reviewCard__avatar"
-                  src={review.avatar}
-                  alt={`${review.author} avatar`}
-                  onError={(e) => {
-                     e.currentTarget.src =
-                        "/assets/avatar-fallback.png";
-                  }}
-               />
-               <div>
-                  <div className="reviewCard__nameRow">
-                     <span className="reviewCard__name">
-                        {review.author}
-                     </span>
-                     {review.verified && (
-                        <span className="badge badge--verified">
-                           Verified Cal Poly Account
-                        </span>
-                     )}
-                  </div>
-                  <div className="reviewCard__meta">
-                     <StarRow value={review.rating} />
-                     <span className="reviewCard__date">
-                        {review.date}
-                     </span>
-                  </div>
-               </div>
-            </div>
-
-            <button
-               className="reviewCard__helpful"
-               aria-label="Helpful"
-            >
-               👍 <span>helpful</span>
-            </button>
-         </div>
-
-         <p className="reviewCard__text">{review.text}</p>
-
-         <div className="reviewCard__tags">
-            {review.tags.map((t) => (
-               <span key={t} className="chip chip--tag">
-                  {t}
-               </span>
-            ))}
-         </div>
-
-         {review.images.length > 0 && (
-            <div className="reviewCard__imgs">
-               {review.images.map((src, idx) => (
-                  <img
-                     key={idx}
-                     src={src}
-                     alt={`review photo ${idx + 1}`}
-                  />
-               ))}
-            </div>
-         )}
-      </article>
-   );
-}
-
-function RatingBar({ star, count, max }) {
-   const pct = Math.round((count / Math.max(max, 1)) * 100);
-   return (
-      <div className="ratingRow">
+      <div
+         className={`ratingRow ${isActive ? "is-active" : ""}`}
+         onClick={onClick}
+         role="button"
+         tabIndex={0}
+         onKeyDown={(e) =>
+            (e.key === "Enter" || e.key === " ") &&
+            onClick()
+         }
+      >
          <div className="ratingRow__star">{star}</div>
          <div className="ratingRow__track">
             <div
                className="ratingRow__fill"
-               style={{ width: `${pct}%` }}
+               style={{ width: `${totalPct}%` }}
             />
+         </div>
+         <div className="ratingRow__percent">
+            {totalPct}%
          </div>
       </div>
    );

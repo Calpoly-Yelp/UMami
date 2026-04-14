@@ -27,7 +27,10 @@ describe("Restaurant Endpoints", () => {
             name: "Restaurant A",
             location: "Location A",
             category: ["Italian"],
+            tags: ["Cozy"],
             avg_rating: 4.5,
+            rating_count: 10,
+            rating_sum: 45,
             hours: ["9-5"],
             image_urls: [],
          },
@@ -36,7 +39,10 @@ describe("Restaurant Endpoints", () => {
             name: "Restaurant B",
             location: "Location B",
             category: ["Mexican"],
+            tags: ["Spicy"],
             avg_rating: 4.0,
+            rating_count: 20,
+            rating_sum: 80,
             hours: ["10-6"],
             image_urls: [],
          },
@@ -87,7 +93,10 @@ describe("Restaurant Endpoints", () => {
          name: "Restaurant A",
          location: "Location A",
          category: ["Italian"],
+         tags: ["Cozy"],
          avg_rating: 4.5,
+         rating_count: 10,
+         rating_sum: 45,
          hours: ["9-5"],
          image_urls: [],
       };
@@ -141,6 +150,79 @@ describe("Restaurant Endpoints", () => {
       });
       const res = await request(app).get(
          "/api/restaurants/1",
+      );
+      expect(res.statusCode).toBe(500);
+   });
+
+   it("GET /api/restaurants/:id/tags should return tags for a single restaurant", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: { tags: ["Acai", "Smoothies", "Toast"] },
+            error: null,
+         }),
+      });
+
+      const res = await request(app).get(
+         "/api/restaurants/1/tags",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual([
+         "Acai",
+         "Smoothies",
+         "Toast",
+      ]);
+      expect(supabase.from).toHaveBeenCalledWith(
+         "restaurants",
+      );
+   });
+
+   it("GET /api/restaurants/:id/tags should return empty array if tags are null", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: { tags: null },
+            error: null,
+         }),
+      });
+
+      const res = await request(app).get(
+         "/api/restaurants/1/tags",
+      );
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual([]);
+   });
+
+   it("GET /api/restaurants/:id/tags should return 404 if not found", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         single: jest
+            .fn()
+            .mockResolvedValue({ data: null, error: null }),
+      });
+
+      const res = await request(app).get(
+         "/api/restaurants/999/tags",
+      );
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Restaurant not found");
+   });
+
+   it("GET /api/restaurants/:id/tags should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "DB Error" },
+         }),
+      });
+      const res = await request(app).get(
+         "/api/restaurants/1/tags",
       );
       expect(res.statusCode).toBe(500);
    });

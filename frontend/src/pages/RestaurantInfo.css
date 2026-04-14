@@ -86,10 +86,15 @@
 }
 
 .review__heroOverlay {
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
    background: linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.55) 0%,
-      rgba(0, 0, 0, 0.18) 55%,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.3) 55%,
       rgba(0, 0, 0, 0.05) 100%
    );
 }
@@ -132,10 +137,19 @@
 }
 .star.is-full {
    color: #f6c04b;
+   text-shadow: 0 0 6px rgba(246, 192, 75, 0.4);
 }
 .star.is-half {
-   color: #f6c04b;
-   opacity: 0.75;
+   background: linear-gradient(
+      90deg,
+      #f6c04b 50%,
+      rgba(255, 255, 255, 0.5) 50%
+   );
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   background-clip: text;
+   color: transparent;
+   text-shadow: 0 0 6px rgba(246, 192, 75, 0.4);
 }
 
 .review__chips {
@@ -156,10 +170,11 @@
 }
 
 .chip--light {
-   background: rgba(255, 255, 255, 0.22);
-   border: 1px solid rgba(255, 255, 255, 0.18);
+   background: rgba(0, 0, 0, 0.4);
+   border: 1px solid rgba(255, 255, 255, 0.25);
    color: #fff;
    backdrop-filter: blur(8px);
+   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .review__photosBtn {
@@ -616,6 +631,8 @@
 
 .review__ratingCard {
    align-self: start;
+   position: sticky;
+   top: 18px;
 }
 
 .review__ratingTop {
@@ -653,14 +670,32 @@
 
 .ratingRow {
    display: grid;
-   grid-template-columns: 18px 1fr;
+   grid-template-columns: 18px 1fr 34px;
    gap: 10px;
    align-items: center;
+   cursor: pointer;
+   padding: 4px 8px;
+   margin: 0 -8px;
+   border-radius: 8px;
+   transition: background 0.15s ease;
+}
+
+.ratingRow:hover {
+   background: rgba(0, 0, 0, 0.04);
+}
+
+.ratingRow.is-active {
+   background: rgba(0, 0, 0, 0.08);
 }
 
 .ratingRow__star {
    font-weight: 900;
    color: #333;
+   transition: color 0.15s ease;
+}
+
+.ratingRow.is-active .ratingRow__star {
+   color: var(--orange);
 }
 
 .ratingRow__track {
@@ -674,6 +709,12 @@
    height: 100%;
    background: rgba(243, 107, 43, 0.55);
    border-radius: 999px;
+}
+
+.ratingRow__percent {
+   font-size: 12px;
+   color: var(--muted);
+   text-align: right;
 }
 
 @media (max-width: 980px) {

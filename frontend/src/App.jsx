@@ -11,10 +11,11 @@ import PhotoGallery from "./pages/PhotoGallery";
 import Onboarding from "./pages/Onboarding";
 import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
+import RestaurantInfo from "./pages/RestaurantInfo";
 import Review from "./pages/Review";
+import RestaurantMenu from "./pages/RestaurantMenu";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
-import ReviewPage from "./pages/ReviewPage";
 function AppLayout() {
    const location = useLocation();
    const hideHeaderPaths = [
@@ -83,14 +84,19 @@ function AppLayout() {
                   path="/restaurants"
                   element={<Restaurant />}
                />
+               <Route
+                  path="/restaurants/:id"
+                  element={<RestaurantInfo />}
+               />
+               <Route
+                  path="/restaurants/:id/menu"
+                  element={<RestaurantMenu />}
+               />
                <Route path="/review" element={<Review />} />
+
                <Route
                   path="/settings"
                   element={<AccountSettings />}
-               />
-               <Route
-                  path="/reviews"
-                  element={<ReviewPage />}
                />
             </Routes>
          </div>
