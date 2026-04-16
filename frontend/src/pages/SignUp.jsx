@@ -1,41 +1,88 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignUp.css";
 import heroImg from "../assets/signup2.jpg";
 import logo from "../assets/logo.png";
+import { supabase } from "../lib/supabase";
 
 export default function SignUp() {
    const navigate = useNavigate();
+   const [error, setError] = useState("");
+   const [loading, setLoading] = useState(false);
 
    const handleSubmit = async (e) => {
       e.preventDefault();
+      setError("");
 
-      // Ensure form is valid before processing (handling JSDOM/Browser edge cases)
       if (!e.target.checkValidity()) return;
 
       const formData = new FormData(e.target);
 
-      const newUser = {
-         id: crypto.randomUUID(),
-         name: formData.get("name"),
-         email: formData.get("email"),
-         avatar_url: "", // Default empty avatar
-         is_verified: false,
-      };
+      const name = formData.get("name");
+      const email = formData.get("email");
+      const password = formData.get("password");
 
       try {
-         await fetch("http://localhost:4000/api/users", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newUser),
-         });
-         localStorage.setItem(
-            "user",
-            JSON.stringify(newUser),
+         setLoading(true);
+
+         const { data, error: signUpError } =
+            await supabase.auth.signUp({
+               email,
+               password,
+               options: {
+                  data: {
+                     name,
+                  },
+               },
+            });
+
+         if (signUpError) {
+            throw signUpError;
+         }
+
+         const user = data.user;
+
+         if (!user) {
+            throw new Error(
+               "User account was not created.",
+            );
+         }
+
+         const response = await fetch(
+            "http://localhost:4000/api/users",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  id: user.id,
+                  name,
+                  email,
+                  avatar_url: "",
+                  is_verified: false,
+               }),
+            },
          );
-         navigate("/onboarding");
-      } catch (error) {
-         console.error("Sign up failed", error);
+
+         const result = await response.json();
+
+         if (!response.ok) {
+            throw new Error(
+               result.error || "Failed to save user.",
+            );
+         }
+
+         if (data.session) {
+            navigate("/onboarding");
+         } else {
+            navigate("/signin");
+         }
+      } catch (err) {
+         console.error("Sign up failed:", err);
+         setError(err.message || "Sign up failed");
+      } finally {
+         setLoading(false);
       }
    };
 
@@ -49,6 +96,7 @@ export default function SignUp() {
                   className="signupForm__logo"
                />
             </div>
+
             <h1 className="signupForm__title">
                Get started now
             </h1>
@@ -134,11 +182,18 @@ export default function SignUp() {
                   </span>
                </label>
 
+               {error && (
+                  <p className="signupForm__error">
+                     {error}
+                  </p>
+               )}
+
                <button
                   className="signupForm__primary"
                   type="submit"
+                  disabled={loading}
                >
-                  Sign up
+                  {loading ? "Signing up..." : "Sign up"}
                </button>
 
                <div className="signupForm__footer">

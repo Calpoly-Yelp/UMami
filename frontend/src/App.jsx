@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
    BrowserRouter,
    Routes,
    Route,
    useLocation,
+   Navigate,
 } from "react-router-dom";
+import { supabase } from "./lib/supabase";
+
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import PhotoGallery from "./pages/PhotoGallery";
@@ -12,12 +15,24 @@ import Onboarding from "./pages/Onboarding";
 import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import RestaurantInfo from "./pages/RestaurantInfo";
-import Review from "./pages/Review";
 import RestaurantMenu from "./pages/RestaurantMenu";
+import Review from "./pages/Review";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
+import ReviewPage from "./pages/ReviewPage";
+
+function ProtectedRoute({ session, children }) {
+   if (!session) {
+      return <Navigate to="/signin" replace />;
+   }
+   return children;
+}
+
 function AppLayout() {
    const location = useLocation();
+   const [session, setSession] = useState(null);
+   const [authLoading, setAuthLoading] = useState(true);
+
    const hideHeaderPaths = [
       "/",
       "/signin",
@@ -25,33 +40,43 @@ function AppLayout() {
       "/signup-form",
       "/onboarding",
    ];
+
    const showHeader = !hideHeaderPaths.includes(
       location.pathname,
    );
 
    useEffect(() => {
-      // Initialize dummy user session for the specific user we want to persist
-      const targetId =
-         "b677be85-81db-4245-91ca-acb713bd5564";
-      const fetchUser = async () => {
-         const storedUser = localStorage.getItem("user");
-         const parsedUser = storedUser
-            ? JSON.parse(storedUser)
-            : null;
-
-         if (!parsedUser || !parsedUser.id) {
-            const response = await fetch(
-               `http://localhost:4000/api/users/${targetId}`,
-            );
-            const userData = await response.json();
-            localStorage.setItem(
-               "user",
-               JSON.stringify(userData),
-            );
+      const getSession = async () => {
+         try {
+            const {
+               data: { session },
+            } = await supabase.auth.getSession();
+            setSession(session);
+         } catch (error) {
+            console.error("Error getting session:", error);
+         } finally {
+            setAuthLoading(false);
          }
       };
-      fetchUser();
+
+      getSession();
+
+      const {
+         data: { subscription },
+      } = supabase.auth.onAuthStateChange(
+         (_event, session) => {
+            setSession(session);
+         },
+      );
+
+      return () => subscription.unsubscribe();
    }, []);
+
+   if (authLoading) {
+      return (
+         <div style={{ padding: "2rem" }}>Loading...</div>
+      );
+   }
 
    return (
       <div
@@ -69,34 +94,115 @@ function AppLayout() {
          >
             <Routes>
                <Route path="/" element={<SignIn />} />
-               <Route path="/signin" element={<SignIn />} />
-               <Route path="/signup" element={<SignUp />} />
+
+               <Route
+                  path="/signin"
+                  element={
+                     session ? (
+                        <Navigate
+                           to="/restaurants"
+                           replace
+                        />
+                     ) : (
+                        <SignIn />
+                     )
+                  }
+               />
+
+               <Route
+                  path="/signup"
+                  element={
+                     session ? (
+                        <Navigate
+                           to="/restaurants"
+                           replace
+                        />
+                     ) : (
+                        <SignUp />
+                     )
+                  }
+               />
+
                <Route
                   path="/onboarding"
-                  element={<Onboarding />}
+                  element={
+                     <ProtectedRoute session={session}>
+                        <Onboarding />
+                     </ProtectedRoute>
+                  }
                />
+
                <Route
                   path="/gallery"
-                  element={<PhotoGallery />}
+                  element={
+                     <ProtectedRoute session={session}>
+                        <PhotoGallery />
+                     </ProtectedRoute>
+                  }
                />
-               <Route path="/user" element={<UserPage />} />
+
+               <Route
+                  path="/user"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <UserPage />
+                     </ProtectedRoute>
+                  }
+               />
+
                <Route
                   path="/restaurants"
-                  element={<Restaurant />}
+                  element={
+                     <ProtectedRoute session={session}>
+                        <Restaurant />
+                     </ProtectedRoute>
+                  }
                />
+
+               {/* NEW ROUTES FROM MAIN */}
                <Route
                   path="/restaurants/:id"
-                  element={<RestaurantInfo />}
+                  element={
+                     <ProtectedRoute session={session}>
+                        <RestaurantInfo />
+                     </ProtectedRoute>
+                  }
                />
+
                <Route
                   path="/restaurants/:id/menu"
-                  element={<RestaurantMenu />}
+                  element={
+                     <ProtectedRoute session={session}>
+                        <RestaurantMenu />
+                     </ProtectedRoute>
+                  }
                />
-               <Route path="/review" element={<Review />} />
+
+               <Route
+                  path="/review"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <Review />
+                     </ProtectedRoute>
+                  }
+               />
+
+               <Route
+                  path="/reviews"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <ReviewPage />
+                     </ProtectedRoute>
+                  }
+               />
 
                <Route
                   path="/settings"
-                  element={<AccountSettings />}
+                  element={
+                     <ProtectedRoute session={session}>
+                        <AccountSettings />
+                     </ProtectedRoute>
+                  }
                />
             </Routes>
          </div>
