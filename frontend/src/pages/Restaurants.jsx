@@ -11,6 +11,8 @@ import "./Restaurants.css";
 
 function Restaurants({ restaurants: initialRestaurants }) {
    const [query, setQuery] = useState("");
+   const [filter, setFilter] = useState("all");
+   const [sort, setSort] = useState("default");
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
    );
@@ -81,6 +83,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                   hours: r.hours || [],
                   rating_count: r.rating_count ?? 0,
                   rating_sum: r.rating_sum ?? 0,
+                  is_open_now: r.is_open_now ?? false,
                }),
             );
 
@@ -109,6 +112,8 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         hours: r.hours || [],
                         rating_count: r.rating_count ?? 0,
                         rating_sum: r.rating_sum ?? 0,
+                        is_open_now:
+                           r.is_open_now ?? false,
                      }));
 
                   const ids = new Set(
@@ -207,7 +212,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
    const visibleRestaurants = useMemo(() => {
       const lowerQuery = query.toLowerCase();
 
-      return restaurants.filter((restaurant) => {
+      let filtered = restaurants.filter((restaurant) => {
          const nameMatch = restaurant.name
             ?.toLowerCase()
             .includes(lowerQuery);
@@ -222,7 +227,33 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
          return nameMatch || locationMatch || tagsMatch;
       });
-   }, [restaurants, query]);
+
+      if (filter === "bookmarked") {
+         filtered = filtered.filter((restaurant) =>
+            bookmarkedIds.has(restaurant.id),
+         );
+      }
+
+      if (filter === "open_now") {
+         filtered = filtered.filter(
+            (restaurant) => restaurant.is_open_now,
+         );
+      }
+
+      if (sort === "lowest_rating") {
+         filtered = [...filtered].sort(
+            (a, b) => (a.avg_rating ?? 0) - (b.avg_rating ?? 0),
+         );
+      }
+
+      if (sort === "highest_rating") {
+         filtered = [...filtered].sort(
+            (a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0),
+         );
+      }
+
+      return filtered;
+   }, [restaurants, bookmarkedIds, query, filter, sort]);
 
    return (
       <div className="restaurants-page">
@@ -246,6 +277,52 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         setQuery(e.target.value)
                      }
                   />
+               </div>
+
+               <div className="controls-right">
+                  <div className="pill">
+                     <span className="pill-label">
+                        filter
+                     </span>
+                     <select
+                        className="pill-select"
+                        value={filter}
+                        onChange={(e) =>
+                           setFilter(e.target.value)
+                        }
+                     >
+                        <option value="all">all</option>
+                        <option value="bookmarked">
+                           bookmarked
+                        </option>
+                        <option value="open_now">
+                           open now
+                        </option>
+                     </select>
+                  </div>
+
+                  <div className="pill">
+                     <span className="pill-label">
+                        sort
+                     </span>
+                     <select
+                        className="pill-select"
+                        value={sort}
+                        onChange={(e) =>
+                           setSort(e.target.value)
+                        }
+                     >
+                        <option value="default">
+                           default
+                        </option>
+                        <option value="lowest_rating">
+                           lowest to highest rating
+                        </option>
+                        <option value="highest_rating">
+                           highest to lowest rating
+                        </option>
+                     </select>
+                  </div>
                </div>
             </div>
 
