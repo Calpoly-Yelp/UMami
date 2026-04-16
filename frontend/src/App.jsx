@@ -19,7 +19,6 @@ import RestaurantMenu from "./pages/RestaurantMenu";
 import Review from "./pages/Review";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
-import ReviewPage from "./pages/ReviewPage";
 
 function ProtectedRoute({ session, children }) {
    if (!session) {
@@ -95,33 +94,8 @@ function AppLayout() {
             <Routes>
                <Route path="/" element={<SignIn />} />
 
-               <Route
-                  path="/signin"
-                  element={
-                     session ? (
-                        <Navigate
-                           to="/restaurants"
-                           replace
-                        />
-                     ) : (
-                        <SignIn />
-                     )
-                  }
-               />
-
-               <Route
-                  path="/signup"
-                  element={
-                     session ? (
-                        <Navigate
-                           to="/restaurants"
-                           replace
-                        />
-                     ) : (
-                        <SignUp />
-                     )
-                  }
-               />
+               <Route path="/signin" element={<SignIn />} />
+               <Route path="/signup" element={<SignUp />} />
 
                <Route
                   path="/onboarding"
@@ -183,15 +157,6 @@ function AppLayout() {
                   element={
                      <ProtectedRoute session={session}>
                         <Review />
-                     </ProtectedRoute>
-                  }
-               />
-
-               <Route
-                  path="/reviews"
-                  element={
-                     <ProtectedRoute session={session}>
-                        <ReviewPage />
                      </ProtectedRoute>
                   }
                />
