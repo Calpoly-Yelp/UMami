@@ -14,11 +14,8 @@ jest.mock("../config/supabaseClient.js");
 
 describe("Restaurant Endpoints", () => {
    beforeEach(() => {
-      // Clear all mocks before each test to ensure isolation
       jest.clearAllMocks();
    });
-
-   // --- Success Tests ---
 
    it("GET /api/restaurants should return a list of restaurants", async () => {
       const mockRestaurants = [
@@ -27,28 +24,27 @@ describe("Restaurant Endpoints", () => {
             name: "Restaurant A",
             location: "Location A",
             category: ["Italian"],
-            tags: ["Cozy"],
-            avg_rating: 4.5,
-            rating_count: 10,
-            rating_sum: 45,
+            tags: ["Italian"],
             hours: ["9-5"],
             image_urls: [],
+            rating_count: 10,
+            rating_sum: 45,
+            avg_rating: 4.5,
          },
          {
             id: 2,
             name: "Restaurant B",
             location: "Location B",
             category: ["Mexican"],
-            tags: ["Spicy"],
-            avg_rating: 4.0,
-            rating_count: 20,
-            rating_sum: 80,
+            tags: ["Mexican"],
             hours: ["10-6"],
             image_urls: [],
+            rating_count: 8,
+            rating_sum: 32,
+            avg_rating: 4.0,
          },
       ];
 
-      // Mock the chained Supabase call
       supabase.from.mockReturnValue({
          select: jest.fn().mockResolvedValue({
             data: mockRestaurants,
@@ -65,6 +61,7 @@ describe("Restaurant Endpoints", () => {
          expect.arrayContaining([
             expect.objectContaining({
                name: "Restaurant A",
+               tags: ["Italian"],
             }),
          ]),
       );
@@ -84,6 +81,7 @@ describe("Restaurant Endpoints", () => {
       const res = await request(app).get(
          "/api/restaurants",
       );
+
       expect(res.statusCode).toBe(500);
    });
 
@@ -93,12 +91,12 @@ describe("Restaurant Endpoints", () => {
          name: "Restaurant A",
          location: "Location A",
          category: ["Italian"],
-         tags: ["Cozy"],
-         avg_rating: 4.5,
-         rating_count: 10,
-         rating_sum: 45,
+         tags: ["Italian"],
          hours: ["9-5"],
          image_urls: [],
+         rating_count: 10,
+         rating_sum: 45,
+         avg_rating: 4.5,
       };
 
       supabase.from.mockReturnValue({
@@ -116,13 +114,13 @@ describe("Restaurant Endpoints", () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.name).toBe("Restaurant A");
+      expect(res.body.tags).toEqual(["Italian"]);
       expect(supabase.from).toHaveBeenCalledWith(
          "restaurants",
       );
    });
 
    it("GET /api/restaurants/:id should return 404 if not found", async () => {
-      // Mock Supabase returning no data
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
          eq: jest.fn().mockReturnThis(),
@@ -148,9 +146,11 @@ describe("Restaurant Endpoints", () => {
             error: { message: "DB Error" },
          }),
       });
+
       const res = await request(app).get(
          "/api/restaurants/1",
       );
+
       expect(res.statusCode).toBe(500);
    });
 
@@ -232,12 +232,32 @@ describe("Restaurant Endpoints", () => {
          { restaurant_id: 1 },
          { restaurant_id: 2 },
       ];
+
       const mockRestaurants = [
-         { id: 1, name: "Restaurant A" },
-         { id: 2, name: "Restaurant B" },
+         {
+            id: 1,
+            name: "Restaurant A",
+            location: "Location A",
+            tags: ["Italian"],
+            hours: ["9-5"],
+            image_urls: [],
+            rating_count: 10,
+            rating_sum: 45,
+            avg_rating: 4.5,
+         },
+         {
+            id: 2,
+            name: "Restaurant B",
+            location: "Location B",
+            tags: ["Mexican"],
+            hours: ["10-6"],
+            image_urls: [],
+            rating_count: 8,
+            rating_sum: 32,
+            avg_rating: 4.0,
+         },
       ];
 
-      // Mock implementation to handle different table calls
       supabase.from.mockImplementation((table) => {
          if (table === "bookmarks") {
             return {
@@ -248,6 +268,7 @@ describe("Restaurant Endpoints", () => {
                }),
             };
          }
+
          if (table === "restaurants") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -257,6 +278,7 @@ describe("Restaurant Endpoints", () => {
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
@@ -281,6 +303,7 @@ describe("Restaurant Endpoints", () => {
       const res = await request(app).get(
          "/api/restaurants/bookmarks/user1",
       );
+
       expect(res.statusCode).toBe(500);
    });
 
@@ -301,6 +324,7 @@ describe("Restaurant Endpoints", () => {
       const res = await request(app).get(
          "/api/restaurants/bookmarks",
       );
+
       expect(res.statusCode).toBe(200);
       expect(res.body[0].user_id).toBe(
          "b677be85-81db-4245-91ca-acb713bd5564",
@@ -314,9 +338,11 @@ describe("Restaurant Endpoints", () => {
             error: { message: "Fetch Error" },
          }),
       });
+
       const res = await request(app).get(
          "/api/restaurants/bookmarks",
       );
+
       expect(res.statusCode).toBe(500);
    });
 
@@ -331,6 +357,7 @@ describe("Restaurant Endpoints", () => {
       const res = await request(app)
          .post("/api/restaurants/bookmarks")
          .send({ user_id: "u1", restaurant_id: 101 });
+
       expect(res.statusCode).toBe(201);
    });
 
@@ -341,9 +368,11 @@ describe("Restaurant Endpoints", () => {
             error: { message: "Insert Error" },
          }),
       });
+
       const res = await request(app)
          .post("/api/restaurants/bookmarks")
          .send({});
+
       expect(res.statusCode).toBe(500);
    });
 
@@ -355,11 +384,11 @@ describe("Restaurant Endpoints", () => {
       const res = await request(app)
          .post("/api/restaurants/bookmarks")
          .send({});
+
       expect(res.statusCode).toBe(500);
    });
 
    it("POST /api/restaurants/bookmarks/sync should sync added and removed bookmarks", async () => {
-      // Mock delete and insert chains
       const mockDelete = jest.fn().mockReturnThis();
       const mockInsert = jest
          .fn()
@@ -382,9 +411,7 @@ describe("Restaurant Endpoints", () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.message).toBe("Sync successful");
-      // Verify delete was called
       expect(mockDelete).toHaveBeenCalled();
-      // Verify insert was called
       expect(mockInsert).toHaveBeenCalled();
    });
 
