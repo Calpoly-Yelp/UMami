@@ -9,6 +9,7 @@ import ReviewPage from "./pages/ReviewPage";
 
 
 export default function App() {
+<<<<<<< Updated upstream
   return (
     <BrowserRouter>
       <Routes>
@@ -24,4 +25,11 @@ export default function App() {
       </Routes>
     </BrowserRouter>
   );
+=======
+   return (
+      <BrowserRouter>
+         <AppLayout />
+      </BrowserRouter>
+   );
+>>>>>>> Stashed changes
 }

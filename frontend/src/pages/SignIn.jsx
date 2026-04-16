@@ -17,6 +17,13 @@ export default function SignIn() {
    navigate("/onboarding");
  };
 
+<<<<<<< Updated upstream
+=======
+            <h1 className="auth__title">
+               Sign into your account
+            </h1>
+            <p className="auth__subtitle"></p>
+>>>>>>> Stashed changes
 
  return (
 <div className="auth">
@@ -73,6 +80,7 @@ export default function SignIn() {
          <div className="auth__divider">
            <span>Don't have an account?</span>
          </div>
+<<<<<<< Updated upstream
 
 
          <Link to="/signup" className="auth__secondary">
@@ -88,4 +96,8 @@ export default function SignIn() {
      </div>
    </div>
  );
+=======
+      </div>
+   );
+>>>>>>> Stashed changes
 }
