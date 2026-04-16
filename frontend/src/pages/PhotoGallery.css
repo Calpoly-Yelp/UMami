@@ -4,74 +4,116 @@
    font-family: "Poppins", sans-serif;
 }
 
+
 .hero-section {
-   height: 300px;
+   height: 320px;
    background-image: url("../assets/shakesmart_header.png");
    background-size: cover;
    background-position: center;
    position: relative;
+   display: flex;
+   align-items: flex-end;
+}
+
+.hero-section::after {
+   display : none;
 }
 
 .hero-overlay {
-   position: absolute;
-   bottom: 40px;
-   left: 40px;
-   color: rgb(7, 7, 7);
+   position: relative;
+   z-index: 2;
+   padding: 40px 60px;
+   color: white;
 }
 
 .hero-overlay h1 {
    font-size: 48px;
    margin: 0;
+   font-weight: 700;
 }
 
 .hero-overlay p {
-   font-size: 24px;
-   margin-top: 5px;
+   font-size: 22px;
+   margin-top: 8px;
+   opacity: 0.9;
 }
+
 
 .tabs {
    display: flex;
    justify-content: center;
-   background: #584f4f;
+   background: white;
+   border-bottom: 1px solid #ddd;
 }
 
 .tab {
    flex: 1;
-   padding: 15px;
+   padding: 16px;
    border: none;
-   background: #ddd;
-   font-size: 18px;
+   background: white;
+   font-size: 16px;
    cursor: pointer;
+   transition: all 0.2s ease;
+}
+
+.tab:hover {
+   background: #f5f5f5;
 }
 
 .tab.active {
-   background: rgb(0, 0, 0);
-   font-weight: bold;
+   font-weight: 600;
+   border-bottom: 3px solid black;
 }
 
 .section {
-   padding: 40px 80px;
+   max-width: 1100px;
+   margin: 0 auto;
+   padding: 50px 20px;
 }
 
 .section h2 {
-   margin-bottom: 30px;
+   font-size: 28px;
+   margin-bottom: 25px;
 }
+
 
 .image-grid {
    display: grid;
    grid-template-columns: repeat(3, 1fr);
-   gap: 30px;
+   gap: 28px;
 }
 
 .image-grid img {
    width: 100%;
    height: 200px;
    object-fit: cover;
-   border-radius: 6px;
-   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-   transition: transform 0.2s ease;
+   border-radius: 10px;
+   box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.12);
+   transition: all 0.25s ease;
 }
 
 .image-grid img:hover {
-   transform: scale(1.03);
+   transform: translateY(-4px);
+   box-shadow: 0px 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+
+@media (max-width: 900px) {
+   .image-grid {
+      grid-template-columns: repeat(2, 1fr);
+   }
+}
+
+@media (max-width: 600px) {
+   .image-grid {
+      grid-template-columns: 1fr;
+   }
+
+   .hero-overlay {
+      padding: 20px;
+   }
+
+   .hero-overlay h1 {
+      font-size: 32px;
+   }
 }

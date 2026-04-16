@@ -11,7 +11,6 @@ export default function SignIn() {
 
    const handleSignIn = async (e) => {
       e.preventDefault();
-      // Simulate login by fetching the specific test user from the database
       try {
          const response = await fetch(
             "http://localhost:4000/api/users/b677be85-81db-4245-91ca-acb713bd5564",
@@ -47,7 +46,7 @@ export default function SignIn() {
                Sign into your account
             </h1>
             <p className="auth__subtitle">
-               Enter your email and password to sign in
+             
             </p>
 
             <form

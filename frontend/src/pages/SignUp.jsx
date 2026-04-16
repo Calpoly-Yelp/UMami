@@ -10,7 +10,6 @@ export default function SignUp() {
    const handleSubmit = async (e) => {
       e.preventDefault();
 
-      // Ensure form is valid before processing (handling JSDOM/Browser edge cases)
       if (!e.target.checkValidity()) return;
 
       const formData = new FormData(e.target);
@@ -19,7 +18,7 @@ export default function SignUp() {
          id: crypto.randomUUID(),
          name: formData.get("name"),
          email: formData.get("email"),
-         avatar_url: "", // Default empty avatar
+         avatar_url: "",
          is_verified: false,
       };
 
@@ -29,10 +28,8 @@ export default function SignUp() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newUser),
          });
-         localStorage.setItem(
-            "user",
-            JSON.stringify(newUser),
-         );
+
+         localStorage.setItem("user", JSON.stringify(newUser));
          navigate("/onboarding");
       } catch (error) {
          console.error("Sign up failed", error);
@@ -42,116 +39,120 @@ export default function SignUp() {
    return (
       <div className="signupForm">
          <div className="signupForm__left">
-            <div className="signupForm__brand">
+            <div className="signupForm__content">
                <img
                   src={logo}
                   alt="Umami logo"
                   className="signupForm__logo"
                />
-            </div>
-            <h1 className="signupForm__title">
-               Get started now
-            </h1>
 
-            <div
-               className="signupForm__icon"
-               aria-hidden="true"
-            >
-               <svg
-                  viewBox="0 0 24 24"
-                  width="64"
-                  height="64"
+               <h1 className="signupForm__title">Get started now</h1>
+
+               <form
+                  className="signupForm__form"
+                  onSubmit={handleSubmit}
                >
-                  <path
-                     fill="currentColor"
-                     d="M12 12a4 4 0 1 0-4-4a4 4 0 0 0 4 4m0 2c-4.42 0-8 2-8 4.5V21h16v-2.5c0-2.5-3.58-4.5-8-4.5"
-                  />
-               </svg>
-            </div>
-
-            <form
-               className="signupForm__form"
-               onSubmit={handleSubmit}
-            >
-               <label
-                  className="signupForm__label"
-                  htmlFor="name"
-               >
-                  Name
-               </label>
-               <input
-                  className="signupForm__input"
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter your name"
-                  autoComplete="name"
-                  required
-               />
-
-               <label
-                  className="signupForm__label"
-                  htmlFor="email"
-               >
-                  Email address
-               </label>
-               <input
-                  className="signupForm__input"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  autoComplete="email"
-                  required
-               />
-
-               <label
-                  className="signupForm__label"
-                  htmlFor="password"
-               >
-                  Password
-               </label>
-               <input
-                  className="signupForm__input"
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter a password"
-                  autoComplete="new-password"
-                  required
-               />
-
-               <label className="signupForm__checkRow">
-                  <input type="checkbox" required />
-                  <span>
-                     I agree to the{" "}
-                     <a
-                        href="#"
-                        onClick={(e) => e.preventDefault()}
+                  <label className="signupForm__label" htmlFor="name">
+                     Name
+                  </label>
+                  <div className="signupForm__inputWrap">
+                     <span
+                        className="signupForm__inputIcon"
+                        aria-hidden="true"
                      >
-                        terms &amp; policy
-                     </a>
-                  </span>
-               </label>
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                           <path
+                              fill="currentColor"
+                              d="M12 12a4 4 0 1 0-4-4a4 4 0 0 0 4 4Zm0 2c-4.418 0-8 2.015-8 4.5V21h16v-2.5c0-2.485-3.582-4.5-8-4.5Z"
+                           />
+                        </svg>
+                     </span>
+                     <input
+                        className="signupForm__input"
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Name"
+                        autoComplete="name"
+                        required
+                     />
+                  </div>
 
-               <button
-                  className="signupForm__primary"
-                  type="submit"
-               >
-                  Sign up
-               </button>
+                  <label className="signupForm__label" htmlFor="email">
+                     Email
+                  </label>
+                  <div className="signupForm__inputWrap">
+                     <span
+                        className="signupForm__inputIcon"
+                        aria-hidden="true"
+                     >
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                           <path
+                              fill="currentColor"
+                              d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5Z"
+                           />
+                        </svg>
+                     </span>
+                     <input
+                        className="signupForm__input"
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Email"
+                        autoComplete="email"
+                        required
+                     />
+                  </div>
 
-               <div className="signupForm__footer">
-                  <span>Have an account?</span>
+                  <label className="signupForm__label" htmlFor="password">
+                     Password
+                  </label>
+                  <div className="signupForm__inputWrap">
+                     <span
+                        className="signupForm__inputIcon"
+                        aria-hidden="true"
+                     >
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                           <path
+                              fill="currentColor"
+                              d="M17 8h-1V6a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2Zm-6 0V6a2 2 0 1 1 4 0v2h-4Z"
+                           />
+                        </svg>
+                     </span>
+                     <input
+                        className="signupForm__input"
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Password"
+                        autoComplete="new-password"
+                        required
+                     />
+                  </div>
+
                   <button
-                     className="signupForm__linkBtn"
-                     type="button"
-                     onClick={() => navigate("/signin")}
+                     className="signupForm__primary"
+                     type="submit"
                   >
-                     Sign In
+                     Create Account
                   </button>
-               </div>
-            </form>
+
+                  <div className="signupForm__footer">
+                     <span className="signupForm__footerLine" />
+                     <span className="signupForm__footerText">
+                        Have an account already?{" "}
+                        <button
+                           className="signupForm__linkBtn"
+                           type="button"
+                           onClick={() => navigate("/signin")}
+                        >
+                           Sign in
+                        </button>
+                     </span>
+                     <span className="signupForm__footerLine" />
+                  </div>
+               </form>
+            </div>
          </div>
 
          <div className="signupForm__right">
