@@ -1,9 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import {
+   render,
+   screen,
+   waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import SignUp from "../pages/SignUp";
+import { supabase } from "../lib/supabase";
 
 jest.mock("../assets/signup2.jpg", () => "mock-image");
+jest.mock("../assets/logo.png", () => "mock-logo");
 
 const mockNavigate = jest.fn();
 
@@ -11,7 +17,14 @@ jest.mock("react-router-dom", () => ({
    useNavigate: () => mockNavigate,
 }));
 
-// Mock global fetch to isolate tests from network/backend
+jest.mock("../lib/supabase", () => ({
+   supabase: {
+      auth: {
+         signUp: jest.fn(),
+      },
+   },
+}));
+
 global.fetch = jest.fn(() =>
    Promise.resolve({
       ok: true,
@@ -22,7 +35,11 @@ global.fetch = jest.fn(() =>
 describe("SignUp component", () => {
    beforeEach(() => {
       mockNavigate.mockClear();
+      supabase.auth.signUp.mockClear();
       global.fetch.mockClear();
+
+      if (!global.crypto) global.crypto = {};
+      global.crypto.randomUUID = jest.fn(() => "test-uuid");
    });
 
    test("renders the sign up form", () => {
@@ -85,13 +102,16 @@ describe("SignUp component", () => {
    test("navigates to /onboarding when sign up is submitted successfully", async () => {
       const user = userEvent.setup();
 
-      // Mock crypto.randomUUID for the component's internal logic
-      if (!global.crypto) global.crypto = {};
-      global.crypto.randomUUID = jest.fn(() => "test-uuid");
+      supabase.auth.signUp.mockResolvedValue({
+         data: {
+            user: { id: "test-user-id" },
+            session: { access_token: "fake-token" },
+         },
+         error: null,
+      });
 
       render(<SignUp />);
 
-      // Fill out required fields so the form is valid and submits
       await user.type(
          screen.getByLabelText(/name/i),
          "Adrian",
@@ -109,14 +129,48 @@ describe("SignUp component", () => {
       const submitButton = screen.getByRole("button", {
          name: /sign up/i,
       });
+
       const form = submitButton.closest("form");
       form.checkValidity = jest.fn().mockReturnValue(true);
 
       await user.click(submitButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith(
-         "/onboarding",
-      );
+      await waitFor(() => {
+         expect(supabase.auth.signUp).toHaveBeenCalledWith({
+            email: "adrian@example.com",
+            password: "mypassword123",
+            options: {
+               data: {
+                  name: "Adrian",
+               },
+            },
+         });
+      });
+
+      await waitFor(() => {
+         expect(global.fetch).toHaveBeenCalledWith(
+            "http://localhost:4000/api/users",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  id: "test-user-id",
+                  name: "Adrian",
+                  email: "adrian@example.com",
+                  avatar_url: "",
+                  is_verified: false,
+               }),
+            },
+         );
+      });
+
+      await waitFor(() => {
+         expect(mockNavigate).toHaveBeenCalledWith(
+            "/onboarding",
+         );
+      });
    });
 
    test("navigates to /signin when sign in button is clicked", async () => {

@@ -2,30 +2,45 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
 import bgImage from "../assets/signup-bg.jpeg";
+import { supabase } from "../lib/supabase";
 
 export default function SignIn() {
    const navigate = useNavigate();
 
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
+   const [error, setError] = useState("");
+   const [loading, setLoading] = useState(false);
 
    const handleSignIn = async (e) => {
       e.preventDefault();
-      // Simulate login by fetching the specific test user from the database
+      setError("");
+
       try {
-         const response = await fetch(
-            "http://localhost:4000/api/users/b677be85-81db-4245-91ca-acb713bd5564",
-         );
-         if (response.ok) {
-            const userData = await response.json();
-            localStorage.setItem(
-               "user",
-               JSON.stringify(userData),
-            );
-            navigate("/restaurants");
+         setLoading(true);
+
+         const { data, error } =
+            await supabase.auth.signInWithPassword({
+               email,
+               password,
+            });
+
+         if (error) {
+            throw error;
          }
-      } catch (error) {
-         console.error("Login failed", error);
+
+         if (!data.user) {
+            throw new Error(
+               "No user returned from sign in.",
+            );
+         }
+
+         navigate("/restaurants");
+      } catch (err) {
+         console.error("Login failed", err);
+         setError(err.message || "Login failed");
+      } finally {
+         setLoading(false);
       }
    };
 
@@ -76,11 +91,16 @@ export default function SignIn() {
                   required
                />
 
+               {error && (
+                  <p className="auth__error">{error}</p>
+               )}
+
                <button
                   className="auth__primary"
                   type="submit"
+                  disabled={loading}
                >
-                  Sign in
+                  {loading ? "Signing in..." : "Sign In"}
                </button>
 
                <div className="auth__divider">

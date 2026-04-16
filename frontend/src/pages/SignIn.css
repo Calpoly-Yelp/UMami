@@ -77,6 +77,13 @@
    align-items: center;
 }
 
+.auth__error {
+   color: #ff4d4f;
+   font-size: 0.9rem;
+   margin-top: 8px;
+   margin-bottom: 4px;
+}
+
 .auth__field {
    width: 100%;
    display: flex;
