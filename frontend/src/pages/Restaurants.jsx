@@ -230,13 +230,15 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
       if (sort === "lowest_rating") {
          filtered = [...filtered].sort(
-            (a, b) => (a.avg_rating ?? 0) - (b.avg_rating ?? 0),
+            (a, b) =>
+               (a.avg_rating ?? 0) - (b.avg_rating ?? 0),
          );
       }
 
       if (sort === "highest_rating") {
          filtered = [...filtered].sort(
-            (a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0),
+            (a, b) =>
+               (b.avg_rating ?? 0) - (a.avg_rating ?? 0),
          );
       }
 
