@@ -57,7 +57,9 @@ router.get("/", async (req, res) => {
 
       res.status(200).json(validatedData);
    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 
@@ -126,7 +128,9 @@ router.post("/:id/helpful", async (req, res) => {
          has_voted_helpful: hasVoted,
       });
    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 

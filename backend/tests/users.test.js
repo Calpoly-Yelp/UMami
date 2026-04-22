@@ -118,11 +118,12 @@ describe("User Endpoints", () => {
 
    it("POST /api/users should create a new user", async () => {
       const newUser = {
-         id: "new-user-id",
+         id: "b677be85-81db-4245-91ca-acb713bd5564",
          email: "new@example.com",
          name: "New User",
          avatar_url: null,
          is_verified: false,
+         created_at: new Date().toISOString(),
       };
 
       supabase.from.mockReturnValue({
@@ -144,11 +145,12 @@ describe("User Endpoints", () => {
 
    it("POST /api/users should handle creation errors", async () => {
       const newUser = {
-         id: "new-user-id",
+         id: "b677be85-81db-4245-91ca-acb713bd5564",
          email: "new@example.com",
          name: "New User",
          avatar_url: null,
          is_verified: false,
+         created_at: new Date().toISOString(),
       };
 
       supabase.from.mockReturnValue({

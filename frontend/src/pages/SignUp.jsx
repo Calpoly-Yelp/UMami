@@ -59,7 +59,7 @@ export default function SignUp() {
                   id: user.id,
                   name,
                   email,
-                  avatar_url: "",
+                  avatar_url: `https://ui-avatars.com/api/?name=${name.trim().replace(/\s+/g, "+")}`,
                   is_verified: false,
                }),
             },
@@ -72,6 +72,13 @@ export default function SignUp() {
                result.error || "Failed to save user.",
             );
          }
+
+         // grab our user from database
+         localStorage.setItem(
+            "user",
+            JSON.stringify(result),
+         );
+         console.log("local storage updated", result);
 
          if (data.session) {
             navigate("/onboarding");
