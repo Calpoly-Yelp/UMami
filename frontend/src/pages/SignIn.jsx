@@ -33,6 +33,24 @@ export default function SignIn() {
             );
          }
 
+         // get our users data based off the id
+         const response = await fetch(
+            `http://localhost:4000/api/users/${data.user.id}`,
+         );
+         if (response.ok) {
+            const userData = await response.json();
+            console.log("Fetched user data:", userData);
+            localStorage.setItem(
+               "user",
+               JSON.stringify(userData),
+            );
+            console.log("local storage updated", userData);
+         } else {
+            throw new Error(
+               "Failed to fetch user profile data.",
+            );
+         }
+
          navigate("/restaurants");
       } catch (err) {
          console.error("Login failed", err);

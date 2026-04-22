@@ -19,7 +19,9 @@ router.get("/", async (req, res) => {
       res.status(200).json(data);
    } catch (error) {
       console.error("Error fetching users:", error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 
@@ -36,9 +38,13 @@ router.post("/", async (req, res) => {
          throw error;
       }
 
-      res.status(201).json(data);
+      const validatedData = User.parse(data);
+
+      res.status(201).json(validatedData);
    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 
@@ -65,7 +71,9 @@ router.get("/:id", async (req, res) => {
 
       res.status(200).json(validatedData);
    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 
@@ -133,7 +141,9 @@ router.get("/:id/follows", async (req, res) => {
 
       res.status(200).json(usersWithReviewCounts);
    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 
@@ -161,7 +171,9 @@ router.post("/follows/sync", async (req, res) => {
          message: "Follows synced successfully",
       });
    } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
    }
 });
 
