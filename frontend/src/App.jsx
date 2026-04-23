@@ -119,7 +119,7 @@ function AppLayout() {
                   path="/user"
                   element={
                      <ProtectedRoute session={session}>
-                        <UserPage />
+                        <UserPage session={session} />
                      </ProtectedRoute>
                   }
                />
