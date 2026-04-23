@@ -16,6 +16,7 @@ import "./User.css";
 
 // This is our user page layout
 function User({
+   session,
    user: initialUser,
    reviews: initialReviews,
    restaurants: initialRestaurants,
@@ -96,12 +97,12 @@ function User({
    const followingIdsRef = useRef(new Set());
 
    useEffect(() => {
-      followingIdsRef.current = followingIds;
-   }, [followingIds]);
-
-   useEffect(() => {
       bookmarkedIdsRef.current = bookmarkedIds;
    }, [bookmarkedIds]);
+
+   useEffect(() => {
+      followingIdsRef.current = followingIds;
+   }, [followingIds]);
 
    useEffect(() => {
       // check if we are in testing mode
@@ -121,13 +122,47 @@ function User({
       //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
-            const storedUser = JSON.parse(
-               localStorage.getItem("user"),
-            );
+            const sessionUser = session?.user || null;
+            const storedUserRaw =
+               localStorage.getItem("user");
+            const storedUser = storedUserRaw
+               ? JSON.parse(storedUserRaw)
+               : null;
 
             // assign user data to object
-            const userData =
-               storedUser || initialUser || {};
+            const userData = {
+               ...(storedUser || {}),
+               ...(initialUser || {}),
+               id:
+                  sessionUser?.id ||
+                  initialUser?.id ||
+                  storedUser?.id ||
+                  "",
+               name:
+                  initialUser?.name ||
+                  storedUser?.name ||
+                  sessionUser?.user_metadata?.name ||
+                  "Anonymous",
+               avatar_url:
+                  initialUser?.avatar_url ||
+                  storedUser?.avatar_url ||
+                  sessionUser?.user_metadata
+                     ?.avatar_url ||
+                  "",
+               is_verified:
+                  initialUser?.is_verified ||
+                  storedUser?.is_verified ||
+                  false,
+            };
+
+            if (!userData.id) {
+               setRestaurants([]);
+               setBookmarkedIds(new Set());
+               setFollowing([]);
+               setFollowingIds(new Set());
+               return;
+            }
+
             if (userData.id) {
                setUser({
                   id: userData.id,
@@ -267,6 +302,7 @@ function User({
       };
       fetchData();
    }, [
+      session,
       initialUser,
       initialReviews,
       initialRestaurants,
