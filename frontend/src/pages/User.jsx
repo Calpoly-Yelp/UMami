@@ -146,8 +146,7 @@ function User({
                avatar_url:
                   initialUser?.avatar_url ||
                   storedUser?.avatar_url ||
-                  sessionUser?.user_metadata
-                     ?.avatar_url ||
+                  sessionUser?.user_metadata?.avatar_url ||
                   "",
                is_verified:
                   initialUser?.is_verified ||
