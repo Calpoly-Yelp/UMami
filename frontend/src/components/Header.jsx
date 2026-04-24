@@ -4,6 +4,9 @@ import {
    MdOutlineAccountCircle,
    MdNotificationsNone,
    MdClose,
+   MdSearch,
+   MdAdd,
+   MdCheck,
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
@@ -14,6 +17,12 @@ function Header() {
       useState(false);
    const [isNotificationsOpen, setIsNotificationsOpen] =
       useState(false);
+   const [isSearchOpen, setIsSearchOpen] = useState(false);
+   const [searchQuery, setSearchQuery] = useState("");
+   const [allUsers, setAllUsers] = useState([]);
+   const [followedSet, setFollowedSet] = useState(
+      new Set(),
+   );
    const [notifications, setNotifications] = useState([]);
    const [visibleCount, setVisibleCount] = useState(4);
    const [user, setUser] = useState(null);
@@ -30,6 +39,13 @@ function Header() {
       setIsNotificationsOpen(!isNotificationsOpen);
       if (!isNotificationsOpen) setVisibleCount(4);
       if (isDropdownOpen) setIsDropdownOpen(false);
+   };
+   const toggleSearch = () => {
+      setIsSearchOpen(!isSearchOpen);
+      setSearchQuery("");
+      if (isDropdownOpen) setIsDropdownOpen(false);
+      if (isNotificationsOpen)
+         setIsNotificationsOpen(false);
    };
 
    // logic for page navigation for element clicks
@@ -216,6 +232,154 @@ function Header() {
       };
    }, []);
 
+   // logic for fetching all users for search
+   useEffect(() => {
+      const fetchUsers = async () => {
+         try {
+            const response = await fetch(
+               "http://localhost:4000/api/users",
+            );
+            if (response.ok) {
+               const data = await response.json();
+               setAllUsers(data);
+            }
+         } catch (error) {
+            console.error("Error fetching users:", error);
+         }
+      };
+      fetchUsers();
+   }, []);
+
+   // logic for fetching users the current user follows
+   useEffect(() => {
+      if (user && user.id) {
+         const fetchFollows = async () => {
+            try {
+               const response = await fetch(
+                  `http://localhost:4000/api/users/${user.id}/follows`,
+               );
+               if (response.ok) {
+                  const data = await response.json();
+                  setFollowedSet(
+                     new Set(
+                        data.map(
+                           (followedUser) =>
+                              followedUser.id,
+                        ),
+                     ),
+                  );
+               }
+            } catch (error) {
+               console.error(
+                  "Error fetching follows:",
+                  error,
+               );
+            }
+         };
+         fetchFollows();
+      }
+   }, [user]);
+
+   // logic for following a user
+   const handleFollow = async (personId) => {
+      if (!user || !user.id) {
+         console.error("User not logged in");
+         return;
+      }
+
+      // Optimistic UI update for instant feedback
+      setFollowedSet((prev) => new Set(prev).add(personId));
+
+      try {
+         const response = await fetch(
+            "http://localhost:4000/api/users/follows/sync",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  follower_id: user.id,
+                  added: [personId],
+                  removed: [],
+               }),
+            },
+         );
+         if (!response.ok) {
+            // Revert if the request failed
+            setFollowedSet((prev) => {
+               const newSet = new Set(prev);
+               newSet.delete(personId);
+               return newSet;
+            });
+         }
+      } catch (error) {
+         console.error("Error following user:", error);
+         // Revert on network error
+         setFollowedSet((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(personId);
+            return newSet;
+         });
+      }
+   };
+
+   // logic for unfollowing a user
+   const handleUnfollow = async (personId) => {
+      if (!user || !user.id) {
+         console.error("User not logged in");
+         return;
+      }
+
+      // Optimistic UI update for instant feedback
+      setFollowedSet((prev) => {
+         const newSet = new Set(prev);
+         newSet.delete(personId);
+         return newSet;
+      });
+
+      try {
+         const response = await fetch(
+            "http://localhost:4000/api/users/follows/sync",
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  follower_id: user.id,
+                  added: [],
+                  removed: [personId],
+               }),
+            },
+         );
+         if (!response.ok) {
+            // Revert if the request failed
+            setFollowedSet((prev) =>
+               new Set(prev).add(personId),
+            );
+         }
+      } catch (error) {
+         console.error("Error unfollowing user:", error);
+         // Revert on network error
+         setFollowedSet((prev) =>
+            new Set(prev).add(personId),
+         );
+      }
+   };
+
+   const filteredPeople =
+      searchQuery.trim() === ""
+         ? []
+         : allUsers.filter(
+              (p) =>
+                 p.id !== user?.id && // filter out the logged in user
+                 p.name &&
+                 p.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()),
+           );
+
    return (
       <div className="app-header">
          <img
@@ -225,6 +389,12 @@ function Header() {
             onClick={() => navigate("/restaurants")}
          />
          <div className="header-right">
+            <MdSearch
+               size={40}
+               color="#154734"
+               className="search-icon"
+               onClick={toggleSearch}
+            />
             <div
                className="notification-container"
                ref={notificationRef}
@@ -368,6 +538,135 @@ function Header() {
                )}
             </div>
          </div>
+         {isSearchOpen && (
+            <div
+               className="search-overlay"
+               onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery("");
+               }}
+            >
+               <div
+                  className="search-modal-container"
+                  onClick={(e) => e.stopPropagation()}
+               >
+                  <div className="search-modal">
+                     <MdSearch size={30} color="#666" />
+                     <input
+                        type="text"
+                        placeholder="Search Umami..."
+                        className="search-modal-input"
+                        value={searchQuery}
+                        onChange={(e) =>
+                           setSearchQuery(e.target.value)
+                        }
+                        autoFocus
+                     />
+                     <MdClose
+                        size={30}
+                        color="#666"
+                        className="search-modal-close"
+                        onClick={() => {
+                           setIsSearchOpen(false);
+                           setSearchQuery("");
+                        }}
+                     />
+                  </div>
+                  {searchQuery.trim() !== "" && (
+                     <div className="search-results-wrapper">
+                        <div className="search-results">
+                           {filteredPeople.length > 0 ? (
+                              <>
+                                 <div className="search-result-spacer" />
+                                 {filteredPeople.map(
+                                    (person) => (
+                                       <div
+                                          key={person.id}
+                                          className="search-result-item"
+                                       >
+                                          {person.avatar_url ? (
+                                             <img
+                                                src={
+                                                   person.avatar_url
+                                                }
+                                                alt={
+                                                   person.name ||
+                                                   "User"
+                                                }
+                                                className="search-result-avatar"
+                                             />
+                                          ) : (
+                                             <MdOutlineAccountCircle
+                                                size={40}
+                                                color="#154734"
+                                                className="search-result-avatar"
+                                             />
+                                          )}
+                                          <div className="search-result-info">
+                                             <span className="search-result-name">
+                                                {person.name ||
+                                                   "Unknown User"}
+                                             </span>
+                                          </div>
+                                          <div className="search-result-action">
+                                             {followedSet.has(
+                                                person.id,
+                                             ) ? (
+                                                <button
+                                                   className="follow-btn"
+                                                   onClick={(
+                                                      e,
+                                                   ) => {
+                                                      e.stopPropagation();
+                                                      handleUnfollow(
+                                                         person.id,
+                                                      );
+                                                   }}
+                                                   title="Unfollow User"
+                                                >
+                                                   <MdCheck
+                                                      size={
+                                                         30
+                                                      }
+                                                   />
+                                                </button>
+                                             ) : (
+                                                <button
+                                                   className="follow-btn"
+                                                   onClick={(
+                                                      e,
+                                                   ) => {
+                                                      e.stopPropagation();
+                                                      handleFollow(
+                                                         person.id,
+                                                      );
+                                                   }}
+                                                   title="Follow User"
+                                                >
+                                                   <MdAdd
+                                                      size={
+                                                         30
+                                                      }
+                                                   />
+                                                </button>
+                                             )}
+                                          </div>
+                                       </div>
+                                    ),
+                                 )}
+                                 <div className="search-result-spacer" />
+                              </>
+                           ) : (
+                              <div className="search-result-empty">
+                                 No people found
+                              </div>
+                           )}
+                        </div>
+                     </div>
+                  )}
+               </div>
+            </div>
+         )}
       </div>
    );
 }

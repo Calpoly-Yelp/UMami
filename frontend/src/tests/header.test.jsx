@@ -69,7 +69,7 @@ describe("Global Header Component", () => {
          }
          return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({}),
+            json: () => Promise.resolve([]),
          });
       });
    });
