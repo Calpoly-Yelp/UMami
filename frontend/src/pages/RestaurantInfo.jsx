@@ -53,10 +53,10 @@ export default function Review() {
          ],
          locationLabel:
             restaurantInfo?.location || "Loading...",
-         address:
-            "Shake Smart, Recreation Center, 1 Grand Ave, San Luis Obispo, CA 93407",
-         lat: 35.3007,
-         lng: -120.6603,
+         street_address:
+            restaurantInfo?.street_address || "",
+         lat: restaurantInfo?.lat || 35.2828,
+         lng: restaurantInfo?.lng || -120.6596,
          menuImages: [
             "/gallery/ss_food_1.jpg",
             "/gallery/ss_food_2.jpg",
@@ -352,7 +352,9 @@ export default function Review() {
                         lat={restaurant.lat}
                         lng={restaurant.lng}
                         name={restaurant.name}
-                        address={restaurant.address}
+                        street_address={
+                           restaurant.street_address
+                        }
                      />
 
                      <div className="review__locationChipRow">

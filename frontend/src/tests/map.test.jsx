@@ -19,6 +19,7 @@ import Map from "../components/Map.jsx";
 // Mock Leaflet to handle the L.icon call and prototype modification in the component
 jest.mock("leaflet", () => ({
    icon: jest.fn(),
+   divIcon: jest.fn(),
    Marker: {
       prototype: {
          options: {},
@@ -43,6 +44,12 @@ jest.mock("react-leaflet", () => ({
    Popup: ({ children }) => (
       <div data-testid="popup">{children}</div>
    ),
+   Tooltip: ({ children }) => (
+      <div data-testid="tooltip">{children}</div>
+   ),
+   useMap: () => ({
+      setView: jest.fn(),
+   }),
 }));
 
 describe("Map", () => {
@@ -83,7 +90,7 @@ describe("Map", () => {
    test("opens Google Maps with address when marker is clicked", () => {
       const props = {
          name: "Burger Joint",
-         address: "123 Main St, Cityville",
+         street_address: "123 Main St, Cityville",
          lat: 10,
          lng: 10,
       };
@@ -105,7 +112,7 @@ describe("Map", () => {
    test("opens Google Maps with coordinates when address is missing", () => {
       const props = {
          name: "Hidden Gem",
-         address: "",
+         street_address: "",
          lat: 35.5,
          lng: -120.5,
       };
@@ -126,7 +133,7 @@ describe("Map", () => {
    test("opens Google Maps when clicking the popup content", () => {
       const props = {
          name: "Popup Click Test",
-         address: "456 Elm St",
+         street_address: "456 Elm St",
       };
       render(<Map {...props} />);
 

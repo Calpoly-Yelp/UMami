@@ -11,6 +11,9 @@ export const Restaurant = z.object({
    rating_count: z.number().nullable(),
    rating_sum: z.number().nullable(),
    avg_rating: z.number().nullable(),
+   lat: z.number().nullable().optional(),
+   lng: z.number().nullable().optional(),
+   street_address: z.string().nullable().optional(),
 });
 
 // Schema for the 'bookmarks' table
