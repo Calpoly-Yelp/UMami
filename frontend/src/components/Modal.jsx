@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "./Modal.css";
 
 export default function Modal({
@@ -6,6 +7,8 @@ export default function Modal({
    onClose,
    title,
    children,
+   disableOverlayClick = false,
+   hideCloseButton = false,
 }) {
    useEffect(() => {
       if (!open) return;
@@ -19,24 +22,32 @@ export default function Modal({
 
    if (!open) return null;
 
-   return (
-      <div className="modal-overlay" onMouseDown={onClose}>
+   return createPortal(
+      <div
+         className="modal-overlay"
+         onMouseDown={
+            disableOverlayClick ? undefined : onClose
+         }
+      >
          <div
             className="modal-panel"
             onMouseDown={(e) => e.stopPropagation()}
          >
             <div className="modal-header">
                <div className="modal-title">{title}</div>
-               <button
-                  className="modal-close"
-                  onClick={onClose}
-                  aria-label="Close"
-               >
-                  ×
-               </button>
+               {!hideCloseButton && (
+                  <button
+                     className="modal-close"
+                     onClick={onClose}
+                     aria-label="Close"
+                  >
+                     ×
+                  </button>
+               )}
             </div>
             <div className="modal-body">{children}</div>
          </div>
-      </div>
+      </div>,
+      document.body,
    );
 }

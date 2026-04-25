@@ -3,19 +3,6 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import WriteReview from "../components/WriteReview";
 
-const mockNavigate = jest.fn();
-jest.mock("react-router-dom", () => ({
-   useNavigate: () => mockNavigate,
-}));
-
-jest.mock("../components/Modal", () => {
-   return function MockModal({ open, children }) {
-      return open ? (
-         <div data-testid="modal">{children}</div>
-      ) : null;
-   };
-});
-
 jest.mock("../components/PhotoUpload", () => {
    return function MockPhotoUpload() {
       return <div>PhotoUpload</div>;
@@ -23,18 +10,6 @@ jest.mock("../components/PhotoUpload", () => {
 });
 
 describe("WriteReview component", () => {
-   beforeEach(() => {
-      mockNavigate.mockClear();
-   });
-
-   test("renders the title", () => {
-      render(<WriteReview />);
-
-      expect(
-         screen.getByText(/shake smart review/i),
-      ).toBeInTheDocument();
-   });
-
    test("allows user to select a star rating", async () => {
       const user = userEvent.setup();
       render(<WriteReview />);
@@ -60,38 +35,56 @@ describe("WriteReview component", () => {
       expect(textarea).toHaveValue("Great service");
    });
 
-   test("allows user to change the category", async () => {
+   test("opens photo modal when photo button is clicked", async () => {
       const user = userEvent.setup();
       render(<WriteReview />);
 
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "Quality");
-
-      expect(select).toHaveValue("Quality");
-   });
-
-   test("opens photo modal when photo button is clicked", async () => {
-      const user = userEvent.setup();
-      const { container } = render(<WriteReview />);
-
-      const photoButton =
-         container.querySelector(".wr-photoCard");
+      const photoButton = screen.getByText(/Upload Photo/i);
       await user.click(photoButton);
 
       expect(
-         screen.getByTestId("modal"),
+         screen.getByText("PhotoUpload"),
       ).toBeInTheDocument();
    });
 
-   test("navigates to /reviews when submit button is clicked", async () => {
+   test("calls onClose when cancel button is clicked", async () => {
       const user = userEvent.setup();
+      const mockOnClose = jest.fn();
+      render(<WriteReview onClose={mockOnClose} />);
+
+      const cancelButton = screen.getByRole("button", {
+         name: /cancel/i,
+      });
+      await user.click(cancelButton);
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+   });
+
+   test("submit button is disabled until a rating is selected", () => {
       render(<WriteReview />);
+
+      const submitButton = screen.getByRole("button", {
+         name: /submit review/i,
+      });
+      expect(submitButton).toBeDisabled();
+   });
+
+   test("calls onClose when submit button is clicked", async () => {
+      const user = userEvent.setup();
+      const mockOnClose = jest.fn();
+      render(<WriteReview onClose={mockOnClose} />);
+
+      // Must select a rating to enable the submit button
+      const star3 = screen.getByRole("radio", {
+         name: /3 stars/i,
+      });
+      await user.click(star3);
 
       const submitButton = screen.getByRole("button", {
          name: /submit review/i,
       });
       await user.click(submitButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/reviews");
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
    });
 });

@@ -1,144 +1,212 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./WriteReview.css";
-import Modal from "./Modal";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 
-function WriteReview() {
-   const navigate = useNavigate();
+function WriteReview({ onClose }) {
    const [rating, setRating] = useState(0);
-   const [category, setCategory] = useState("Service");
    const [text, setText] = useState("");
    const [openPhotoModal, setOpenPhotoModal] =
       useState(false);
-   const [experiencePhotoUrl, setExperiencePhotoUrl] =
-      useState(null);
+   const [photos, setPhotos] = useState([]);
+   const [hoverRating, setHoverRating] = useState(0);
 
    return (
       <div className="wr-page">
          <div className="wr-container">
-            <h1 className="wr-title">Shake Smart Review</h1>
+            <div className="wr-top-half">
+               <div className="wr-section">
+                  <div className="wr-labelRow">
+                     <div
+                        className="wr-label"
+                        style={{ marginBottom: 0 }}
+                     >
+                        Rate your experience:
+                     </div>
+                  </div>
 
-            <div className="wr-section">
-               <div className="wr-label">
-                  Rate your experience:
+                  <div
+                     className="wr-stars"
+                     role="radiogroup"
+                     aria-label="Rating"
+                  >
+                     {[1, 2, 3, 4, 5].map((n) => {
+                        const isFilled = n <= rating;
+                        const isFaint =
+                           n > rating && n <= hoverRating;
+                        return (
+                           <button
+                              key={n}
+                              type="button"
+                              className={`wr-star ${isFilled ? "is-filled" : ""} ${isFaint ? "is-faint" : ""}`}
+                              onClick={() => setRating(n)}
+                              onMouseEnter={() =>
+                                 setHoverRating(n)
+                              }
+                              onMouseLeave={() =>
+                                 setHoverRating(0)
+                              }
+                              aria-label={`${n} star${n === 1 ? "" : "s"}`}
+                              aria-checked={n === rating}
+                              role="radio"
+                           >
+                              ★
+                           </button>
+                        );
+                     })}
+                  </div>
                </div>
 
                <div
-                  className="wr-stars"
-                  role="radiogroup"
-                  aria-label="Rating"
+                  className="wr-section"
+                  style={{ flex: 1, width: "100%" }}
                >
-                  {[1, 2, 3, 4, 5].map((n) => (
-                     <button
-                        key={n}
-                        type="button"
-                        className={`wr-star ${n <= rating ? "is-filled" : ""}`}
-                        onClick={() => setRating(n)}
-                        aria-label={`${n} star${n === 1 ? "" : "s"}`}
-                        aria-checked={n === rating}
-                        role="radio"
-                     >
-                        ★
-                     </button>
-                  ))}
-               </div>
-            </div>
-
-            <div className="wr-section">
-               <textarea
-                  id="wr-text"
-                  className="wr-textarea"
-                  placeholder="Talk about your experience..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-               />
-            </div>
-
-            <div className="wr-grid">
-               <div className="wr-col">
-                  <label
-                     className="wr-label"
-                     htmlFor="wr-category"
-                  >
-                     What is your experience about?
-                  </label>
-
-                  <div className="wr-selectWrap">
-                     <select
-                        id="wr-category"
-                        className="wr-select"
-                        value={category}
+                  <div className="wr-textarea-wrapper">
+                     <textarea
+                        id="wr-text"
+                        className="wr-textarea"
+                        placeholder="Talk about your experience..."
+                        value={text}
+                        maxLength={750}
                         onChange={(e) =>
-                           setCategory(e.target.value)
+                           setText(e.target.value)
                         }
+                     />
+                     <div
+                        className={`wr-char-count ${text.length >= 750 ? "is-max" : ""}`}
                      >
-                        <option value="Service">
-                           Service
-                        </option>
-                        <option value="Quality">
-                           Quality
-                        </option>
-                        <option value="Other">Other</option>
-                     </select>
+                        {text.length}/750
+                     </div>
                   </div>
                </div>
+            </div>
 
-               <div className="wr-col wr-right">
-                  <div className="wr-label">
-                     Show your experience:
-                  </div>
+            <div className="wr-layout">
+               <div className="wr-left"></div>
 
-                  <button
-                     type="button"
-                     className="wr-photoCard"
-                     onClick={() => setOpenPhotoModal(true)}
+               <div className="wr-right">
+                  <div
+                     className="wr-section"
+                     style={{ flex: 1, marginBottom: 0 }}
                   >
-                     {experiencePhotoUrl ? (
-                        <img
-                           className="wr-photoPreview"
-                           src={experiencePhotoUrl}
-                           alt="Selected Experience"
-                        />
-                     ) : (
-                        <>
-                           <img
-                              className="wr-photoIcon"
-                              src={uploadIcon}
-                              aria-hidden="true"
-                           />
-                           <div className="wr-photoHint">
-                              Add a photo
+                     <div className="wr-labelRow">
+                        <div
+                           className="wr-label"
+                           style={{ marginBottom: 0 }}
+                        >
+                           Show your experience (
+                           {photos.length}/10):
+                        </div>
+                        {photos.length < 10 && (
+                           <button
+                              type="button"
+                              className="wr-uploadBtn"
+                              onClick={() =>
+                                 setOpenPhotoModal(true)
+                              }
+                           >
+                              + Upload Photo
+                           </button>
+                        )}
+                     </div>
+
+                     <div
+                        className={`wr-photoBox ${photos.length === 0 ? "is-empty" : ""}`}
+                     >
+                        {photos.length === 0 ? (
+                           <div className="wr-photoEmpty">
+                              <img
+                                 src={uploadIcon}
+                                 alt="Upload"
+                                 className="wr-photoEmptyIcon"
+                              />
+                              <p>
+                                 Got pictures? We'd love to
+                                 see them!
+                              </p>
                            </div>
-                        </>
-                     )}
-                  </button>
+                        ) : (
+                           photos.map((photo, idx) => (
+                              <div
+                                 key={idx}
+                                 className="wr-photoCardH"
+                              >
+                                 <img
+                                    src={photo.url}
+                                    alt={`Experience ${idx + 1}`}
+                                    className="wr-photoThumbH"
+                                 />
+                                 <button
+                                    type="button"
+                                    className="wr-photoRemoveBtnH"
+                                    onClick={() =>
+                                       setPhotos(
+                                          photos.filter(
+                                             (_, i) =>
+                                                i !== idx,
+                                          ),
+                                       )
+                                    }
+                                    title="Remove photo"
+                                 >
+                                    ×
+                                 </button>
+                                 <div className="wr-photoDetailsH">
+                                    <span className="wr-photoCaptionH">
+                                       {photo.type ===
+                                       "Menu Item"
+                                          ? photo.item
+                                          : photo.type}
+                                    </span>
+                                 </div>
+                              </div>
+                           ))
+                        )}
+                     </div>
+                  </div>
 
                   <div className="wr-actions">
                      <button
                         type="button"
+                        className="wr-cancel"
+                        onClick={onClose}
+                     >
+                        Cancel
+                     </button>
+                     <button
+                        type="button"
                         className="wr-submit"
-                        onClick={() => navigate("/reviews")}
+                        onClick={onClose}
+                        disabled={rating === 0}
                      >
                         Submit review
                      </button>
                   </div>
                </div>
             </div>
-
-            <Modal
-               open={openPhotoModal}
-               onClose={() => setOpenPhotoModal(false)}
-            >
-               <PhotoUpload
-                  onPhotoSelected={(url) =>
-                     setExperiencePhotoUrl(url)
-                  }
-                  onClose={() => setOpenPhotoModal(false)}
-               />
-            </Modal>
          </div>
+
+         {openPhotoModal && (
+            <div
+               className="wr-photo-overlay"
+               onMouseDown={() => setOpenPhotoModal(false)}
+            >
+               <div
+                  style={{ width: "100%", margin: "auto" }}
+                  onMouseDown={(e) => e.stopPropagation()}
+               >
+                  <PhotoUpload
+                     onPhotoSelected={(photoObj) => {
+                        setPhotos([...photos, photoObj]);
+                        setOpenPhotoModal(false);
+                     }}
+                     onClose={() =>
+                        setOpenPhotoModal(false)
+                     }
+                  />
+               </div>
+            </div>
+         )}
       </div>
    );
 }

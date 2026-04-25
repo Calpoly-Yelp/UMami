@@ -1,33 +1,51 @@
 .wr-page {
-   background: #f5f5f2;
    width: 100%;
    padding: 0;
    color: #000;
    font-family: "Poppins", sans-serif;
    color-scheme: light;
-   border-radius: 24px;
-   overflow: hidden;
 }
 
 .wr-container {
-   margin-top: 40px;
-   width: 1100px;
-   padding: 0 80px 60px;
+   width: 100%;
+   display: flex;
+   flex-direction: column;
+   height: 75vh;
 }
 
-.wr-title {
-   text-align: left;
-   font-size: 40px;
-   font-weight: 600;
-   line-height: 60px;
-   margin: 0 0 18px;
+.wr-top-half {
+   display: flex;
+   flex-direction: column;
+   flex: 1;
+   min-height: 0;
+}
+
+.wr-layout {
+   display: flex;
+   flex-direction: row;
+   gap: 30px;
+   align-items: stretch;
+   flex-wrap: wrap; /* Stack safely on small screens */
+   flex: 1;
+   min-height: 0;
+}
+
+.wr-left,
+.wr-right {
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   min-width: 250px;
+   min-height: 0;
+   max-height: 100%;
 }
 
 .wr-section {
    display: flex;
    flex-direction: column;
    align-items: flex-start;
-   margin-bottom: 28px;
+   margin-bottom: 16px;
+   min-height: 0;
 }
 
 .wr-label {
@@ -49,26 +67,52 @@
    border: none;
    background: transparent;
    cursor: pointer;
-   font-size: 22px;
+   font-size: 26px;
    line-height: 1;
-   color: #cac7a7; /* “empty” look */
+   color: #e4e3d3; /* “empty” look */
    padding: 2px 4px;
+   transition:
+      color 0.2s ease,
+      text-shadow 0.2s ease,
+      transform 0.1s ease;
+}
+
+.wr-star:active {
+   transform: scale(0.85);
 }
 
 .wr-star.is-filled {
-   color: #ffee00; /* “filled” look */
-   text-shadow: 0 0 0 #e4e3d3;
+   color: #f2c75c; /* “filled” look */
+   text-shadow: 0 0 6px rgba(242, 199, 92, 0.4);
+}
+
+.wr-star.is-faint {
+   color: rgba(242, 199, 92, 0.5); /* “faint” hover look */
+   text-shadow: 0 0 6px rgba(242, 199, 92, 0.2);
+}
+
+.wr-textarea-wrapper {
+   width: 100%;
+   flex: 1;
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
+   background: #fff;
+   border-radius: 20px;
+   box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.12);
+   overflow: hidden;
+   position: relative;
 }
 
 .wr-textarea {
    width: 100%;
-   height: 250px;
+   flex: 1;
+   min-height: 0;
    resize: none;
    border: none;
-   border-radius: 20px;
    padding: 18px;
-   background: #fff;
-   box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.12);
+   box-sizing: border-box;
+   background: transparent;
    outline: none;
    font-family: "Poppins", sans-serif;
    font-size: 14px;
@@ -78,97 +122,210 @@
    color: rgba(0, 0, 0, 0.35);
 }
 
-.wr-grid {
+.wr-labelRow {
    display: flex;
    justify-content: space-between;
-   gap: 60px;
-   margin-top: 8px;
-}
-
-.wr-col {
-   flex: 1;
-   min-width: 0;
-}
-
-.wr-right {
-   max-width: 440px;
-}
-
-.wr-selectWrap {
-   position: relative;
-   width: 350px;
-}
-
-.wr-selectWrap::after {
-   content: "▾";
-   position: absolute;
-   right: 16px;
-   top: 50%;
-   transform: translateY(-50%);
-   pointer-events: none;
-}
-
-.wr-select {
-   -webkit-appearance: none;
-   appearance: none;
+   align-items: flex-end;
    width: 100%;
-   height: 52px;
-   border-radius: 20px;
-   border: 2px solid #ff6a39;
-   background: #fff;
-   padding: 0 44px 0 14px;
-   font-family: "Poppins", sans-serif;
-   font-size: 14px;
-   outline: none;
-   box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.1);
+   margin-bottom: 10px;
+   min-height: 36px;
 }
 
-.wr-photoCard {
-   width: 440px;
-   height: 215px;
-   border: none;
-   border-radius: 20px;
+.wr-char-count {
+   position: absolute;
+   bottom: 12px;
+   right: 16px;
+   padding: 4px 8px;
    background: #fff;
-   box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.2);
-   margin-top: 12px;
-   cursor: pointer;
+   box-shadow: 0 0 12px 8px #fff;
+   border-radius: 8px;
+   pointer-events: none;
+   font-size: 12px;
+   color: #888;
+   font-family: "Poppins", sans-serif;
+}
 
+.wr-char-count.is-max {
+   color: #e74c3c;
+}
+
+button.wr-uploadBtn {
+   background: #fff;
+   border: 2px solid rgba(0, 0, 0, 0.08);
+   border-radius: 30px;
+   padding: 8px 18px;
+   font-family: "Poppins", sans-serif;
+   font-size: 13px;
+   font-weight: 600;
+   cursor: pointer;
+   color: #333;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+   transition: all 0.2s ease;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+
+button.wr-uploadBtn:hover {
+   background: #fafafa;
+   border-color: rgba(0, 0, 0, 0.15);
+   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+   transform: translateY(-1px);
+}
+
+button.wr-uploadBtn:active {
+   transform: translateY(1px);
+   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.wr-photoBox {
+   width: 100%;
+   flex: 1 1 0px;
+   min-height: 0;
+   background: #fff;
+   border-radius: 20px;
+   box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.12);
+   display: flex;
+   flex-wrap: wrap;
+   justify-content: center;
+   align-content: flex-start;
+   padding: 16px;
+   box-sizing: border-box;
+   overflow-x: hidden;
+   overflow-y: auto;
+   gap: 16px;
+}
+
+.wr-photoBox.is-empty {
+   border: 2px dashed rgba(0, 0, 0, 0.12);
+   background: #fafafa;
+   display: flex; /* Overrides grid to center the empty state */
+   box-shadow: none;
+   justify-content: center;
+   align-items: center;
+   align-content: center;
+}
+
+/* Custom Scrollbar for the Photo Box */
+.wr-photoBox::-webkit-scrollbar {
+   width: 14px;
+}
+
+.wr-photoBox::-webkit-scrollbar-track {
+   background: transparent;
+   margin: 16px 0; /* Keeps scrollbar away from the rounded corners */
+}
+
+.wr-photoBox::-webkit-scrollbar-thumb {
+   background-color: rgba(0, 0, 0, 0.15);
+   border-radius: 100px;
+   border: 4px solid #fff; /* Adds "padding" around the thumb to push it inwards */
+}
+
+.wr-photoBox::-webkit-scrollbar-thumb:hover {
+   background-color: rgba(0, 0, 0, 0.25);
+}
+
+.wr-photoEmpty {
    display: flex;
    flex-direction: column;
    align-items: center;
    justify-content: center;
-   gap: 10px;
-
-   transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-}
-
-.wr-photoCard:hover {
-   transform: translateY(-2px);
-   box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.25);
-}
-
-.wr-photoIcon {
-   width: 110px;
-   height: 110px;
-   object-fit: contain;
-   opacity: 0.9;
-   margin-bottom: 6px;
-}
-.wr-photoCard:hover .wr-photoIcon {
-   opacity: 1;
-}
-
-.wr-photoHint {
+   color: #888;
+   text-align: center;
+   gap: 12px;
    font-size: 14px;
-   color: rgba(0, 0, 0, 0.65);
+}
+
+.wr-photoEmptyIcon {
+   width: 48px;
+   height: 48px;
+   opacity: 0.4;
+}
+
+.wr-photoCardH {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   width: 180px;
+   background: #fff;
+   border-radius: 12px;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+   overflow: hidden;
+   flex-shrink: 0;
+   border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.wr-photoThumbH {
+   width: 100%;
+   aspect-ratio: 4 / 3;
+   height: auto;
+   object-fit: cover;
+}
+
+.wr-photoDetailsH {
+   padding: 10px;
+   text-align: center;
+}
+
+.wr-photoCaptionH {
+   font-size: 14px;
+   color: #333;
+   font-weight: 500;
+   display: block;
+   word-wrap: break-word;
+   line-height: 1.3;
+}
+
+.wr-photoRemoveBtnH {
+   position: absolute;
+   top: 6px;
+   right: 6px;
+   background: rgba(255, 255, 255, 0.9);
+   border: none;
+   border-radius: 50%;
+   width: 24px;
+   height: 24px;
+   font-size: 18px;
+   line-height: 1;
+   color: #333;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+   transition:
+      background 0.2s,
+      color 0.2s;
+}
+
+.wr-photoRemoveBtnH:hover {
+   background: #e74c3c;
+   color: #fff;
 }
 
 .wr-actions {
    display: flex;
    justify-content: flex-end;
-   margin-top: 18px;
+   gap: 12px;
+   margin-top: 24px;
+}
+
+.wr-cancel {
+   background: transparent;
+   border: none;
+   border-radius: 30px;
+   padding: 10px 16px;
+   cursor: pointer;
+   font-family: "Poppins", sans-serif;
+   font-size: 14px;
+   font-weight: 500;
+   color: #666;
+   transition: background-color 0.2s ease;
+}
+
+.wr-cancel:hover {
+   background-color: rgba(0, 0, 0, 0.05);
 }
 
 .wr-submit {
@@ -184,10 +341,24 @@
    text-transform: lowercase;
 }
 
-.wr-photoPreview {
-   width: 100%;
-   height: 100%;
+.wr-submit:disabled {
+   background: #e0e0e0;
+   color: #999;
+   box-shadow: none;
+   cursor: not-allowed;
+}
+
+.wr-photo-overlay {
+   position: absolute;
+   inset: 0;
+   background-color: rgba(245, 245, 242, 0.85);
+   backdrop-filter: blur(8px);
+   -webkit-backdrop-filter: blur(8px);
+   z-index: 100;
+   display: flex;
+   flex-direction: column;
+   overflow-y: auto;
    border-radius: 20px;
-   object-fit: cover;
-   display: block;
+   padding: 30px;
+   box-sizing: border-box;
 }

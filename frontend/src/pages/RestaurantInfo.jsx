@@ -2,6 +2,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Map from "../components/Map";
 import ReviewCard from "../components/ReviewCard";
+import Modal from "../components/Modal";
+import WriteReview from "../components/WriteReview";
 import "./RestaurantInfo.css";
 
 export default function Review() {
@@ -11,6 +13,8 @@ export default function Review() {
    const [restaurantInfo, setRestaurantInfo] =
       useState(null);
    const [ratingFilter, setRatingFilter] = useState(null);
+   const [isWriteReviewOpen, setIsWriteReviewOpen] =
+      useState(false);
 
    const restaurant = useMemo(() => {
       // Helper to format database time
@@ -252,7 +256,9 @@ export default function Review() {
                   <div className="review__actions">
                      <button
                         className="pillBtn"
-                        onClick={() => navigate("/review")}
+                        onClick={() =>
+                           setIsWriteReviewOpen(true)
+                        }
                      >
                         ✎ <span>write review</span>
                      </button>
@@ -430,7 +436,7 @@ export default function Review() {
                         <button
                            className="pillBtn"
                            onClick={() =>
-                              navigate("/review")
+                              setIsWriteReviewOpen(true)
                            }
                         >
                            ✎ write review
@@ -503,6 +509,18 @@ export default function Review() {
                </aside>
             </section>
          </main>
+
+         <Modal
+            open={isWriteReviewOpen}
+            onClose={() => setIsWriteReviewOpen(false)}
+            title={`${restaurant.name} review`}
+            disableOverlayClick={true}
+            hideCloseButton={true}
+         >
+            <WriteReview
+               onClose={() => setIsWriteReviewOpen(false)}
+            />
+         </Modal>
       </div>
    );
 }

@@ -56,7 +56,8 @@ describe("PhotoUpload component", () => {
       expect(photoTypeSelect).toHaveValue("Other");
    });
 
-   test("calls onPhotoSelected and onClose when a file is uploaded", () => {
+   test("calls onPhotoSelected and onClose when submit button is clicked", async () => {
+      const user = userEvent.setup();
       const onPhotoSelected = jest.fn();
       const onClose = jest.fn();
 
@@ -84,8 +85,17 @@ describe("PhotoUpload component", () => {
       expect(URL.createObjectURL).toHaveBeenCalledWith(
          file,
       );
+
+      const submitButton = screen.getByRole("button", {
+         name: /submit photo/i,
+      });
+      await user.click(submitButton);
+
       expect(onPhotoSelected).toHaveBeenCalledWith(
-         "mock-preview-url",
+         expect.objectContaining({
+            url: "mock-preview-url",
+            type: "Menu Item",
+         }),
       );
       expect(onClose).toHaveBeenCalledTimes(1);
    });
