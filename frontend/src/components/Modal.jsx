@@ -9,6 +9,7 @@ export default function Modal({
    children,
    disableOverlayClick = false,
    hideCloseButton = false,
+   className = "",
 }) {
    useEffect(() => {
       if (!open) return;
@@ -30,7 +31,7 @@ export default function Modal({
          }
       >
          <div
-            className="modal-panel"
+            className={`modal-panel ${className}`.trim()}
             onMouseDown={(e) => e.stopPropagation()}
          >
             <div className="modal-header">

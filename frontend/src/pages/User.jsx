@@ -253,6 +253,7 @@ function User({
                const userReviews = reviewsData
                   .map((review) => ({
                      id: review.id,
+                     user_id: userData.id,
                      avatar_url: userData.avatar_url || "",
                      userName: userData.name || "Anonymous",
                      is_verified:
@@ -483,6 +484,31 @@ function User({
       });
    };
 
+   // Deletes a review from the backend and updates local state
+   const handleDeleteReview = async (reviewId) => {
+      try {
+         const response = await fetch(
+            `http://localhost:4000/api/reviews/${reviewId}`,
+            {
+               method: "DELETE",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ user_id: user.id }),
+            },
+         );
+         if (response.ok) {
+            setReviews((prev) =>
+               prev.filter((r) => r.id !== reviewId),
+            );
+         } else {
+            console.error("Failed to delete review");
+         }
+      } catch (error) {
+         console.error("Error deleting review:", error);
+      }
+   };
+
    return (
       <div className="user-page">
          {/* Content Section */}
@@ -589,6 +615,10 @@ function User({
                                     `${review.date ?? "review"}-${index}`
                                  }
                                  review={review}
+                                 currentUserId={user.id}
+                                 onDelete={
+                                    handleDeleteReview
+                                 }
                               />
                            ))
                         ) : (

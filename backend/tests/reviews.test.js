@@ -569,4 +569,158 @@ describe("Review Endpoints", () => {
       expect(res.statusCode).toBe(500);
       expect(res.body.error).toBe("Internal Server Error");
    });
+
+   // --- DELETE /api/reviews/:id Tests ---
+
+   it("DELETE /api/reviews/:id should delete a review if the user is the owner", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: { user_id: "user123" },
+            error: null,
+         }),
+         delete: jest.fn().mockReturnThis(),
+         then: jest
+            .fn()
+            .mockImplementation((resolve) =>
+               resolve({ error: null }),
+            ),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.message).toBe(
+         "Review deleted successfully",
+      );
+      expect(mockQuery.delete).toHaveBeenCalled();
+   });
+
+   it("DELETE /api/reviews/:id should return 400 if user_id is missing", async () => {
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({});
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("user_id is required");
+   });
+
+   it("DELETE /api/reviews/:id should return 404 if review does not exist", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: null,
+            error: null,
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.error).toBe("Review not found");
+   });
+
+   it("DELETE /api/reviews/:id should return 403 if user is not the owner", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: { user_id: "differentUser" },
+            error: null,
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(403);
+      expect(res.body.error).toBe(
+         "Unauthorized to delete this review",
+      );
+   });
+
+   it("DELETE /api/reviews/:id should handle DB errors on fetch", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Fetch Error" },
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Fetch Error");
+   });
+
+   it("DELETE /api/reviews/:id should handle DB errors on delete", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: { user_id: "user123" },
+            error: null,
+         }),
+         delete: jest.fn().mockReturnThis(),
+         then: jest.fn().mockImplementation((resolve) =>
+            resolve({
+               error: { message: "Delete Error" },
+            }),
+         ),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Delete Error");
+   });
+
+   it("DELETE /api/reviews/:id should handle DB errors on delete without a message", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: { user_id: "user123" },
+            error: null,
+         }),
+         delete: jest.fn().mockReturnThis(),
+         then: jest.fn().mockImplementation((resolve) =>
+            resolve({
+               error: {}, // No message property
+            }),
+         ),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .delete("/api/reviews/1")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
+   });
 });

@@ -113,6 +113,7 @@ export default function Review() {
             // Map the backend ReviewModel to the frontend ReviewCard props
             const formattedReviews = data.map((rev) => ({
                id: rev.id,
+               user_id: rev.user_id,
                userName:
                   rev.users?.name || "Anonymous User",
                avatar_url: rev.users?.avatar_url || null,
@@ -134,29 +135,63 @@ export default function Review() {
       }
    }, [id, CURRENT_USER_ID]);
 
-   useEffect(() => {
-      // Fetches the restaurant's data
-      const fetchRestaurant = async () => {
-         try {
-            const response = await fetch(
-               `http://localhost:4000/api/restaurants/${id}`,
-            );
-            if (response.ok) {
-               const data = await response.json();
-               setRestaurantInfo(data);
-            }
-         } catch (error) {
-            console.error(
-               "Failed to fetch restaurant:",
-               error,
-            );
+   // Fetches the restaurant's data
+   const fetchRestaurant = useCallback(async () => {
+      try {
+         const response = await fetch(
+            `http://localhost:4000/api/restaurants/${id}`,
+         );
+         if (response.ok) {
+            const data = await response.json();
+            setRestaurantInfo(data);
          }
-      };
+      } catch (error) {
+         console.error(
+            "Failed to fetch restaurant:",
+            error,
+         );
+      }
+   }, [id]);
 
-      fetchRestaurant();
-      // eslint-disable-next-line
-      fetchReviews();
-   }, [id, fetchReviews]);
+   useEffect(() => {
+      const loadData = async () => {
+         await Promise.all([
+            fetchRestaurant(),
+            fetchReviews(),
+         ]);
+      };
+      loadData();
+   }, [fetchRestaurant, fetchReviews]);
+
+   // Deletes a review from the backend and updates local state
+   const handleDeleteReview = async (reviewId) => {
+      try {
+         const response = await fetch(
+            `http://localhost:4000/api/reviews/${reviewId}`,
+            {
+               method: "DELETE",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  user_id: CURRENT_USER_ID,
+               }),
+            },
+         );
+         if (response.ok) {
+            // Instantly remove it from the UI
+            setReviews((prev) =>
+               prev.filter((r) => r.id !== reviewId),
+            );
+            // Refetch the restaurant info to update the aggregate rating counts
+            fetchRestaurant();
+         } else {
+            console.error("Failed to delete review");
+         }
+      } catch (error) {
+         console.error("Error deleting review:", error);
+      }
+   };
 
    // Calculates the total count of each star rating (1-5) from the fetched reviews array.
    // This is used to populate the filled percentages on the "Overall Rating" bar chart.
@@ -631,6 +666,10 @@ export default function Review() {
                               key={r.id}
                               review={r}
                               showHelpful={true}
+                              currentUserId={
+                                 CURRENT_USER_ID
+                              }
+                              onDelete={handleDeleteReview}
                            />
                         ))
                      ) : (
