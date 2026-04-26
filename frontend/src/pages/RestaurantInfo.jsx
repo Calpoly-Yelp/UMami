@@ -1,4 +1,9 @@
-import { useMemo, useState, useEffect } from "react";
+import {
+   useMemo,
+   useState,
+   useEffect,
+   useCallback,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Map from "../components/Map";
 import ReviewCard from "../components/ReviewCard";
@@ -15,6 +20,21 @@ export default function Review() {
    const [ratingFilter, setRatingFilter] = useState(null);
    const [isWriteReviewOpen, setIsWriteReviewOpen] =
       useState(false);
+
+   // Retrieve the actual logged-in user from localStorage
+   const [currentUser] = useState(() => {
+      try {
+         const userStr = localStorage.getItem("user");
+         return userStr ? JSON.parse(userStr) : null;
+      } catch (err) {
+         console.error(
+            "Failed to parse user from local storage:",
+            err,
+         );
+         return null;
+      }
+   });
+   const CURRENT_USER_ID = currentUser?.id;
 
    const restaurant = useMemo(() => {
       // Helper to format database time
@@ -72,6 +92,41 @@ export default function Review() {
 
    const [reviews, setReviews] = useState([]);
 
+   // Fetches all the individual reviews associated with this restaurant
+   const fetchReviews = useCallback(async () => {
+      try {
+         let url = `http://localhost:4000/api/reviews?restaurant_id=${id}`;
+         if (CURRENT_USER_ID) {
+            url += `&current_user_id=${CURRENT_USER_ID}`;
+         }
+         const response = await fetch(url);
+         if (response.ok) {
+            const data = await response.json();
+
+            // Map the backend ReviewModel to the frontend ReviewCard props
+            const formattedReviews = data.map((rev) => ({
+               id: rev.id,
+               userName:
+                  rev.users?.name || "Anonymous User",
+               avatar_url: rev.users?.avatar_url || null,
+               is_verified: rev.users?.is_verified || false,
+               rating: rev.rating || 0,
+               date: rev.created_at,
+               comments: rev.comment,
+               tags: rev.tags || [],
+               photos: rev.photo_urls || [],
+               helpfulCount: rev.helpful_count || 0,
+               hasVotedHelpful:
+                  rev.has_voted_helpful || false,
+            }));
+
+            setReviews(formattedReviews);
+         }
+      } catch (error) {
+         console.error("Failed to fetch reviews:", error);
+      }
+   }, [id, CURRENT_USER_ID]);
+
    useEffect(() => {
       // Fetches the restaurant's data
       const fetchRestaurant = async () => {
@@ -91,50 +146,10 @@ export default function Review() {
          }
       };
 
-      // Fetches all the individual reviews associated with this restaurant
-      const fetchReviews = async () => {
-         try {
-            // You'll want to replace this dummy ID with your actual logged-in user ID later
-            const CURRENT_USER_ID =
-               "b677be85-81db-4245-91ca-acb713bd5564";
-
-            const response = await fetch(
-               `http://localhost:4000/api/reviews?restaurant_id=${id}&current_user_id=${CURRENT_USER_ID}`,
-            );
-            if (response.ok) {
-               const data = await response.json();
-
-               // Map the backend ReviewModel to the frontend ReviewCard props
-               const formattedReviews = data.map((rev) => ({
-                  id: rev.id,
-                  userName:
-                     rev.users?.name || "Anonymous User",
-                  avatar_url: rev.users?.avatar_url || null,
-                  is_verified:
-                     rev.users?.is_verified || false,
-                  rating: rev.rating || 0,
-                  date: rev.created_at,
-                  comments: rev.comment,
-                  tags: rev.tags || [],
-                  photos: rev.photo_urls || [],
-                  helpfulCount: rev.helpful_count || 0,
-                  hasVotedHelpful:
-                     rev.has_voted_helpful || false,
-               }));
-
-               setReviews(formattedReviews);
-            }
-         } catch (error) {
-            console.error(
-               "Failed to fetch reviews:",
-               error,
-            );
-         }
-      };
-
       fetchRestaurant();
+      // eslint-disable-next-line
       fetchReviews();
-   }, [id]);
+   }, [id, fetchReviews]);
 
    // Calculates the total count of each star rating (1-5) from the fetched reviews array.
    // This is used to populate the filled percentages on the "Overall Rating" bar chart.
@@ -256,9 +271,15 @@ export default function Review() {
                   <div className="review__actions">
                      <button
                         className="pillBtn"
-                        onClick={() =>
-                           setIsWriteReviewOpen(true)
-                        }
+                        onClick={() => {
+                           if (!CURRENT_USER_ID) {
+                              alert(
+                                 "Please log in to write a review!",
+                              );
+                              return;
+                           }
+                           setIsWriteReviewOpen(true);
+                        }}
                      >
                         ✎ <span>write review</span>
                      </button>
@@ -435,9 +456,15 @@ export default function Review() {
                      <div className="review__reviewsControls">
                         <button
                            className="pillBtn"
-                           onClick={() =>
-                              setIsWriteReviewOpen(true)
-                           }
+                           onClick={() => {
+                              if (!CURRENT_USER_ID) {
+                                 alert(
+                                    "Please log in to write a review!",
+                                 );
+                                 return;
+                              }
+                              setIsWriteReviewOpen(true);
+                           }}
                         >
                            ✎ write review
                         </button>
@@ -519,6 +546,62 @@ export default function Review() {
          >
             <WriteReview
                onClose={() => setIsWriteReviewOpen(false)}
+               restaurantId={parseInt(id, 10)}
+               userId={CURRENT_USER_ID}
+               onSuccess={(newReview) => {
+                  // Optimistically update the restaurant rating & count
+                  setRestaurantInfo((prev) => {
+                     if (!prev) return prev;
+                     const newCount =
+                        (prev.rating_count || 0) + 1;
+                     const oldAvg = prev.avg_rating || 0;
+                     const newAvg =
+                        (oldAvg * (prev.rating_count || 0) +
+                           (newReview?.rating || 0)) /
+                        newCount;
+                     return {
+                        ...prev,
+                        rating_count: newCount,
+                        avg_rating: newAvg,
+                     };
+                  });
+
+                  // Optimistically prepend the new review to the list
+                  if (newReview) {
+                     const formattedReview = {
+                        id: newReview.id || Date.now(),
+                        userName:
+                           currentUser?.name ||
+                           currentUser?.user_metadata
+                              ?.name ||
+                           "You",
+                        avatar_url:
+                           currentUser?.avatar_url ||
+                           currentUser?.user_metadata
+                              ?.avatar_url ||
+                           null,
+                        is_verified:
+                           currentUser?.is_verified ||
+                           false,
+                        rating: newReview.rating || 0,
+                        date:
+                           newReview.created_at ||
+                           new Date().toISOString(),
+                        comments: newReview.comment || "",
+                        tags: newReview.tags || [],
+                        photos: newReview.photo_urls || [],
+                        helpfulCount: 0,
+                        hasVotedHelpful: false,
+                     };
+                     setReviews((prev) => [
+                        formattedReview,
+                        ...prev,
+                     ]);
+                  }
+
+                  // Background refetch to ensure data consistency
+                  fetchReviews();
+               }}
             />
          </Modal>
       </div>

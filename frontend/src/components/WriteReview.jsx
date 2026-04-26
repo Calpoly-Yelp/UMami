@@ -3,13 +3,65 @@ import "./WriteReview.css";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 
-function WriteReview({ onClose }) {
+function WriteReview({
+   onClose,
+   restaurantId,
+   userId,
+   onSuccess,
+}) {
    const [rating, setRating] = useState(0);
    const [text, setText] = useState("");
    const [openPhotoModal, setOpenPhotoModal] =
       useState(false);
    const [photos, setPhotos] = useState([]);
    const [hoverRating, setHoverRating] = useState(0);
+   const [isSubmitting, setIsSubmitting] = useState(false);
+
+   const handleSubmit = async () => {
+      // Basic validation
+      if (rating === 0) return;
+
+      if (!restaurantId || !userId) {
+         console.error(
+            "Missing props! restaurantId or userId is undefined.",
+            { restaurantId, userId },
+         );
+         return;
+      }
+
+      setIsSubmitting(true);
+      try {
+         const response = await fetch("/api/reviews", {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               restaurant_id: restaurantId,
+               user_id: userId,
+               rating: rating,
+               comment: text,
+               photo_urls: photos.map((p) => p.url),
+            }),
+         });
+
+         if (response.ok) {
+            const newReviewData = await response.json();
+            if (onSuccess) onSuccess(newReviewData);
+            onClose();
+         } else {
+            const errorData = await response.json();
+            console.error(
+               "Failed to post review:",
+               errorData,
+            );
+         }
+      } catch (error) {
+         console.error("Error submitting review:", error);
+      } finally {
+         setIsSubmitting(false);
+      }
+   };
 
    return (
       <div className="wr-page">
@@ -176,10 +228,14 @@ function WriteReview({ onClose }) {
                      <button
                         type="button"
                         className="wr-submit"
-                        onClick={onClose}
-                        disabled={rating === 0}
+                        onClick={handleSubmit}
+                        disabled={
+                           rating === 0 || isSubmitting
+                        }
                      >
-                        Submit review
+                        {isSubmitting
+                           ? "Submitting..."
+                           : "Submit review"}
                      </button>
                   </div>
                </div>

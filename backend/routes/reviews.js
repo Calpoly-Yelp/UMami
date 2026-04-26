@@ -134,4 +134,53 @@ router.post("/:id/helpful", async (req, res) => {
    }
 });
 
+// Create a new review
+router.post("/", async (req, res) => {
+   try {
+      const {
+         restaurant_id,
+         user_id,
+         rating,
+         comment,
+         photo_urls,
+         tags,
+      } = req.body;
+
+      if (
+         !restaurant_id ||
+         !user_id ||
+         rating === undefined
+      ) {
+         return res
+            .status(400)
+            .json({ error: "Missing required fields" });
+      }
+
+      const { data, error } = await supabase
+         .from("reviews")
+         .insert([
+            {
+               restaurant_id,
+               user_id,
+               rating,
+               comment,
+               photo_urls: photo_urls || [],
+               tags: tags || [],
+            },
+         ])
+         .select()
+         .single();
+
+      if (error) {
+         throw error;
+      }
+
+      res.status(201).json(data);
+   } catch (error) {
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
+   }
+});
+
 export default router;

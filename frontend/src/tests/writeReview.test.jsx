@@ -1,4 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import {
+   render,
+   screen,
+   waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import WriteReview from "../components/WriteReview";
@@ -10,6 +14,19 @@ jest.mock("../components/PhotoUpload", () => {
 });
 
 describe("WriteReview component", () => {
+   beforeAll(() => {
+      global.fetch = jest.fn(() =>
+         Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({}),
+         }),
+      );
+   });
+
+   afterEach(() => {
+      jest.clearAllMocks();
+   });
+
    test("allows user to select a star rating", async () => {
       const user = userEvent.setup();
       render(<WriteReview />);
@@ -72,7 +89,13 @@ describe("WriteReview component", () => {
    test("calls onClose when submit button is clicked", async () => {
       const user = userEvent.setup();
       const mockOnClose = jest.fn();
-      render(<WriteReview onClose={mockOnClose} />);
+      render(
+         <WriteReview
+            onClose={mockOnClose}
+            restaurantId={1}
+            userId="user123"
+         />,
+      );
 
       // Must select a rating to enable the submit button
       const star3 = screen.getByRole("radio", {
@@ -85,6 +108,8 @@ describe("WriteReview component", () => {
       });
       await user.click(submitButton);
 
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+         expect(mockOnClose).toHaveBeenCalledTimes(1);
+      });
    });
 });

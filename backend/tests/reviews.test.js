@@ -298,6 +298,48 @@ describe("Review Endpoints", () => {
       expect(res.body[0].has_voted_helpful).toBeUndefined();
    });
 
+   it("POST /api/reviews should create a new review", async () => {
+      const mockReview = {
+         id: 3,
+         restaurant_id: 101,
+         user_id: "user123",
+         rating: 5,
+         comment: "Test",
+      };
+      const mockQuery = {
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: mockReview,
+            error: null,
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .post("/api/reviews")
+         .send({
+            restaurant_id: 101,
+            user_id: "user123",
+            rating: 5,
+            comment: "Test",
+         });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.comment).toBe("Test");
+      expect(mockQuery.insert).toHaveBeenCalledWith([
+         {
+            restaurant_id: 101,
+            user_id: "user123",
+            rating: 5,
+            comment: "Test",
+            photo_urls: [],
+            tags: [],
+         },
+      ]);
+   });
+
    // --- Error Handling Tests ---
 
    it("GET /api/reviews should handle errors", async () => {
@@ -315,6 +357,24 @@ describe("Review Endpoints", () => {
       });
       const res = await request(app).get("/api/reviews");
       expect(res.statusCode).toBe(500);
+   });
+
+   it("GET /api/reviews should handle errors without a message", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockResolvedValue({
+            data: null,
+            error: {}, // No message property
+         }),
+         then: (resolve) =>
+            resolve({
+               data: null,
+               error: {}, // No message property
+            }),
+      });
+      const res = await request(app).get("/api/reviews");
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 
    it("POST /api/reviews/:id/helpful should return 400 if user_id is missing", async () => {
@@ -344,6 +404,26 @@ describe("Review Endpoints", () => {
 
       expect(res.statusCode).toBe(500);
       expect(res.body.error).toBe("DB Error");
+   });
+
+   it("POST /api/reviews/:id/helpful should handle DB errors without a message", async () => {
+      const mockQuery = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         maybeSingle: jest.fn().mockResolvedValue({
+            data: null,
+            error: {}, // No message property
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .post("/api/reviews/1/helpful")
+         .send({ user_id: "user123" });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 
    it("POST /api/reviews/:id/helpful should handle DB error on delete", async () => {
@@ -424,5 +504,69 @@ describe("Review Endpoints", () => {
 
       expect(res.statusCode).toBe(500);
       expect(res.body.error).toBe("Fetch Error");
+   });
+
+   it("POST /api/reviews should return 400 if required fields are missing", async () => {
+      const res = await request(app)
+         .post("/api/reviews")
+         .send({
+            // Missing restaurant_id, user_id, rating
+            comment: "Test",
+         });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe(
+         "Missing required fields",
+      );
+   });
+
+   it("POST /api/reviews should handle DB errors on insert", async () => {
+      const mockQuery = {
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Insert Error" },
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .post("/api/reviews")
+         .send({
+            restaurant_id: 101,
+            user_id: "user123",
+            rating: 5,
+            comment: "Test",
+         });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Insert Error");
+   });
+
+   it("POST /api/reviews should handle DB errors on insert without a message", async () => {
+      const mockQuery = {
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: {}, // No message property
+         }),
+      };
+
+      supabase.from.mockReturnValue(mockQuery);
+
+      const res = await request(app)
+         .post("/api/reviews")
+         .send({
+            restaurant_id: 101,
+            user_id: "user123",
+            rating: 5,
+            comment: "Test",
+         });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 });
