@@ -20,6 +20,13 @@ export default function Review() {
    const [ratingFilter, setRatingFilter] = useState(null);
    const [isWriteReviewOpen, setIsWriteReviewOpen] =
       useState(false);
+   const [sortOption, setSortOption] =
+      useState("date-desc");
+   const [filterHasPhotos, setFilterHasPhotos] =
+      useState(false);
+   const [isFilterMenuOpen, setIsFilterMenuOpen] =
+      useState(false);
+   const [currentPage, setCurrentPage] = useState(1);
 
    // Retrieve the actual logged-in user from localStorage
    const [currentUser] = useState(() => {
@@ -172,17 +179,96 @@ export default function Review() {
 
    // Filters the reviews based on the selected star rating filter
    const filteredReviews = useMemo(() => {
-      if (!ratingFilter) return reviews;
-      return reviews.filter((r) => {
-         if (typeof r.rating !== "number" || r.rating <= 0)
-            return false;
-         const roundedRating = Math.max(
-            1,
-            Math.min(5, Math.round(r.rating)),
+      let result = reviews;
+
+      if (ratingFilter) {
+         result = result.filter((r) => {
+            if (
+               typeof r.rating !== "number" ||
+               r.rating <= 0
+            )
+               return false;
+            const roundedRating = Math.max(
+               1,
+               Math.min(5, Math.round(r.rating)),
+            );
+            return roundedRating === ratingFilter;
+         });
+      }
+
+      if (filterHasPhotos) {
+         result = result.filter(
+            (r) => r.photos && r.photos.length > 0,
          );
-         return roundedRating === ratingFilter;
+      }
+
+      result = [...result].sort((a, b) => {
+         if (sortOption === "date-desc") {
+            return (
+               (b.date ? new Date(b.date).getTime() : 0) -
+               (a.date ? new Date(a.date).getTime() : 0)
+            );
+         } else if (sortOption === "date-asc") {
+            return (
+               (a.date ? new Date(a.date).getTime() : 0) -
+               (b.date ? new Date(b.date).getTime() : 0)
+            );
+         } else if (sortOption === "helpful-desc") {
+            return (
+               (b.helpfulCount || 0) - (a.helpfulCount || 0)
+            );
+         } else if (sortOption === "helpful-asc") {
+            return (
+               (a.helpfulCount || 0) - (b.helpfulCount || 0)
+            );
+         }
+         return 0;
       });
-   }, [reviews, ratingFilter]);
+
+      return result;
+   }, [reviews, ratingFilter, filterHasPhotos, sortOption]);
+
+   const REVIEWS_PER_PAGE = 10;
+   const totalPages = Math.ceil(
+      filteredReviews.length / REVIEWS_PER_PAGE,
+   );
+   const paginatedReviews = useMemo(() => {
+      const start = (currentPage - 1) * REVIEWS_PER_PAGE;
+      return filteredReviews.slice(
+         start,
+         start + REVIEWS_PER_PAGE,
+      );
+   }, [filteredReviews, currentPage]);
+
+   // Generate an array of page numbers with ellipses for truncated pagination
+   const paginationRange = useMemo(() => {
+      if (totalPages <= 1) return [];
+      const delta = 1;
+      const range = [];
+      for (
+         let i = Math.max(2, currentPage - delta);
+         i <= Math.min(totalPages - 1, currentPage + delta);
+         i++
+      ) {
+         range.push(i);
+      }
+
+      if (currentPage - delta > 3) {
+         range.unshift("...");
+      } else if (currentPage - delta === 3) {
+         range.unshift(2);
+      }
+
+      if (currentPage + delta < totalPages - 2) {
+         range.push("...");
+      } else if (currentPage + delta === totalPages - 2) {
+         range.push(totalPages - 1);
+      }
+
+      range.unshift(1);
+      range.push(totalPages);
+      return range;
+   }, [totalPages, currentPage]);
 
    const scrollTo = (key) => {
       setActiveTab(key);
@@ -468,15 +554,79 @@ export default function Review() {
                         >
                            ✎ write review
                         </button>
-                        <button className="pillBtn pillBtn--ghost">
-                           filter ▼
-                        </button>
+                        <div
+                           style={{ position: "relative" }}
+                        >
+                           <button
+                              className="pillBtn pillBtn--ghost"
+                              onClick={() =>
+                                 setIsFilterMenuOpen(
+                                    (prev) => !prev,
+                                 )
+                              }
+                           >
+                              filter ▼
+                           </button>
+                           {isFilterMenuOpen && (
+                              <div className="review__filterDropdown">
+                                 <div className="review__filterGroup">
+                                    <label>Sort By:</label>
+                                    <select
+                                       value={sortOption}
+                                       onChange={(e) => {
+                                          setSortOption(
+                                             e.target.value,
+                                          );
+                                          setCurrentPage(1);
+                                       }}
+                                    >
+                                       <option value="date-desc">
+                                          Newest First
+                                       </option>
+                                       <option value="date-asc">
+                                          Oldest First
+                                       </option>
+                                       <option value="helpful-desc">
+                                          Most Helpful
+                                       </option>
+                                       <option value="helpful-asc">
+                                          Least Helpful
+                                       </option>
+                                    </select>
+                                 </div>
+                                 <div className="review__filterGroup">
+                                    <label
+                                       style={{
+                                          fontWeight: 600,
+                                       }}
+                                    >
+                                       <input
+                                          type="checkbox"
+                                          checked={
+                                             filterHasPhotos
+                                          }
+                                          onChange={(e) => {
+                                             setFilterHasPhotos(
+                                                e.target
+                                                   .checked,
+                                             );
+                                             setCurrentPage(
+                                                1,
+                                             );
+                                          }}
+                                       />{" "}
+                                       Has Pictures
+                                    </label>
+                                 </div>
+                              </div>
+                           )}
+                        </div>
                      </div>
                   </div>
 
                   <div className="review__reviewList">
-                     {filteredReviews.length > 0 ? (
-                        filteredReviews.map((r) => (
+                     {paginatedReviews.length > 0 ? (
+                        paginatedReviews.map((r) => (
                            <ReviewCard
                               key={r.id}
                               review={r}
@@ -496,9 +646,60 @@ export default function Review() {
                      )}
                   </div>
 
-                  <div className="review__pagination">
-                     ‹ 1 2 3 ›
-                  </div>
+                  {totalPages > 1 && (
+                     <div className="review__pagination">
+                        <button
+                           className="review__paginationBtn"
+                           disabled={currentPage === 1}
+                           onClick={() => {
+                              setCurrentPage((p) =>
+                                 Math.max(1, p - 1),
+                              );
+                              scrollTo("reviews");
+                           }}
+                        >
+                           ‹
+                        </button>
+                        {paginationRange.map((page, idx) =>
+                           page === "..." ? (
+                              <span
+                                 key={`dots-${idx}`}
+                                 className="review__paginationDots"
+                              >
+                                 ...
+                              </span>
+                           ) : (
+                              <button
+                                 key={page}
+                                 className={`review__paginationBtn ${currentPage === page ? "is-active" : ""}`}
+                                 onClick={() => {
+                                    setCurrentPage(page);
+                                    scrollTo("reviews");
+                                 }}
+                              >
+                                 {page}
+                              </button>
+                           ),
+                        )}
+                        <button
+                           className="review__paginationBtn"
+                           disabled={
+                              currentPage === totalPages
+                           }
+                           onClick={() => {
+                              setCurrentPage((p) =>
+                                 Math.min(
+                                    totalPages,
+                                    p + 1,
+                                 ),
+                              );
+                              scrollTo("reviews");
+                           }}
+                        >
+                           ›
+                        </button>
+                     </div>
+                  )}
                </div>
 
                <aside className="card card--section review__ratingCard">
@@ -525,11 +726,12 @@ export default function Review() {
                            count={computedRatings.counts[s]}
                            total={restaurant.ratingCount}
                            isActive={ratingFilter === s}
-                           onClick={() =>
+                           onClick={() => {
                               setRatingFilter((prev) =>
                                  prev === s ? null : s,
-                              )
-                           }
+                              );
+                              setCurrentPage(1);
+                           }}
                         />
                      ))}
                   </div>

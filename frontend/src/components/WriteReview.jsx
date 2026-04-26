@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./WriteReview.css";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
+import PRESET_TAGS from "../assets/tags.json";
 
 function WriteReview({
    onClose,
@@ -16,6 +17,18 @@ function WriteReview({
    const [photos, setPhotos] = useState([]);
    const [hoverRating, setHoverRating] = useState(0);
    const [isSubmitting, setIsSubmitting] = useState(false);
+   const [selectedTags, setSelectedTags] = useState([]);
+   const [tagSearch, setTagSearch] = useState("");
+   const [showTagDropdown, setShowTagDropdown] =
+      useState(false);
+
+   const filteredTags = PRESET_TAGS.filter(
+      (t) =>
+         t
+            .toLowerCase()
+            .includes(tagSearch.toLowerCase()) &&
+         !selectedTags.includes(t),
+   );
 
    const handleSubmit = async () => {
       // Basic validation
@@ -42,6 +55,7 @@ function WriteReview({
                rating: rating,
                comment: text,
                photo_urls: photos.map((p) => p.url),
+               tags: selectedTags,
             }),
          });
 
@@ -134,7 +148,121 @@ function WriteReview({
             </div>
 
             <div className="wr-layout">
-               <div className="wr-left"></div>
+               <div className="wr-left">
+                  <div
+                     className="wr-section"
+                     style={{
+                        width: "100%",
+                        flex: 1,
+                        minHeight: 0,
+                     }}
+                  >
+                     <div className="wr-labelRow">
+                        <div
+                           className="wr-label"
+                           style={{ marginBottom: 0 }}
+                        >
+                           Tags ({selectedTags.length}/15):
+                        </div>
+                     </div>
+
+                     <div className="wr-tag-container">
+                        <div className="wr-tag-search-wrapper">
+                           <input
+                              type="text"
+                              className="wr-tag-input"
+                              placeholder={
+                                 selectedTags.length >= 15
+                                    ? "Maximum 15 tags allowed"
+                                    : "Search and add tags..."
+                              }
+                              value={tagSearch}
+                              disabled={
+                                 selectedTags.length >= 15
+                              }
+                              onChange={(e) => {
+                                 setTagSearch(
+                                    e.target.value,
+                                 );
+                                 setShowTagDropdown(true);
+                              }}
+                              onFocus={() =>
+                                 setShowTagDropdown(true)
+                              }
+                              onBlur={() =>
+                                 setTimeout(
+                                    () =>
+                                       setShowTagDropdown(
+                                          false,
+                                       ),
+                                    200,
+                                 )
+                              }
+                           />
+                           {showTagDropdown &&
+                              selectedTags.length < 15 && (
+                                 <div className="wr-tag-dropdown">
+                                    {filteredTags.length >
+                                    0 ? (
+                                       filteredTags.map(
+                                          (tag) => (
+                                             <div
+                                                key={tag}
+                                                className="wr-tag-option"
+                                                onMouseDown={(
+                                                   e,
+                                                ) => {
+                                                   // Prevent input blur so user can keep adding tags rapidly
+                                                   e.preventDefault();
+                                                   if (
+                                                      selectedTags.length <
+                                                      15
+                                                   ) {
+                                                      setSelectedTags(
+                                                         [
+                                                            ...selectedTags,
+                                                            tag,
+                                                         ],
+                                                      );
+                                                   }
+                                                   setTagSearch(
+                                                      "",
+                                                   );
+                                                }}
+                                             >
+                                                {tag}
+                                             </div>
+                                          ),
+                                       )
+                                    ) : (
+                                       <div className="wr-tag-option is-empty">
+                                          No tags found
+                                       </div>
+                                    )}
+                                 </div>
+                              )}
+                        </div>
+
+                        <div className="wr-selected-tags">
+                           {selectedTags.map((tag) => (
+                              <span
+                                 key={tag}
+                                 className="wr-tag-pill"
+                                 onClick={() =>
+                                    setSelectedTags(
+                                       selectedTags.filter(
+                                          (t) => t !== tag,
+                                       ),
+                                    )
+                                 }
+                              >
+                                 {tag} <span>×</span>
+                              </span>
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+               </div>
 
                <div className="wr-right">
                   <div

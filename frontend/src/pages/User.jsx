@@ -45,7 +45,13 @@ function User({
       },
    );
    const [reviews, setReviews] = useState(
-      initialReviews || [],
+      initialReviews
+         ? [...initialReviews].sort(
+              (a, b) =>
+                 (b.date ? new Date(b.date).getTime() : 0) -
+                 (a.date ? new Date(a.date).getTime() : 0),
+           )
+         : [],
    );
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
@@ -244,8 +250,8 @@ function User({
                console.log("Fetched reviews:", reviewsData);
 
                // filter reviews for this user
-               const userReviews = reviewsData.map(
-                  (review) => ({
+               const userReviews = reviewsData
+                  .map((review) => ({
                      id: review.id,
                      avatar_url: userData.avatar_url || "",
                      userName: userData.name || "Anonymous",
@@ -256,8 +262,16 @@ function User({
                      comments: review.comment || "",
                      tags: review.tags || [],
                      photos: review.photo_urls || [],
-                  }),
-               );
+                  }))
+                  .sort(
+                     (a, b) =>
+                        (b.date
+                           ? new Date(b.date).getTime()
+                           : 0) -
+                        (a.date
+                           ? new Date(a.date).getTime()
+                           : 0),
+                  );
 
                setReviews(userReviews);
             } else {
