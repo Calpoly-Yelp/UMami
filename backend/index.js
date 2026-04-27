@@ -6,6 +6,7 @@ import usersRouter from "./routes/users.js";
 import restaurantsRouter from "./routes/restaurants.js";
 import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
+import uploadsRouter from "./routes/uploads.js"; // Import uploads router
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -28,6 +29,7 @@ app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/restaurants", restaurantsRouter);
 app.use("/api/notifications", notificationsRouter);
+app.use("/api/uploads", uploadsRouter); // Use uploads router
 
 /* Keep temporary debug route (optional) */
 app.get("/test-supabase", async (req, res) => {
