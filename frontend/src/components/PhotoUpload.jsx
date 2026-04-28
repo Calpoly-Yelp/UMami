@@ -1,37 +1,41 @@
 import "./PhotoUpload.css";
 import React, { useRef, useState } from "react";
 import uploadIcon from "../assets/upload-icon.svg";
+import { uploadReviewPhoto } from "../lib/uploadPhoto";
 
 function PhotoUpload({ onPhotoSelected, onClose }) {
    const inputRef = useRef(null);
    const [previewUrl, setPreviewUrl] = useState(null);
    const [photoType, setPhotoType] = useState("Menu Item");
    const [menuItem, setMenuItem] = useState("Menu Item");
+   const [uploading, setUploading] = useState(false);
+   const [error, setError] = useState(null);
 
    const handlePick = () => {
       inputRef.current?.click();
    };
 
-   const handleFileChange = (e) => {
+   const handleFileChange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewUrl(imageUrl);
-   };
+      // Show local preview immediately
+      const localUrl = URL.createObjectURL(file);
+      setPreviewUrl(localUrl);
+      setError(null);
+      setUploading(true);
 
-   const handleSubmit = () => {
-      console.log("Submitting:");
-      console.log("Photo Type:", photoType);
-      console.log("Menu Item:", menuItem);
-      console.log("Image URL:", previewUrl);
-
-      onPhotoSelected?.({
-         url: previewUrl,
-         type: photoType,
-         item: menuItem,
-      });
-      onClose?.();
+      try {
+         // Upload to Supabase bucket, get back real public URL
+         const publicUrl = await uploadReviewPhoto(file);
+         // Pass the real URL up to WriteReview
+         onPhotoSelected?.(publicUrl);
+         onClose?.();
+      } catch (err) {
+         setError("Upload failed: " + err.message);
+      } finally {
+         setUploading(false);
+      }
    };
 
    return (
@@ -64,18 +68,19 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                         className="preview-img"
                      />
                   ) : (
-                     <>
-                        <img
-                           className="upload-icon"
-                           src={uploadIcon}
-                           alt="Upload"
-                        />
-                        <p className="upload-text">
-                           Drag and drop / Select photo here
-                        </p>
-                     </>
+                     <img
+                        className="upload-icon"
+                        src={uploadIcon}
+                        alt="Upload"
+                     />
                   )}
+                  <p className="upload-text">
+                     {uploading
+                        ? "Uploading..."
+                        : "Drag and drop / Select photo here"}
+                  </p>
                </div>
+               {error && <p style={{ color: "red", marginTop: "10px", textAlign: "center" }}>{error}</p>}
             </div>
 
             <div className="photo-right">
@@ -127,10 +132,9 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                   </button>
                   <button
                      className="submit-btn"
-                     onClick={handleSubmit}
-                     disabled={!previewUrl}
+                     disabled={!previewUrl || uploading}
                   >
-                     Submit Photo
+                     {uploading ? "Uploading..." : "Submit Photo"}
                   </button>
                </div>
             </div>

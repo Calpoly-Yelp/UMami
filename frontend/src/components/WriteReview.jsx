@@ -12,6 +12,8 @@ function WriteReview({
 }) {
    const [rating, setRating] = useState(0);
    const [text, setText] = useState("");
+
+   // --- Photo modal state ---
    const [openPhotoModal, setOpenPhotoModal] =
       useState(false);
    const [photos, setPhotos] = useState([]);
@@ -21,6 +23,7 @@ function WriteReview({
    const [tagSearch, setTagSearch] = useState("");
    const [showTagDropdown, setShowTagDropdown] =
       useState(false);
+   const [submitError, setSubmitError] = useState(null);
 
    const filteredTags = PRESET_TAGS.filter(
       (t) =>
@@ -43,6 +46,7 @@ function WriteReview({
       }
 
       setIsSubmitting(true);
+      setSubmitError(null);
       try {
          const response = await fetch("/api/reviews", {
             method: "POST",
@@ -69,9 +73,11 @@ function WriteReview({
                "Failed to post review:",
                errorData,
             );
+             setSubmitError(errorData.error || "Failed to post review");
          }
       } catch (error) {
          console.error("Error submitting review:", error);
+         setSubmitError(error.message);
       } finally {
          setIsSubmitting(false);
       }
@@ -345,6 +351,8 @@ function WriteReview({
                      </div>
                   </div>
 
+                  {/* --- Submit Button --- */}
+                  {/* Disabled while submitting to prevent double submissions */}
                   <div className="wr-actions">
                      <button
                         type="button"
@@ -366,6 +374,18 @@ function WriteReview({
                            : "Submit review"}
                      </button>
                   </div>
+
+                  {/* --- Inline error message if submission fails --- */}
+                  {submitError && (
+                     <p
+                        style={{
+                           color: "red",
+                           marginTop: "8px",
+                        }}
+                     >
+                        {submitError}
+                     </p>
+                  )}
                </div>
             </div>
          </div>
@@ -380,8 +400,8 @@ function WriteReview({
                   onMouseDown={(e) => e.stopPropagation()}
                >
                   <PhotoUpload
-                     onPhotoSelected={(photoObj) => {
-                        setPhotos([...photos, photoObj]);
+                  onPhotoSelected={(url) => {
+                     setPhotos([...photos, { url, type: "Uploaded Photo", item: "" }]);
                         setOpenPhotoModal(false);
                      }}
                      onClose={() =>

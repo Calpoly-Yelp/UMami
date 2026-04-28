@@ -13,6 +13,7 @@ import "./RestaurantInfo.css";
 
 export default function Review() {
    const navigate = useNavigate();
+   // Get the restaurant id from the URL e.g. /restaurants/5
    const { id } = useParams();
    const [activeTab, setActiveTab] = useState("menu");
    const [restaurantInfo, setRestaurantInfo] =
@@ -43,8 +44,9 @@ export default function Review() {
    });
    const CURRENT_USER_ID = currentUser?.id;
 
+   // Build a clean restaurant object from the raw API data
    const restaurant = useMemo(() => {
-      // Helper to format database time
+      // Converts "13:00" → "1pm", "13:30" → "1:30pm"
       const formatTime = (timeStr) => {
          if (!timeStr) return "";
          const [hourStr, minuteStr] = timeStr.split(":");
@@ -56,6 +58,7 @@ export default function Review() {
          return `${formattedHour}${formattedMinute}${ampm}`;
       };
 
+      // Format open/close hours from the array returned by the API
       const timeString =
          restaurantInfo?.hours?.length === 2
             ? `${formatTime(restaurantInfo.hours[0])} - ${formatTime(
@@ -199,7 +202,6 @@ export default function Review() {
       const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
       reviews.forEach((r) => {
-         // Only count valid number ratings between 1 and 5
          if (typeof r.rating === "number" && r.rating > 0) {
             const roundedRating = Math.max(
                1,
@@ -212,7 +214,8 @@ export default function Review() {
       return { counts };
    }, [reviews]);
 
-   // Filters the reviews based on the selected star rating filter
+   // Filter reviews by selected star rating
+   // If no filter is selected (null), show all reviews
    const filteredReviews = useMemo(() => {
       let result = reviews;
 
@@ -305,6 +308,7 @@ export default function Review() {
       return range;
    }, [totalPages, currentPage]);
 
+   // Smooth scroll to a section and update the active tab
    const scrollTo = (key) => {
       setActiveTab(key);
       const el = document.getElementById(`section-${key}`);
@@ -317,6 +321,7 @@ export default function Review() {
 
    return (
       <div className="review">
+         {/* ── Hero Banner ── */}
          <section
             className="review__hero"
             style={{
@@ -359,6 +364,7 @@ export default function Review() {
             </div>
          </section>
 
+         {/* ── Section Tab Navigation ── */}
          <nav
             className="review__tabs"
             aria-label="Sections"
@@ -384,12 +390,15 @@ export default function Review() {
          </nav>
 
          <main className="review__main">
+            {/* ── Menu Section ── */}
             <section
                className="card card--section"
                id="section-menu"
             >
                <div className="review__sectionHeaderRow">
                   <div className="review__actions">
+                     {/* Pass restaurant id as query param so WriteReview
+                         knows which restaurant this review is for */}
                      <button
                         className="pillBtn"
                         onClick={() => {
@@ -447,6 +456,7 @@ export default function Review() {
                </button>
             </section>
 
+            {/* ── Info Section ── */}
             <section
                className="card card--section"
                id="section-info"
@@ -454,6 +464,7 @@ export default function Review() {
                <h2 className="review__h2">Info</h2>
 
                <div className="review__infoGrid">
+                  {/* Hours */}
                   <div className="review__hours">
                      <div className="review__subHeader">
                         <span className="review__subIcon">
@@ -495,6 +506,7 @@ export default function Review() {
                      </button>
                   </div>
 
+                  {/* Map */}
                   <div className="review__mapBlock">
                      <Map
                         lat={restaurant.lat}
@@ -513,6 +525,7 @@ export default function Review() {
                   </div>
                </div>
 
+               {/* Peak Hours Chart */}
                <div className="review__peak">
                   <div className="review__subHeader">
                      <span className="review__subIcon">
@@ -566,6 +579,7 @@ export default function Review() {
                </div>
             </section>
 
+            {/* ── Reviews Section ── */}
             <section
                className="review__reviewsGrid"
                id="section-reviews"
@@ -575,6 +589,7 @@ export default function Review() {
                      <h2 className="review__h2">Reviews</h2>
 
                      <div className="review__reviewsControls">
+                        {/* Second write review button — also passes restaurant id */}
                         <button
                            className="pillBtn"
                            onClick={() => {
@@ -741,6 +756,7 @@ export default function Review() {
                   )}
                </div>
 
+               {/* ── Overall Rating Sidebar ── */}
                <aside className="card card--section review__ratingCard">
                   <div className="review__ratingTop">
                      <div className="review__ratingValue">
@@ -757,6 +773,8 @@ export default function Review() {
                      </div>
                   </div>
 
+                  {/* Clicking a bar filters reviews to that star rating
+                      Clicking it again clears the filter */}
                   <div className="review__bars">
                      {[5, 4, 3, 2, 1].map((s) => (
                         <RatingBar
@@ -849,15 +867,12 @@ export default function Review() {
    );
 }
 
-// Renders a visual row of 5 stars based on a numeric value
+// Renders a row of 5 stars filled based on a numeric rating value
 function StarRow({ value }) {
-   // Calculate number of completely filled stars
    const full = Math.floor(value);
-   // Determine if a half-filled star is needed
    const half = value - full >= 0.5;
    return (
       <div className="stars" aria-label={`Rating ${value}`}>
-         {/* Generate exactly 5 stars */}
          {Array.from({ length: 5 }).map((_, i) => {
             const isFull = i < full;
             const isHalf = i === full && half;
@@ -874,7 +889,8 @@ function StarRow({ value }) {
    );
 }
 
-// Renders a single horizontal bar in the rating histogram
+// Renders a single bar in the star rating histogram
+// Clicking it filters the review list to that star rating
 function RatingBar({
    star,
    count,
@@ -882,7 +898,6 @@ function RatingBar({
    isActive,
    onClick,
 }) {
-   // Calculate what percentage of total reviews this star rating makes up
    const totalPct =
       total > 0 ? Math.round((count / total) * 100) : 0;
    return (
