@@ -7,46 +7,12 @@ import {
 import "@testing-library/jest-dom";
 import WriteReview from "../components/WriteReview.jsx";
 
-// Mock react-router-dom hooks used by WriteReview
-const mockNavigate = jest.fn();
-
-jest.mock("react-router-dom", () => ({
-   useNavigate: () => mockNavigate,
-   useSearchParams: () => [
-      {
-         get: jest.fn((key) => {
-            if (key === "restaurant_id") {
-               return "123";
-            }
-            return null;
-         }),
-      },
-   ],
+// Mock upload helper to prevent real network requests during tests
+jest.mock("../lib/uploadPhoto", () => ({
+   uploadReviewPhoto: jest.fn(() =>
+      Promise.resolve("mock-uploaded-url"),
+   ),
 }));
-
-// Mock Supabase session lookup
-jest.mock("../lib/supabase", () => ({
-   supabase: {
-      auth: {
-         getSession: jest.fn(() =>
-            Promise.resolve({
-               data: {
-                  session: {
-                     user: { id: "test-user-id" },
-                  },
-               },
-            }),
-         ),
-      },
-   },
-}));
-
-// Mock Modal so we can assert it renders
-jest.mock("../components/Modal.jsx", () => {
-   return function MockModal({ children }) {
-      return <div data-testid="mock-modal">{children}</div>;
-   };
-});
 
 // Mock PhotoUpload so we do not test upload internals here
 jest.mock("../components/PhotoUpload.jsx", () => {
@@ -62,29 +28,43 @@ describe("WriteReview component", () => {
       global.fetch = jest.fn(() =>
          Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({}),
+            json: () =>
+               Promise.resolve({ id: 123, rating: 4 }),
          }),
       );
    });
 
-   test("renders the title", async () => {
-      render(<WriteReview />);
+   test("renders the basic UI elements", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
       expect(
-         await screen.findByText(/shake smart review/i),
+         await screen.findByText(/rate your experience/i),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByPlaceholderText(
+            /talk about your experience/i,
+         ),
       ).toBeInTheDocument();
    });
 
    test("allows user to select a star rating", async () => {
-      render(<WriteReview />);
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
-      // In the current UI, stars are radios
       const starButtons =
          await screen.findAllByRole("radio");
 
       fireEvent.click(starButtons[3]);
 
-      // 4th star should now be selected
       expect(starButtons[3]).toHaveAttribute(
          "aria-checked",
          "true",
@@ -92,7 +72,12 @@ describe("WriteReview component", () => {
    });
 
    test("allows user to type a review", async () => {
-      render(<WriteReview />);
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
       const textarea = await screen.findByPlaceholderText(
          /talk about your experience/i,
@@ -107,33 +92,63 @@ describe("WriteReview component", () => {
       );
    });
 
-   test("allows user to change the category", async () => {
-      render(<WriteReview />);
+   test("allows user to add tags", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
-      const select = await screen.findByRole("combobox");
+      const input = screen.getByPlaceholderText(
+         /search and add tags/i,
+      );
 
-      // Current options are Service / Quality / Other
-      fireEvent.change(select, {
-         target: { value: "Quality" },
+      fireEvent.focus(input);
+      fireEvent.change(input, {
+         target: { value: "Vegan" },
       });
 
-      expect(select).toHaveValue("Quality");
+      const option = await screen.findByText("Vegan");
+      fireEvent.mouseDown(option);
+
+      expect(screen.getByText("Vegan")).toBeInTheDocument();
    });
 
-   test("renders the photo upload modal content", async () => {
-      render(<WriteReview />);
+   test("renders the photo upload overlay", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
+
+      const btn = screen.getByRole("button", {
+         name: /\+ upload photo/i,
+      });
+      fireEvent.click(btn);
 
       expect(
-         await screen.findByTestId("mock-modal"),
-      ).toBeInTheDocument();
-
-      expect(
-         screen.getByText(/mock photo upload/i),
+         await screen.findByText(/mock photo upload/i),
       ).toBeInTheDocument();
    });
 
-   test("submits review and navigates after clicking submit", async () => {
-      render(<WriteReview />);
+   test("submits review and calls callbacks after clicking submit", async () => {
+      const onSuccessMock = jest.fn();
+      const onCloseMock = jest.fn();
+
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+            onSuccess={onSuccessMock}
+            onClose={onCloseMock}
+         />,
+      );
+
+      const starButtons =
+         await screen.findAllByRole("radio");
+      fireEvent.click(starButtons[3]);
 
       const textarea = await screen.findByPlaceholderText(
          /talk about your experience/i,
@@ -144,7 +159,7 @@ describe("WriteReview component", () => {
       });
 
       const submitButton = screen.getByRole("button", {
-         name: /submit review/i,
+         name: /^submit$/i,
       });
 
       fireEvent.click(submitButton);
@@ -154,7 +169,9 @@ describe("WriteReview component", () => {
       });
 
       await waitFor(() => {
-         expect(mockNavigate).toHaveBeenCalled();
+         expect(onSuccessMock).toHaveBeenCalled();
       });
+
+      expect(onCloseMock).toHaveBeenCalled();
    });
 });

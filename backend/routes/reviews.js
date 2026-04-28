@@ -221,4 +221,108 @@ router.post("/:id/helpful", async (req, res) => {
    }
 });
 
+// Create a new review
+router.post("/", async (req, res) => {
+   try {
+      const {
+         restaurant_id,
+         user_id,
+         rating,
+         comment,
+         photo_urls,
+         tags,
+      } = req.body;
+
+      if (
+         !restaurant_id ||
+         !user_id ||
+         rating === undefined
+      ) {
+         return res
+            .status(400)
+            .json({ error: "Missing required fields" });
+      }
+
+      const { data, error } = await supabase
+         .from("reviews")
+         .insert([
+            {
+               restaurant_id,
+               user_id,
+               rating,
+               comment,
+               photo_urls: photo_urls || [],
+               tags: tags || [],
+            },
+         ])
+         .select()
+         .single();
+
+      if (error) {
+         throw error;
+      }
+
+      res.status(201).json(data);
+   } catch (error) {
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
+   }
+});
+
+// Delete a review
+router.delete("/:id", async (req, res) => {
+   try {
+      const { id } = req.params;
+      const { user_id } = req.body;
+
+      if (!user_id) {
+         return res
+            .status(400)
+            .json({ error: "user_id is required" });
+      }
+
+      // Check if the review exists and get its owner
+      const { data: review, error: fetchError } =
+         await supabase
+            .from("reviews")
+            .select("user_id")
+            .eq("id", id)
+            .maybeSingle();
+
+      if (fetchError) {
+         throw fetchError;
+      }
+
+      if (!review) {
+         return res
+            .status(404)
+            .json({ error: "Review not found" });
+      }
+
+      if (review.user_id !== user_id) {
+         return res.status(403).json({
+            error: "Unauthorized to delete this review",
+         });
+      }
+
+      // Delete the review
+      const { error: deleteError } = await supabase
+         .from("reviews")
+         .delete()
+         .eq("id", id);
+      if (deleteError) {
+         throw deleteError;
+      }
+
+      res.status(200).json({
+         message: "Review deleted successfully",
+      });
+   } catch (error) {
+      res.status(500).json({
+         error: error?.message || "Internal Server Error",
+      });
+   }
+});
+
 export default router;

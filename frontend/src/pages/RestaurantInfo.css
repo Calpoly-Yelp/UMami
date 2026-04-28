@@ -629,6 +629,39 @@
    font-weight: 800;
 }
 
+.review__paginationBtn {
+   background: transparent;
+   border: none;
+   color: var(--muted);
+   font-family: inherit;
+   font-weight: 800;
+   font-size: 15px;
+   cursor: pointer;
+   padding: 4px 8px;
+   margin: 0 2px;
+   border-radius: 6px;
+   transition: all 0.15s ease;
+}
+
+.review__paginationBtn:hover:not(:disabled) {
+   background: rgba(0, 0, 0, 0.05);
+}
+.review__paginationBtn.is-active {
+   color: var(--orange);
+   text-decoration: underline;
+}
+.review__paginationBtn:disabled {
+   opacity: 0.4;
+   cursor: not-allowed;
+}
+
+.review__paginationDots {
+   color: var(--muted);
+   font-weight: 800;
+   padding: 4px 8px;
+   margin: 0 2px;
+}
+
 .review__ratingCard {
    align-self: start;
    position: sticky;
@@ -678,6 +711,45 @@
    margin: 0 -8px;
    border-radius: 8px;
    transition: background 0.15s ease;
+}
+
+.review__filterDropdown {
+   position: absolute;
+   top: calc(100% + 8px);
+   right: 0;
+   background: #fff;
+   border: 1px solid rgba(0, 0, 0, 0.12);
+   border-radius: 12px;
+   box-shadow: var(--shadow-soft);
+   padding: 14px;
+   min-width: 200px;
+   z-index: 10;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+}
+
+.review__filterGroup {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+   font-size: 13px;
+}
+
+.review__filterGroup label {
+   font-weight: 800;
+   display: flex;
+   align-items: center;
+   gap: 8px;
+}
+
+.review__filterGroup select {
+   padding: 6px 10px;
+   border-radius: 6px;
+   border: 1px solid var(--border);
+   font-family: inherit;
+   font-size: 13px;
+   cursor: pointer;
 }
 
 .ratingRow:hover {

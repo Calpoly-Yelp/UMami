@@ -195,20 +195,6 @@
    color: #1b1b1b;
 }
 
-.modal-overlay {
-   position: fixed;
-   top: 0;
-   left: 0;
-   right: 0;
-   bottom: 0;
-   background: rgba(0, 0, 0, 0.5);
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   z-index: 1000;
-   backdrop-filter: blur(4px);
-}
-
 .modal-content {
    background: linear-gradient(to bottom, #f5f5f2, #e4e3d3);
    padding: 30px;
@@ -217,30 +203,6 @@
    width: 90%;
    position: relative;
    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-.modal-close {
-   position: absolute;
-   top: 15px;
-   right: 15px;
-   background: transparent;
-   border: none;
-   font-size: 28px;
-   cursor: pointer;
-   color: #8e9089;
-   line-height: 1;
-   transition: color 0.2s ease;
-}
-
-.modal-close:hover {
-   color: #1b1b1b;
-}
-
-.modal-title {
-   margin: 0 0 5px;
-   font-size: 24px;
-   font-weight: 800;
-   color: #1b1b1b;
 }
 
 .modal-portion {
