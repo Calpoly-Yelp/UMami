@@ -7,6 +7,9 @@ import {
    afterEach,
 } from "@jest/globals";
 
+process.env.SUPABASE_URL = "https://test.supabase.co";
+process.env.SUPABASE_SECRET_KEY = "test-secret";
+
 // Prevent dotenv from loading .env file which interferes with tests
 jest.mock("dotenv/config", () => {});
 

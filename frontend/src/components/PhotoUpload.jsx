@@ -1,33 +1,41 @@
 import "./PhotoUpload.css";
 import React, { useRef, useState } from "react";
 import uploadIcon from "../assets/upload-icon.svg";
+import { uploadReviewPhoto } from "../lib/uploadPhoto";
 
 function PhotoUpload({ onPhotoSelected, onClose }) {
    const inputRef = useRef(null);
    const [previewUrl, setPreviewUrl] = useState(null);
    const [photoType, setPhotoType] = useState("Menu Item");
    const [menuItem, setMenuItem] = useState("Menu Item");
+   const [uploading, setUploading] = useState(false);
+   const [error, setError] = useState(null);
 
    const handlePick = () => {
       inputRef.current?.click();
    };
 
-   const handleFileChange = (e) => {
+   const handleFileChange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewUrl(imageUrl);
+      // Show local preview immediately
+      const localUrl = URL.createObjectURL(file);
+      setPreviewUrl(localUrl);
+      setError(null);
+      setUploading(true);
 
-      onPhotoSelected?.(imageUrl);
-      onClose?.();
-   };
-
-   const handleSubmit = () => {
-      console.log("Submitting:");
-      console.log("Photo Type:", photoType);
-      console.log("Menu Item:", menuItem);
-      console.log("Image URL:", previewUrl);
+      try {
+         // Upload to Supabase bucket, get back real public URL
+         const publicUrl = await uploadReviewPhoto(file);
+         // Pass the real URL up to WriteReview
+         onPhotoSelected?.(publicUrl);
+         onClose?.();
+      } catch (err) {
+         setError("Upload failed: " + err.message);
+      } finally {
+         setUploading(false);
+      }
    };
 
    return (
@@ -36,7 +44,6 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
             Shake Smart Photo Upload
          </h1>
 
-         {/* Upload Card */}
          <div
             className="upload-card"
             onClick={handlePick}
@@ -50,7 +57,6 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                accept="image/*"
                onChange={handleFileChange}
             />
-
             {previewUrl ? (
                <img
                   src={previewUrl}
@@ -64,11 +70,15 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                   alt="Upload"
                />
             )}
-
-            <p>Drag and drop / Select photo here</p>
+            <p>
+               {uploading
+                  ? "Uploading..."
+                  : "Drag and drop / Select photo here"}
+            </p>
          </div>
 
-         {/* Dropdown Row */}
+         {error && <p style={{ color: "red" }}>{error}</p>}
+
          <div className="form-row">
             <div className="form-group">
                <label>What is this a photo of?</label>
@@ -85,7 +95,6 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                   </select>
                </div>
             </div>
-
             <div className="form-group">
                <label>What menu item is this?</label>
                <div className="select-wrap">
@@ -99,17 +108,6 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                   </select>
                </div>
             </div>
-         </div>
-
-         {/* Submit Button */}
-         <div className="actions">
-            <button
-               className="submit-btn"
-               onClick={handleSubmit}
-               disabled={!previewUrl}
-            >
-               Submit Photo
-            </button>
          </div>
       </div>
    );

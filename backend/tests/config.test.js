@@ -24,7 +24,7 @@ describe("Supabase Config", () => {
          await import("../config/supabaseClient.js");
       } catch (e) {
          expect(e.message).toBe(
-            "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY in backend/.env",
+            "Missing SUPABASE_URL or SUPABASE_SECRET_KEY in backend/.env",
          );
       }
 
