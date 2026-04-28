@@ -302,9 +302,12 @@ describe("Review Endpoints", () => {
       const mockReview = {
          id: 3,
          restaurant_id: 101,
-         user_id: "user123",
+         user_id: "b677be85-81db-4245-91ca-acb713bd5564",
+         created_at: "2023-01-01T00:00:00Z",
          rating: 5,
          comment: "Test",
+         photo_urls: [],
+         tags: [],
       };
       const mockQuery = {
          insert: jest.fn().mockReturnThis(),
@@ -321,7 +324,7 @@ describe("Review Endpoints", () => {
          .post("/api/reviews")
          .send({
             restaurant_id: 101,
-            user_id: "user123",
+            user_id: "b677be85-81db-4245-91ca-acb713bd5564",
             rating: 5,
             comment: "Test",
          });
@@ -331,11 +334,11 @@ describe("Review Endpoints", () => {
       expect(mockQuery.insert).toHaveBeenCalledWith([
          {
             restaurant_id: 101,
-            user_id: "user123",
+            user_id: "b677be85-81db-4245-91ca-acb713bd5564",
             rating: 5,
             comment: "Test",
-            photo_urls: [],
-            tags: [],
+            photo_urls: undefined,
+            tags: undefined,
          },
       ]);
    });
@@ -516,7 +519,7 @@ describe("Review Endpoints", () => {
 
       expect(res.statusCode).toBe(400);
       expect(res.body.error).toBe(
-         "Missing required fields",
+         "user_id and rating are required",
       );
    });
 

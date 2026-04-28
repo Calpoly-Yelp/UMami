@@ -1,21 +1,20 @@
 import "./PhotoUpload.css";
 import React, { useRef, useState } from "react";
 import uploadIcon from "../assets/upload-icon.svg";
-import { uploadReviewPhoto } from "../lib/uploadPhoto";
 
 function PhotoUpload({ onPhotoSelected, onClose }) {
    const inputRef = useRef(null);
    const [previewUrl, setPreviewUrl] = useState(null);
+   const [selectedFile, setSelectedFile] = useState(null);
    const [photoType, setPhotoType] = useState("Menu Item");
    const [menuItem, setMenuItem] = useState("Menu Item");
-   const [uploading, setUploading] = useState(false);
    const [error, setError] = useState(null);
 
    const handlePick = () => {
       inputRef.current?.click();
    };
 
-   const handleFileChange = async (e) => {
+   const handleFileChange = (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
@@ -23,18 +22,18 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
       const localUrl = URL.createObjectURL(file);
       setPreviewUrl(localUrl);
       setError(null);
-      setUploading(true);
+      setSelectedFile(file);
+   };
 
-      try {
-         // Upload to Supabase bucket, get back real public URL
-         const publicUrl = await uploadReviewPhoto(file);
-         // Pass the real URL up to WriteReview
-         onPhotoSelected?.(publicUrl);
+   const handleSubmit = () => {
+      if (selectedFile) {
+         onPhotoSelected?.({
+            file: selectedFile,
+            url: previewUrl,
+            type: photoType,
+            item: menuItem,
+         });
          onClose?.();
-      } catch (err) {
-         setError("Upload failed: " + err.message);
-      } finally {
-         setUploading(false);
       }
    };
 
@@ -75,12 +74,20 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                      />
                   )}
                   <p className="upload-text">
-                     {uploading
-                        ? "Uploading..."
-                        : "Drag and drop / Select photo here"}
+                     Drag and drop / Select photo here
                   </p>
                </div>
-               {error && <p style={{ color: "red", marginTop: "10px", textAlign: "center" }}>{error}</p>}
+               {error && (
+                  <p
+                     style={{
+                        color: "red",
+                        marginTop: "10px",
+                        textAlign: "center",
+                     }}
+                  >
+                     {error}
+                  </p>
+               )}
             </div>
 
             <div className="photo-right">
@@ -132,9 +139,10 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                   </button>
                   <button
                      className="submit-btn"
-                     disabled={!previewUrl || uploading}
+                     onClick={handleSubmit}
+                     disabled={!selectedFile}
                   >
-                     {uploading ? "Uploading..." : "Submit Photo"}
+                     Submit
                   </button>
                </div>
             </div>

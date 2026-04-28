@@ -298,7 +298,7 @@ describe("User Endpoints", () => {
       });
 
       const res = await request(app).get(
-         "/api/users/generic-error-id",
+         "/api/users/550e8400-e29b-41d4-a716-446655440009",
       );
       expect(res.statusCode).toBe(500);
       expect(res.body.error).toBe("Internal Server Error");
@@ -588,7 +588,8 @@ describe("User Endpoints", () => {
    });
 
    it("GET /api/users/:id/follows should handle errors without a message", async () => {
-      const followerId = "user-id";
+      const followerId =
+         "550e8400-e29b-41d4-a716-446655440002";
 
       supabase.from.mockImplementation((table) => {
          if (table === "follows") {
@@ -737,8 +738,11 @@ describe("User Endpoints", () => {
    });
 
    it("POST /api/users/follows/sync should handle errors without a message", async () => {
-      const followerId = "user-id";
-      const added = ["id1"];
+      const followerId =
+         "550e8400-e29b-41d4-a716-446655440002";
+      const added = [
+         "550e8400-e29b-41d4-a716-446655440003",
+      ];
 
       const mockInsert = jest.fn().mockRejectedValue({}); // Throwing an empty object
 

@@ -3,6 +3,7 @@ import "./WriteReview.css";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 import PRESET_TAGS from "../assets/tags.json";
+import { uploadReviewPhoto } from "../lib/uploadPhoto";
 
 function WriteReview({
    onClose,
@@ -48,6 +49,19 @@ function WriteReview({
       setIsSubmitting(true);
       setSubmitError(null);
       try {
+         // 1. Upload any pending photos to the bucket first
+         const finalPhotoUrls = [];
+         for (const photo of photos) {
+            if (photo.file) {
+               const publicUrl = await uploadReviewPhoto(
+                  photo.file,
+               );
+               finalPhotoUrls.push(publicUrl);
+            } else {
+               finalPhotoUrls.push(photo.url);
+            }
+         }
+
          const response = await fetch("/api/reviews", {
             method: "POST",
             headers: {
@@ -58,7 +72,7 @@ function WriteReview({
                user_id: userId,
                rating: rating,
                comment: text,
-               photo_urls: photos.map((p) => p.url),
+               photo_urls: finalPhotoUrls,
                tags: selectedTags,
             }),
          });
@@ -73,7 +87,9 @@ function WriteReview({
                "Failed to post review:",
                errorData,
             );
-             setSubmitError(errorData.error || "Failed to post review");
+            setSubmitError(
+               errorData.error || "Failed to post review",
+            );
          }
       } catch (error) {
          console.error("Error submitting review:", error);
@@ -371,7 +387,7 @@ function WriteReview({
                      >
                         {isSubmitting
                            ? "Submitting..."
-                           : "Submit review"}
+                           : "Submit"}
                      </button>
                   </div>
 
@@ -400,8 +416,8 @@ function WriteReview({
                   onMouseDown={(e) => e.stopPropagation()}
                >
                   <PhotoUpload
-                  onPhotoSelected={(url) => {
-                     setPhotos([...photos, { url, type: "Uploaded Photo", item: "" }]);
+                     onPhotoSelected={(photoData) => {
+                        setPhotos([...photos, photoData]);
                         setOpenPhotoModal(false);
                      }}
                      onClose={() =>
