@@ -9,12 +9,9 @@ import PhotoUpload from "../components/PhotoUpload";
 
 describe("PhotoUpload component", () => {
    beforeEach(() => {
-      // Mock the browser preview URL that appears after file selection.
       URL.createObjectURL = jest.fn(
          () => "mock-preview-url",
       );
-
-      // Clear mock call history before each test.
       jest.clearAllMocks();
    });
 
@@ -26,27 +23,39 @@ describe("PhotoUpload component", () => {
          />,
       );
 
-      // Main title should appear
       expect(
          screen.getByText(/shake smart photo upload/i),
       ).toBeInTheDocument();
 
-      // Upload instructions should appear
       expect(
          screen.getByText(
             /drag and drop \/ select photo here/i,
          ),
       ).toBeInTheDocument();
 
-      // Upload card behaves like a button
       expect(
-         screen.getByRole("button", {
-            name: /upload drag and drop \/ select photo here/i,
-         }),
+         screen.getByText(/what is this a photo of\?/i),
       ).toBeInTheDocument();
+
+      expect(
+         screen.queryByText(/what menu item is this\?/i),
+      ).not.toBeInTheDocument();
    });
 
-   test("allows user to change photo type", async () => {
+   test("defaults photo type to Other", () => {
+      render(
+         <PhotoUpload
+            onPhotoSelected={jest.fn()}
+            onClose={jest.fn()}
+         />,
+      );
+
+      const photoTypeSelect = screen.getByRole("combobox");
+
+      expect(photoTypeSelect).toHaveValue("Other");
+   });
+
+   test("shows menu item dropdown when Menu Item is selected", async () => {
       const user = userEvent.setup();
 
       render(
@@ -56,15 +65,53 @@ describe("PhotoUpload component", () => {
          />,
       );
 
-      const selects = screen.getAllByRole("combobox");
-      const photoTypeSelect = selects[0];
+      const photoTypeSelect = screen.getByRole("combobox");
 
-      await user.selectOptions(photoTypeSelect, "Other");
+      await user.selectOptions(
+         photoTypeSelect,
+         "Menu Item",
+      );
 
-      expect(photoTypeSelect).toHaveValue("Other");
+      expect(photoTypeSelect).toHaveValue("Menu Item");
+
+      expect(
+         screen.getByText(/what menu item is this\?/i),
+      ).toBeInTheDocument();
+
+      expect(screen.getAllByRole("combobox")).toHaveLength(
+         2,
+      );
    });
 
-   test("shows preview image after file selection", async () => {
+   test("hides menu item dropdown when switched away from Menu Item", async () => {
+      const user = userEvent.setup();
+
+      render(
+         <PhotoUpload
+            onPhotoSelected={jest.fn()}
+            onClose={jest.fn()}
+         />,
+      );
+
+      const photoTypeSelect = screen.getByRole("combobox");
+
+      await user.selectOptions(
+         photoTypeSelect,
+         "Menu Item",
+      );
+      expect(
+         screen.getByText(/what menu item is this\?/i),
+      ).toBeInTheDocument();
+
+      await user.selectOptions(photoTypeSelect, "Vibe");
+
+      expect(photoTypeSelect).toHaveValue("Vibe");
+      expect(
+         screen.queryByText(/what menu item is this\?/i),
+      ).not.toBeInTheDocument();
+   });
+
+   test("shows preview image after file selection", () => {
       const { container } = render(
          <PhotoUpload
             onPhotoSelected={jest.fn()}
@@ -78,32 +125,26 @@ describe("PhotoUpload component", () => {
       const file = new File(
          ["dummy content"],
          "photo.png",
-         {
-            type: "image/png",
-         },
+         { type: "image/png" },
       );
 
-      // Simulate file selection
       fireEvent.change(fileInput, {
          target: { files: [file] },
       });
 
-      // The component should generate a local preview URL
       expect(URL.createObjectURL).toHaveBeenCalledWith(
          file,
       );
 
-      // Preview image should appear immediately
-      expect(
-         screen.getByAltText(/preview/i),
-      ).toBeInTheDocument();
-
-      expect(
-         screen.getByAltText(/preview/i),
-      ).toHaveAttribute("src", "mock-preview-url");
+      const previewImage = screen.getByAltText(/preview/i);
+      expect(previewImage).toBeInTheDocument();
+      expect(previewImage).toHaveAttribute(
+         "src",
+         "mock-preview-url",
+      );
    });
 
-   test("calls onPhotoSelected and onClose with file data", async () => {
+   test("calls onPhotoSelected and onClose with file data when Add Photo is clicked", () => {
       const onPhotoSelected = jest.fn();
       const onClose = jest.fn();
 
@@ -120,29 +161,76 @@ describe("PhotoUpload component", () => {
       const file = new File(
          ["dummy content"],
          "photo.png",
-         {
-            type: "image/png",
-         },
+         { type: "image/png" },
       );
 
       fireEvent.change(fileInput, {
          target: { files: [file] },
       });
 
-      expect(
-         screen.getByRole("button", {
-            name: /^submit$/i,
-         }),
-      ).not.toBeDisabled();
-      // Click the submit button
+      const addPhotoButton = screen.getByRole("button", {
+         name: /add photo/i,
+      });
+
+      expect(addPhotoButton).not.toBeDisabled();
+
+      fireEvent.click(addPhotoButton);
+
+      expect(onPhotoSelected).toHaveBeenCalledWith({
+         file,
+         url: "mock-preview-url",
+         type: "Other",
+         item: "",
+      });
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+   });
+
+   test("submits selected menu item when photo type is Menu Item", async () => {
+      const user = userEvent.setup();
+      const onPhotoSelected = jest.fn();
+      const onClose = jest.fn();
+
+      const { container } = render(
+         <PhotoUpload
+            onPhotoSelected={onPhotoSelected}
+            onClose={onClose}
+         />,
+      );
+
+      const photoTypeSelect = screen.getByRole("combobox");
+
+      await user.selectOptions(
+         photoTypeSelect,
+         "Menu Item",
+      );
+
+      const selects = screen.getAllByRole("combobox");
+      const menuItemSelect = selects[1];
+
+      await user.selectOptions(menuItemSelect, "Menu Item");
+
+      const fileInput =
+         container.querySelector(".file-input");
+
+      const file = new File(
+         ["dummy content"],
+         "photo.png",
+         { type: "image/png" },
+      );
+
+      fireEvent.change(fileInput, {
+         target: { files: [file] },
+      });
+
       fireEvent.click(
          screen.getByRole("button", {
-            name: /^submit$/i,
+            name: /add photo/i,
          }),
       );
 
       expect(onPhotoSelected).toHaveBeenCalledWith({
-         file: file,
+         file,
          url: "mock-preview-url",
          type: "Menu Item",
          item: "Menu Item",

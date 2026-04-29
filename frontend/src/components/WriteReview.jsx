@@ -299,21 +299,54 @@ function WriteReview({
                            Show your experience (
                            {photos.length}/10):
                         </div>
-                        {photos.length < 10 && (
-                           <button
-                              type="button"
-                              className="wr-uploadBtn"
-                              onClick={() =>
-                                 setOpenPhotoModal(true)
-                              }
-                           >
-                              + Upload Photo
-                           </button>
-                        )}
+
+                        {photos.length > 0 &&
+                           photos.length < 10 && (
+                              <button
+                                 type="button"
+                                 className="wr-uploadBtn"
+                                 onClick={() =>
+                                    setOpenPhotoModal(true)
+                                 }
+                              >
+                                 + Upload Another Photo
+                              </button>
+                           )}
                      </div>
 
                      <div
                         className={`wr-photoBox ${photos.length === 0 ? "is-empty" : ""}`}
+                        onClick={
+                           photos.length === 0
+                              ? () =>
+                                   setOpenPhotoModal(true)
+                              : undefined
+                        }
+                        onKeyDown={
+                           photos.length === 0
+                              ? (e) => {
+                                   if (
+                                      e.key === "Enter" ||
+                                      e.key === " "
+                                   ) {
+                                      e.preventDefault();
+                                      setOpenPhotoModal(
+                                         true,
+                                      );
+                                   }
+                                }
+                              : undefined
+                        }
+                        role={
+                           photos.length === 0
+                              ? "button"
+                              : undefined
+                        }
+                        tabIndex={
+                           photos.length === 0
+                              ? 0
+                              : undefined
+                        }
                      >
                         {photos.length === 0 ? (
                            <div className="wr-photoEmpty">
@@ -322,10 +355,10 @@ function WriteReview({
                                  alt="Upload"
                                  className="wr-photoEmptyIcon"
                               />
-                              <p>
+                              <span>
                                  Got pictures? We'd love to
                                  see them!
-                              </p>
+                              </span>
                            </div>
                         ) : (
                            photos.map((photo, idx) => (
@@ -341,14 +374,15 @@ function WriteReview({
                                  <button
                                     type="button"
                                     className="wr-photoRemoveBtnH"
-                                    onClick={() =>
+                                    onClick={(e) => {
+                                       e.stopPropagation();
                                        setPhotos(
                                           photos.filter(
                                              (_, i) =>
                                                 i !== idx,
                                           ),
-                                       )
-                                    }
+                                       );
+                                    }}
                                     title="Remove photo"
                                  >
                                     ×
@@ -366,7 +400,6 @@ function WriteReview({
                         )}
                      </div>
                   </div>
-
                   {/* --- Submit Button --- */}
                   {/* Disabled while submitting to prevent double submissions */}
                   <div className="wr-actions">

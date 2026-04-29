@@ -322,6 +322,7 @@ export default function Review() {
    return (
       <div className="review">
          {/* ── Hero Banner ── */}
+
          <section
             className="review__hero"
             style={{
@@ -334,6 +335,13 @@ export default function Review() {
             <div className="review__heroOverlay" />
 
             <div className="review__heroContent">
+               <button
+                  type="button"
+                  className="review__backBtn"
+                  onClick={() => navigate("/restaurants")}
+               >
+                  Back to Restaurants
+               </button>
                <h1 className="review__title">
                   {restaurant.name}
                </h1>
@@ -799,7 +807,7 @@ export default function Review() {
          <Modal
             open={isWriteReviewOpen}
             onClose={() => setIsWriteReviewOpen(false)}
-            title={`${restaurant.name} review`}
+            title={`${restaurant.name} Review`}
             disableOverlayClick={true}
             hideCloseButton={true}
          >
