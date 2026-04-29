@@ -112,7 +112,8 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         hours: r.hours || [],
                         rating_count: r.rating_count ?? 0,
                         rating_sum: r.rating_sum ?? 0,
-                        is_open_now: r.is_open_now ?? false,
+                        is_open_now:
+                           r.is_open_now ?? false,
                      }));
 
                   const ids = new Set(
@@ -241,15 +242,13 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
       if (sort === "lowest_rating") {
          filtered = [...filtered].sort(
-            (a, b) =>
-               (a.avg_rating ?? 0) - (b.avg_rating ?? 0),
+            (a, b) => (a.avg_rating ?? 0) - (b.avg_rating ?? 0),
          );
       }
 
       if (sort === "highest_rating") {
          filtered = [...filtered].sort(
-            (a, b) =>
-               (b.avg_rating ?? 0) - (a.avg_rating ?? 0),
+            (a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0),
          );
       }
 
