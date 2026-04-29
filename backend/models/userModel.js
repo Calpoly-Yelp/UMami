@@ -4,11 +4,11 @@ import { z } from "zod";
 export const User = z.object({
    id: z.string().uuid(),
    email: z.string().email(),
-   password_hash: z.string(),
+   password_hash: z.string().nullable().optional(),
    created_at: z.string(),
-   name: z.string().nullable(),
-   avatar_url: z.string().nullable(),
-   is_verified: z.boolean().nullable(),
+   name: z.string().nullable().optional(),
+   avatar_url: z.string().nullable().optional(),
+   is_verified: z.boolean().nullable().optional(),
 });
 
 // Schema for the 'follows' table

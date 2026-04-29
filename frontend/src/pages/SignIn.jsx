@@ -2,33 +2,98 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
 import bgImage from "../assets/signup-bg.jpeg";
+import { supabase } from "../lib/supabase";
 
 export default function SignIn() {
    const navigate = useNavigate();
 
+   // form state
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
 
+   // UI state
+   const [error, setError] = useState("");
+   const [loading, setLoading] = useState(false);
+
+   // ===============================
+   // HANDLE SIGN IN
+   // ===============================
    const handleSignIn = async (e) => {
       e.preventDefault();
-      // Simulate login by fetching the specific test user from the database
+
       try {
-         const response = await fetch(
-            "http://localhost:4000/api/users/b677be85-81db-4245-91ca-acb713bd5564",
-         );
-         if (response.ok) {
-            const userData = await response.json();
-            localStorage.setItem(
-               "user",
-               JSON.stringify(userData),
-            );
-            navigate("/restaurants");
+         setLoading(true);
+         setError("");
+
+         // -----------------------------------
+         // 1. Authenticate with Supabase Auth
+         // -----------------------------------
+         const { data, error } =
+            await supabase.auth.signInWithPassword({
+               email,
+               password,
+            });
+
+         if (error) {
+            // Supabase auth failed (wrong password, etc.)
+            throw error;
          }
-      } catch (error) {
-         console.error("Login failed", error);
+
+         if (!data.user) {
+            throw new Error(
+               "No user returned from sign in.",
+            );
+         }
+
+         console.log("Supabase user:", data.user);
+
+         // -----------------------------------
+         // 2. Fetch user profile from backend
+         // -----------------------------------
+         const response = await fetch(
+            `http://localhost:4000/api/users/${data.user.id}`,
+         );
+
+         // try to parse response body safely
+         const body = await response
+            .json()
+            .catch(() => ({}));
+
+         // If backend returned error (like 500)
+         if (!response.ok) {
+            console.error("Backend error:", body);
+            throw new Error(
+               body.error ||
+                  `Failed to fetch user profile (${response.status})`,
+            );
+         }
+
+         // -----------------------------------
+         // 3. Save user data locally
+         // -----------------------------------
+         console.log("Fetched user data:", body);
+
+         localStorage.setItem("user", JSON.stringify(body));
+
+         console.log("Saved to localStorage");
+
+         // -----------------------------------
+         // 4. Redirect to main app
+         // -----------------------------------
+         navigate("/restaurants");
+      } catch (err) {
+         console.error("Login failed:", err);
+
+         // Show error message on UI
+         setError(err.message || "Login failed");
+      } finally {
+         setLoading(false);
       }
    };
 
+   // ===============================
+   // UI
+   // ===============================
    return (
       <div
          className="auth"
@@ -46,14 +111,12 @@ export default function SignIn() {
             <h1 className="auth__title">
                Sign into your account
             </h1>
-            <p className="auth__subtitle">
-               Enter your email and password to sign in
-            </p>
 
             <form
                className="auth__form"
                onSubmit={handleSignIn}
             >
+               {/* Email input */}
                <input
                   className="auth__input"
                   type="email"
@@ -64,6 +127,7 @@ export default function SignIn() {
                   required
                />
 
+               {/* Password input */}
                <input
                   className="auth__input"
                   type="password"
@@ -76,13 +140,21 @@ export default function SignIn() {
                   required
                />
 
+               {/* Show error if exists */}
+               {error && (
+                  <p className="auth__error">{error}</p>
+               )}
+
+               {/* Submit button */}
                <button
                   className="auth__primary"
                   type="submit"
+                  disabled={loading}
                >
-                  Sign in
+                  {loading ? "Signing in..." : "Sign In"}
                </button>
 
+               {/* Signup redirect */}
                <div className="auth__divider">
                   <span>Don't have an account?</span>
                </div>
@@ -94,12 +166,6 @@ export default function SignIn() {
                >
                   Sign Up
                </button>
-
-               <p className="auth__legal">
-                  By continuing, you agree to our{" "}
-                  <strong>Terms of Service</strong> and{" "}
-                  <strong>Privacy Policy</strong>
-               </p>
             </form>
          </div>
       </div>

@@ -1,144 +1,432 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./WriteReview.css";
-import Modal from "./Modal";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
+import PRESET_TAGS from "../assets/tags.json";
+import { uploadReviewPhoto } from "../lib/uploadPhoto";
 
-function WriteReview() {
-   const navigate = useNavigate();
+function WriteReview({
+   onClose,
+   restaurantId,
+   userId,
+   onSuccess,
+}) {
    const [rating, setRating] = useState(0);
-   const [category, setCategory] = useState("Service");
    const [text, setText] = useState("");
+
+   // --- Photo modal state ---
    const [openPhotoModal, setOpenPhotoModal] =
       useState(false);
-   const [experiencePhotoUrl, setExperiencePhotoUrl] =
-      useState(null);
+   const [photos, setPhotos] = useState([]);
+   const [hoverRating, setHoverRating] = useState(0);
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [selectedTags, setSelectedTags] = useState([]);
+   const [tagSearch, setTagSearch] = useState("");
+   const [showTagDropdown, setShowTagDropdown] =
+      useState(false);
+   const [submitError, setSubmitError] = useState(null);
+
+   const filteredTags = PRESET_TAGS.filter(
+      (t) =>
+         t
+            .toLowerCase()
+            .includes(tagSearch.toLowerCase()) &&
+         !selectedTags.includes(t),
+   );
+
+   const handleSubmit = async () => {
+      // Basic validation
+      if (rating === 0) return;
+
+      if (!restaurantId || !userId) {
+         console.error(
+            "Missing props! restaurantId or userId is undefined.",
+            { restaurantId, userId },
+         );
+         return;
+      }
+
+      setIsSubmitting(true);
+      setSubmitError(null);
+      try {
+         // 1. Upload any pending photos to the bucket first
+         const finalPhotoUrls = [];
+         for (const photo of photos) {
+            if (photo.file) {
+               const publicUrl = await uploadReviewPhoto(
+                  photo.file,
+               );
+               finalPhotoUrls.push(publicUrl);
+            } else {
+               finalPhotoUrls.push(photo.url);
+            }
+         }
+
+         const response = await fetch("/api/reviews", {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+               restaurant_id: restaurantId,
+               user_id: userId,
+               rating: rating,
+               comment: text,
+               photo_urls: finalPhotoUrls,
+               tags: selectedTags,
+            }),
+         });
+
+         if (response.ok) {
+            const newReviewData = await response.json();
+            if (onSuccess) onSuccess(newReviewData);
+            onClose();
+         } else {
+            const errorData = await response.json();
+            console.error(
+               "Failed to post review:",
+               errorData,
+            );
+            setSubmitError(
+               errorData.error || "Failed to post review",
+            );
+         }
+      } catch (error) {
+         console.error("Error submitting review:", error);
+         setSubmitError(error.message);
+      } finally {
+         setIsSubmitting(false);
+      }
+   };
 
    return (
       <div className="wr-page">
          <div className="wr-container">
-            <h1 className="wr-title">Shake Smart Review</h1>
+            <div className="wr-top-half">
+               <div className="wr-section">
+                  <div className="wr-labelRow">
+                     <div
+                        className="wr-label"
+                        style={{ marginBottom: 0 }}
+                     >
+                        Rate your experience:
+                     </div>
+                  </div>
 
-            <div className="wr-section">
-               <div className="wr-label">
-                  Rate your experience:
+                  <div
+                     className="wr-stars"
+                     role="radiogroup"
+                     aria-label="Rating"
+                  >
+                     {[1, 2, 3, 4, 5].map((n) => {
+                        const isFilled = n <= rating;
+                        const isFaint =
+                           n > rating && n <= hoverRating;
+                        return (
+                           <button
+                              key={n}
+                              type="button"
+                              className={`wr-star ${isFilled ? "is-filled" : ""} ${isFaint ? "is-faint" : ""}`}
+                              onClick={() => setRating(n)}
+                              onMouseEnter={() =>
+                                 setHoverRating(n)
+                              }
+                              onMouseLeave={() =>
+                                 setHoverRating(0)
+                              }
+                              aria-label={`${n} star${n === 1 ? "" : "s"}`}
+                              aria-checked={n === rating}
+                              role="radio"
+                           >
+                              ★
+                           </button>
+                        );
+                     })}
+                  </div>
                </div>
 
                <div
-                  className="wr-stars"
-                  role="radiogroup"
-                  aria-label="Rating"
+                  className="wr-section"
+                  style={{ flex: 1, width: "100%" }}
                >
-                  {[1, 2, 3, 4, 5].map((n) => (
-                     <button
-                        key={n}
-                        type="button"
-                        className={`wr-star ${n <= rating ? "is-filled" : ""}`}
-                        onClick={() => setRating(n)}
-                        aria-label={`${n} star${n === 1 ? "" : "s"}`}
-                        aria-checked={n === rating}
-                        role="radio"
-                     >
-                        ★
-                     </button>
-                  ))}
-               </div>
-            </div>
-
-            <div className="wr-section">
-               <textarea
-                  id="wr-text"
-                  className="wr-textarea"
-                  placeholder="Talk about your experience..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-               />
-            </div>
-
-            <div className="wr-grid">
-               <div className="wr-col">
-                  <label
-                     className="wr-label"
-                     htmlFor="wr-category"
-                  >
-                     What is your experience about?
-                  </label>
-
-                  <div className="wr-selectWrap">
-                     <select
-                        id="wr-category"
-                        className="wr-select"
-                        value={category}
+                  <div className="wr-textarea-wrapper">
+                     <textarea
+                        id="wr-text"
+                        className="wr-textarea"
+                        placeholder="Talk about your experience..."
+                        value={text}
+                        maxLength={750}
                         onChange={(e) =>
-                           setCategory(e.target.value)
+                           setText(e.target.value)
                         }
+                     />
+                     <div
+                        className={`wr-char-count ${text.length >= 750 ? "is-max" : ""}`}
                      >
-                        <option value="Service">
-                           Service
-                        </option>
-                        <option value="Quality">
-                           Quality
-                        </option>
-                        <option value="Other">Other</option>
-                     </select>
+                        {text.length}/750
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div className="wr-layout">
+               <div className="wr-left">
+                  <div
+                     className="wr-section"
+                     style={{
+                        width: "100%",
+                        flex: 1,
+                        minHeight: 0,
+                     }}
+                  >
+                     <div className="wr-labelRow">
+                        <div
+                           className="wr-label"
+                           style={{ marginBottom: 0 }}
+                        >
+                           Tags ({selectedTags.length}/15):
+                        </div>
+                     </div>
+
+                     <div className="wr-tag-container">
+                        <div className="wr-tag-search-wrapper">
+                           <input
+                              type="text"
+                              className="wr-tag-input"
+                              placeholder={
+                                 selectedTags.length >= 15
+                                    ? "Maximum 15 tags allowed"
+                                    : "Search and add tags..."
+                              }
+                              value={tagSearch}
+                              disabled={
+                                 selectedTags.length >= 15
+                              }
+                              onChange={(e) => {
+                                 setTagSearch(
+                                    e.target.value,
+                                 );
+                                 setShowTagDropdown(true);
+                              }}
+                              onFocus={() =>
+                                 setShowTagDropdown(true)
+                              }
+                              onBlur={() =>
+                                 setTimeout(
+                                    () =>
+                                       setShowTagDropdown(
+                                          false,
+                                       ),
+                                    200,
+                                 )
+                              }
+                           />
+                           {showTagDropdown &&
+                              selectedTags.length < 15 && (
+                                 <div className="wr-tag-dropdown">
+                                    {filteredTags.length >
+                                    0 ? (
+                                       filteredTags.map(
+                                          (tag) => (
+                                             <div
+                                                key={tag}
+                                                className="wr-tag-option"
+                                                onMouseDown={(
+                                                   e,
+                                                ) => {
+                                                   // Prevent input blur so user can keep adding tags rapidly
+                                                   e.preventDefault();
+                                                   if (
+                                                      selectedTags.length <
+                                                      15
+                                                   ) {
+                                                      setSelectedTags(
+                                                         [
+                                                            ...selectedTags,
+                                                            tag,
+                                                         ],
+                                                      );
+                                                   }
+                                                   setTagSearch(
+                                                      "",
+                                                   );
+                                                }}
+                                             >
+                                                {tag}
+                                             </div>
+                                          ),
+                                       )
+                                    ) : (
+                                       <div className="wr-tag-option is-empty">
+                                          No tags found
+                                       </div>
+                                    )}
+                                 </div>
+                              )}
+                        </div>
+
+                        <div className="wr-selected-tags">
+                           {selectedTags.map((tag) => (
+                              <span
+                                 key={tag}
+                                 className="wr-tag-pill"
+                                 onClick={() =>
+                                    setSelectedTags(
+                                       selectedTags.filter(
+                                          (t) => t !== tag,
+                                       ),
+                                    )
+                                 }
+                              >
+                                 {tag} <span>×</span>
+                              </span>
+                           ))}
+                        </div>
+                     </div>
                   </div>
                </div>
 
-               <div className="wr-col wr-right">
-                  <div className="wr-label">
-                     Show your experience:
+               <div className="wr-right">
+                  <div
+                     className="wr-section"
+                     style={{ flex: 1, marginBottom: 0 }}
+                  >
+                     <div className="wr-labelRow">
+                        <div
+                           className="wr-label"
+                           style={{ marginBottom: 0 }}
+                        >
+                           Show your experience (
+                           {photos.length}/10):
+                        </div>
+                        {photos.length < 10 && (
+                           <button
+                              type="button"
+                              className="wr-uploadBtn"
+                              onClick={() =>
+                                 setOpenPhotoModal(true)
+                              }
+                           >
+                              + Upload Photo
+                           </button>
+                        )}
+                     </div>
+
+                     <div
+                        className={`wr-photoBox ${photos.length === 0 ? "is-empty" : ""}`}
+                     >
+                        {photos.length === 0 ? (
+                           <div className="wr-photoEmpty">
+                              <img
+                                 src={uploadIcon}
+                                 alt="Upload"
+                                 className="wr-photoEmptyIcon"
+                              />
+                              <p>
+                                 Got pictures? We'd love to
+                                 see them!
+                              </p>
+                           </div>
+                        ) : (
+                           photos.map((photo, idx) => (
+                              <div
+                                 key={idx}
+                                 className="wr-photoCardH"
+                              >
+                                 <img
+                                    src={photo.url}
+                                    alt={`Experience ${idx + 1}`}
+                                    className="wr-photoThumbH"
+                                 />
+                                 <button
+                                    type="button"
+                                    className="wr-photoRemoveBtnH"
+                                    onClick={() =>
+                                       setPhotos(
+                                          photos.filter(
+                                             (_, i) =>
+                                                i !== idx,
+                                          ),
+                                       )
+                                    }
+                                    title="Remove photo"
+                                 >
+                                    ×
+                                 </button>
+                                 <div className="wr-photoDetailsH">
+                                    <span className="wr-photoCaptionH">
+                                       {photo.type ===
+                                       "Menu Item"
+                                          ? photo.item
+                                          : photo.type}
+                                    </span>
+                                 </div>
+                              </div>
+                           ))
+                        )}
+                     </div>
                   </div>
 
-                  <button
-                     type="button"
-                     className="wr-photoCard"
-                     onClick={() => setOpenPhotoModal(true)}
-                  >
-                     {experiencePhotoUrl ? (
-                        <img
-                           className="wr-photoPreview"
-                           src={experiencePhotoUrl}
-                           alt="Selected Experience"
-                        />
-                     ) : (
-                        <>
-                           <img
-                              className="wr-photoIcon"
-                              src={uploadIcon}
-                              aria-hidden="true"
-                           />
-                           <div className="wr-photoHint">
-                              Add a photo
-                           </div>
-                        </>
-                     )}
-                  </button>
-
+                  {/* --- Submit Button --- */}
+                  {/* Disabled while submitting to prevent double submissions */}
                   <div className="wr-actions">
                      <button
                         type="button"
-                        className="wr-submit"
-                        onClick={() => navigate("/reviews")}
+                        className="wr-cancel"
+                        onClick={onClose}
                      >
-                        Submit review
+                        Cancel
+                     </button>
+                     <button
+                        type="button"
+                        className="wr-submit"
+                        onClick={handleSubmit}
+                        disabled={
+                           rating === 0 || isSubmitting
+                        }
+                     >
+                        {isSubmitting
+                           ? "Submitting..."
+                           : "Submit"}
                      </button>
                   </div>
+
+                  {/* --- Inline error message if submission fails --- */}
+                  {submitError && (
+                     <p
+                        style={{
+                           color: "red",
+                           marginTop: "8px",
+                        }}
+                     >
+                        {submitError}
+                     </p>
+                  )}
                </div>
             </div>
-
-            <Modal
-               open={openPhotoModal}
-               onClose={() => setOpenPhotoModal(false)}
-            >
-               <PhotoUpload
-                  onPhotoSelected={(url) =>
-                     setExperiencePhotoUrl(url)
-                  }
-                  onClose={() => setOpenPhotoModal(false)}
-               />
-            </Modal>
          </div>
+
+         {openPhotoModal && (
+            <div
+               className="wr-photo-overlay"
+               onMouseDown={() => setOpenPhotoModal(false)}
+            >
+               <div
+                  style={{ width: "100%", margin: "auto" }}
+                  onMouseDown={(e) => e.stopPropagation()}
+               >
+                  <PhotoUpload
+                     onPhotoSelected={(photoData) => {
+                        setPhotos([...photos, photoData]);
+                        setOpenPhotoModal(false);
+                     }}
+                     onClose={() =>
+                        setOpenPhotoModal(false)
+                     }
+                  />
+               </div>
+            </div>
+         )}
       </div>
    );
 }

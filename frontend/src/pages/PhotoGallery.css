@@ -12,6 +12,10 @@
    position: relative;
 }
 
+.hero-section::after {
+   display: none;
+}
+
 .hero-overlay {
    position: absolute;
    bottom: 40px;
@@ -74,4 +78,24 @@
 
 .image-grid img:hover {
    transform: scale(1.03);
+}
+
+@media (max-width: 900px) {
+   .image-grid {
+      grid-template-columns: repeat(2, 1fr);
+   }
+}
+
+@media (max-width: 600px) {
+   .image-grid {
+      grid-template-columns: 1fr;
+   }
+
+   .hero-overlay {
+      padding: 20px;
+   }
+
+   .hero-overlay h1 {
+      font-size: 32px;
+   }
 }

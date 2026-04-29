@@ -24,11 +24,9 @@ function FollowedUserCard({
             />
          </div>
          <div className="followed-user-bottom-section">
-            {/* TODO: implement number of reviews 
             <span className="review-count">
-               {followedUser.numReviews} Reviews
+               {followedUser.numReviews ?? 0} Reviews
             </span>
-            */}
             {/* Follow button */}
             <button
                className={`follow-button ${isFollowing ? "following" : ""}`}

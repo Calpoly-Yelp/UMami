@@ -9,22 +9,21 @@ function RestaurantCard({
    onToggle,
    className = "",
 }) {
-   // changes whether the restaurant is bookmarked or no
    const [localIsBookmarked, setLocalIsBookmarked] =
       useState(restaurant.isBookmarked || false);
 
-   // Determine if controlled or uncontrolled
    const isControlled = propIsBookmarked !== undefined;
    const isBookmarked = isControlled
       ? propIsBookmarked
       : localIsBookmarked;
 
-   // logic to change bookmarked status when clicked
    const handleBookmarkToggle = (e) => {
       e.stopPropagation();
+
       if (onToggle) {
          onToggle();
       }
+
       if (!isControlled) {
          setLocalIsBookmarked((prev) => !prev);
       }
@@ -32,7 +31,6 @@ function RestaurantCard({
 
    return (
       <div className={`restaurant-card ${className}`}>
-         {/* Restaurant Image at top of card */}
          <div className="restaurant-image-wrapper">
             <img
                className="restaurant-image"
@@ -46,7 +44,7 @@ function RestaurantCard({
                <h3 className="restaurant-name">
                   {restaurant.name}
                </h3>
-               {/* Bookmark Button */}
+
                <button
                   className={`bookmark-button ${isBookmarked ? "bookmarked" : ""}`}
                   onClick={handleBookmarkToggle}
@@ -64,8 +62,8 @@ function RestaurantCard({
                   />
                </button>
             </div>
+
             <span className="restaurant-rating">
-               {/* Stars are precise up to half a star */}
                {[1, 2, 3, 4, 5].map((star) => {
                   const rating = restaurant.avg_rating || 0;
 
@@ -75,6 +73,7 @@ function RestaurantCard({
                   } else if (rating >= star - 0.5) {
                      starType = "half";
                   }
+
                   return (
                      <span
                         key={star}
@@ -85,7 +84,7 @@ function RestaurantCard({
                   );
                })}
             </span>
-            {/* Display the restaurant location */}
+
             {restaurant.location && (
                <div className="restaurant-tags">
                   <span className="tag">

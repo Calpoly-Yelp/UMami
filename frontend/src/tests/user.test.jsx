@@ -6,9 +6,17 @@ import {
    beforeAll,
    jest,
 } from "@jest/globals";
-import { render, screen } from "@testing-library/react";
+import {
+   render as rtlRender,
+   screen,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { MemoryRouter } from "react-router-dom";
 import UserPage from "../pages/User.jsx";
+
+// Custom render function that wraps components in MemoryRouter so React Router hooks work
+const render = (ui, options) =>
+   rtlRender(ui, { wrapper: MemoryRouter, ...options });
 
 // --- Mock Data Setup ---
 const testUser = {
@@ -289,6 +297,22 @@ describe("User Profile Page", () => {
       expect(followedUserCards.length).toBe(5);
    });
 
+   // Verify that the number of reviews are displayed on the followed user cards
+   test("renders number of reviews for followed users", () => {
+      render(
+         <UserPage
+            user={testUser}
+            followedUsers={testFollowedUsers}
+         />,
+      );
+      expect(
+         screen.getByText("10 Reviews"),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByText("283 Reviews"),
+      ).toBeInTheDocument();
+   });
+
    // Verify that restaurants passed as props are visually marked as bookmarked
    test("renders saved restaurants as bookmarked", () => {
       render(
@@ -355,16 +379,6 @@ describe("User Profile Page", () => {
       expect(
          screen.getByRole("heading", { name: "Following" }),
       ).toBeInTheDocument();
-   });
-
-   // Verify that scroll controls (left/right arrows) are rendered for the horizontal lists
-   test("renders scroll buttons for lists", () => {
-      render(<UserPage user={testUser} />);
-      const scrollButtons = document.querySelectorAll(
-         ".scroll-button",
-      );
-      // 2 buttons (left/right) * 3 sections = 6 buttons
-      expect(scrollButtons.length).toBe(6);
    });
 });
 

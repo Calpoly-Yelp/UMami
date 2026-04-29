@@ -1,97 +1,177 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import {
+   render,
+   screen,
+   fireEvent,
+   waitFor,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
-import WriteReview from "../components/WriteReview";
+import WriteReview from "../components/WriteReview.jsx";
 
-const mockNavigate = jest.fn();
-jest.mock("react-router-dom", () => ({
-   useNavigate: () => mockNavigate,
+// Mock upload helper to prevent real network requests during tests
+jest.mock("../lib/uploadPhoto", () => ({
+   uploadReviewPhoto: jest.fn(() =>
+      Promise.resolve("mock-uploaded-url"),
+   ),
 }));
 
-jest.mock("../components/Modal", () => {
-   return function MockModal({ open, children }) {
-      return open ? (
-         <div data-testid="modal">{children}</div>
-      ) : null;
-   };
-});
-
-jest.mock("../components/PhotoUpload", () => {
+// Mock PhotoUpload so we do not test upload internals here
+jest.mock("../components/PhotoUpload.jsx", () => {
    return function MockPhotoUpload() {
-      return <div>PhotoUpload</div>;
+      return <div>Mock Photo Upload</div>;
    };
 });
 
 describe("WriteReview component", () => {
    beforeEach(() => {
-      mockNavigate.mockClear();
+      jest.clearAllMocks();
+
+      global.fetch = jest.fn(() =>
+         Promise.resolve({
+            ok: true,
+            json: () =>
+               Promise.resolve({ id: 123, rating: 4 }),
+         }),
+      );
    });
 
-   test("renders the title", () => {
-      render(<WriteReview />);
+   test("renders the basic UI elements", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
       expect(
-         screen.getByText(/shake smart review/i),
+         await screen.findByText(/rate your experience/i),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByPlaceholderText(
+            /talk about your experience/i,
+         ),
       ).toBeInTheDocument();
    });
 
    test("allows user to select a star rating", async () => {
-      const user = userEvent.setup();
-      render(<WriteReview />);
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
-      const star3 = screen.getByRole("radio", {
-         name: /3 stars/i,
-      });
-      await user.click(star3);
+      const starButtons =
+         await screen.findAllByRole("radio");
 
-      expect(star3).toHaveAttribute("aria-checked", "true");
+      fireEvent.click(starButtons[3]);
+
+      expect(starButtons[3]).toHaveAttribute(
+         "aria-checked",
+         "true",
+      );
    });
 
    test("allows user to type a review", async () => {
-      const user = userEvent.setup();
-      render(<WriteReview />);
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
-      const textarea = screen.getByPlaceholderText(
+      const textarea = await screen.findByPlaceholderText(
          /talk about your experience/i,
       );
 
-      await user.type(textarea, "Great service");
+      fireEvent.change(textarea, {
+         target: { value: "Great food and service!" },
+      });
 
-      expect(textarea).toHaveValue("Great service");
+      expect(textarea).toHaveValue(
+         "Great food and service!",
+      );
    });
 
-   test("allows user to change the category", async () => {
-      const user = userEvent.setup();
-      render(<WriteReview />);
+   test("allows user to add tags", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "Quality");
+      const input = screen.getByPlaceholderText(
+         /search and add tags/i,
+      );
 
-      expect(select).toHaveValue("Quality");
+      fireEvent.focus(input);
+      fireEvent.change(input, {
+         target: { value: "Vegan" },
+      });
+
+      const option = await screen.findByText("Vegan");
+      fireEvent.mouseDown(option);
+
+      expect(screen.getByText("Vegan")).toBeInTheDocument();
    });
 
-   test("opens photo modal when photo button is clicked", async () => {
-      const user = userEvent.setup();
-      const { container } = render(<WriteReview />);
+   test("renders the photo upload overlay", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
 
-      const photoButton =
-         container.querySelector(".wr-photoCard");
-      await user.click(photoButton);
+      const btn = screen.getByRole("button", {
+         name: /\+ upload photo/i,
+      });
+      fireEvent.click(btn);
 
       expect(
-         screen.getByTestId("modal"),
+         await screen.findByText(/mock photo upload/i),
       ).toBeInTheDocument();
    });
 
-   test("navigates to /reviews when submit button is clicked", async () => {
-      const user = userEvent.setup();
-      render(<WriteReview />);
+   test("submits review and calls callbacks after clicking submit", async () => {
+      const onSuccessMock = jest.fn();
+      const onCloseMock = jest.fn();
+
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+            onSuccess={onSuccessMock}
+            onClose={onCloseMock}
+         />,
+      );
+
+      const starButtons =
+         await screen.findAllByRole("radio");
+      fireEvent.click(starButtons[3]);
+
+      const textarea = await screen.findByPlaceholderText(
+         /talk about your experience/i,
+      );
+
+      fireEvent.change(textarea, {
+         target: { value: "Amazing place!" },
+      });
 
       const submitButton = screen.getByRole("button", {
-         name: /submit review/i,
+         name: /^submit$/i,
       });
-      await user.click(submitButton);
 
-      expect(mockNavigate).toHaveBeenCalledWith("/reviews");
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+         expect(global.fetch).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+         expect(onSuccessMock).toHaveBeenCalled();
+      });
+
+      expect(onCloseMock).toHaveBeenCalled();
    });
 });
