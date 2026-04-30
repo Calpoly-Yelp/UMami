@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-
+import { useNavigate, useParams } from "react-router-dom";
 import "./RestaurantMenu.css";
 
 const displayValue = (value) =>
@@ -9,6 +8,7 @@ const displayValue = (value) =>
       : value;
 
 export default function RestaurantMenu() {
+   const navigate = useNavigate();
    const { id } = useParams();
    const [restaurantName, setRestaurantName] =
       useState("Loading...");
@@ -107,6 +107,15 @@ export default function RestaurantMenu() {
             <div className="hero-overlay" />
 
             <div className="hero-content">
+               <button
+                  type="button"
+                  className="menu-backBtn"
+                  onClick={() =>
+                     navigate(`/restaurants/${id}`)
+                  }
+               >
+                  Back to {restaurantName}
+               </button>
                <h1 className="hero-title">
                   {restaurantName}
                </h1>

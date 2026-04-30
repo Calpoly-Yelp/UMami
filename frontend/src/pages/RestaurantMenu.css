@@ -2,10 +2,18 @@
    min-height: 100vh;
    background: linear-gradient(
       to bottom,
-      var(--color-bg-top) 240px,
-      var(--color-bg-bottom) 100%
+      #f5f5f2 240px,
+      #e4e3d3 100%
    );
-   color: var(--color-text);
+   color: #1b1b1b;
+   font-family:
+      Poppins,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      Arial,
+      sans-serif;
 }
 
 .menu-hero {
@@ -77,7 +85,7 @@
    margin: 0 0 15px;
    font-size: 18px;
    font-weight: 800;
-   color: var(--color-text);
+   color: #1b1b1b;
 }
 
 .menu-categories {
@@ -93,8 +101,8 @@
    cursor: pointer;
    font-weight: 600;
    font-size: 16px;
-   color: var(--color-text-soft);
-   border-bottom: 1px solid var(--color-text-soft);
+   color: #8e9089;
+   border-bottom: 1px solid #8e9089;
    transition: color 0.2s ease;
 }
 
@@ -102,14 +110,12 @@
    border-bottom: none;
 }
 
-.menu-categories li:hover,
-.menu-categories li.is-active {
-   color: var(--color-text);
+.menu-categories li:hover {
+   color: #1b1b1b;
 }
 
-.menu-categories li.is-disabled {
-   color: #8e9089;
-   cursor: default;
+.menu-categories li.is-active {
+   color: #1b1b1b;
 }
 
 .menu-section {
@@ -118,7 +124,7 @@
 }
 
 .menu-section-title {
-   color: var(--color-text);
+   color: #1b1b1b;
    margin: 0 0 10px 0;
    padding: 0;
    font-size: 20px;
@@ -186,57 +192,21 @@
 
 .menu-table tbody tr:hover td {
    background-color: rgba(0, 0, 0, 0.04);
-   color: var(--color-text);
-}
-
-.menu-empty {
-   margin: 0;
-   color: #54585a;
-   font-size: 15px;
-   font-weight: 600;
+   color: #1b1b1b;
 }
 
 .modal-content {
-   background: linear-gradient(
-      to bottom,
-      var(--color-bg-top),
-      var(--color-bg-bottom)
-   );
+   background: linear-gradient(to bottom, #f5f5f2, #e4e3d3);
    padding: 30px;
-   border-radius: var(--radius-lg);
+   border-radius: 16px;
    max-width: 400px;
    width: 90%;
    position: relative;
    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-<<<<<<< HEAD .modal-close {
-   position: absolute;
-   top: 15px;
-   right: 15px;
-   background: transparent;
-   border: none;
-   font-size: 28px;
-   cursor: pointer;
-   color: var(--color-text-soft);
-   line-height: 1;
-   transition: color 0.2s ease;
-}
-
-.modal-close:hover {
-   color: var(--color-text);
-}
-
-.modal-title {
-   margin: 0 0 5px;
-   font-size: 24px;
-   font-weight: 800;
-   color: var(--color-text);
-}
-
-=======>>>>>>>a633e2dc06c84e956f4ae759f7d1faa085ae2d07
-   .modal-portion {
-   color: var(--color-text-soft);
+.modal-portion {
+   color: #8e9089;
    margin-bottom: 20px;
    font-weight: 600;
    font-size: 14px;
@@ -254,7 +224,7 @@
    padding-bottom: 12px;
    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
    font-weight: 600;
-   color: var(--color-text);
+   color: #1b1b1b;
    font-size: 15px;
 }
 
@@ -263,14 +233,69 @@
    padding-bottom: 0;
 }
 
-@media (max-width: 900px) {
-   .menu-content {
-      grid-template-columns: 1fr;
-      gap: 24px;
-   }
+/* Back Button */
 
-   .menu-sidebar {
-      position: static;
-      padding: 0;
-   }
+.menu-backRow {
+   padding: 24px 32px 16px;
+}
+
+.menu-backBtn {
+   background: none;
+   border: none;
+   padding: 0;
+   font: inherit;
+   cursor: pointer;
+
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+
+   color: #ffffff;
+   font-weight: 600;
+
+   transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+}
+
+.menu-backBtn::before {
+   content: "←";
+   display: inline-block;
+   transform: translateX(0);
+   transition: transform 0.2s ease;
+}
+
+.menu-backBtn:hover {
+   transform: translateY(-1px);
+   opacity: 0.85;
+}
+
+.menu-backBtn:hover::before {
+   transform: translateX(-4px);
+}
+
+.hero-title--clickable {
+   cursor: pointer;
+   display: inline-flex;
+   align-items: center;
+   gap: 8px;
+   transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+}
+
+.hero-title--clickable::after {
+   opacity: 0;
+   transform: translateX(6px);
+   transition: all 0.2s ease;
+}
+
+.hero-title--clickable:hover {
+   transform: translateY(-2px);
+   opacity: 0.9;
+}
+
+.hero-title--clickable:hover::after {
+   opacity: 1;
+   transform: translateX(0);
 }
