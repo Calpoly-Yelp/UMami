@@ -1,5 +1,5 @@
 .user-page {
-   min-height: 100vh;
+   height: calc(100vh - 80px);
    width: 100%;
    background: var(--color-bg-page);
    overflow: hidden;
@@ -13,8 +13,8 @@
 }
 
 .user-content {
-   min-height: 100vh;
-   overflow: hidden;
+   height: 100%;
+   overflow-y: hidden;
 }
 
 .user-info {
@@ -80,7 +80,7 @@
 
 .user-activity {
    flex: 1;
-   min-height: 100vh;
+   height: 100%;
    overflow-y: auto;
    font-size: 24px;
    color: #333;
@@ -202,12 +202,15 @@
 
 @media (max-width: 900px) {
    .user-page {
+      height: auto;
+      min-height: 100vh;
       overflow: auto;
    }
 
    .user-content {
       flex-direction: column;
-      min-height: auto;
+      height: auto;
+      overflow-y: visible;
    }
 
    .user-info {
@@ -232,6 +235,7 @@
    }
 
    .user-activity {
+      height: auto;
       min-height: auto;
       overflow: visible;
       padding-bottom: 24px;
