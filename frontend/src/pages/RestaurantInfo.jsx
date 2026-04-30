@@ -10,6 +10,7 @@ import ReviewCard from "../components/ReviewCard";
 import Modal from "../components/Modal";
 import WriteReview from "../components/WriteReview";
 import "./RestaurantInfo.css";
+import { Camera, PencilSimple, Bookmark, Eye, Clock, CaretLeft, CaretRight} from "@phosphor-icons/react";
 
 export default function Review() {
    const navigate = useNavigate();
@@ -28,6 +29,10 @@ export default function Review() {
    const [isFilterMenuOpen, setIsFilterMenuOpen] =
       useState(false);
    const [currentPage, setCurrentPage] = useState(1);
+   const [canScrollMenu, setCanScrollMenu] = useState({
+   left: false,
+   right: false,
+   });
 
    // Retrieve the actual logged-in user from localStorage
    const [currentUser] = useState(() => {
@@ -96,6 +101,12 @@ export default function Review() {
             "/gallery/ss_food_2.jpg",
             "/gallery/ss_food_3.jpg",
             "/gallery/ss_food_4.jpg",
+            "/gallery/ss_food_5.jpg", 
+            "/gallery/ss_ambience_1.jpg",
+            "/gallery/ss_ambience_2.jpg",
+            "/gallery/ss_ambience_3.jpg",
+            "/gallery/ss_ambience_4.jpg",
+            "/gallery/ss_ambience_5.jpg"
          ],
       };
    }, [restaurantInfo]);
@@ -319,6 +330,65 @@ export default function Review() {
          });
    };
 
+   // Scroll through photos
+
+   const checkMenuScroll = useCallback(() => {
+   const el = document.getElementById("menu-carousel-list");
+   if (!el) return;
+
+   setCanScrollMenu((prev) => {
+      const next = {
+         left: el.scrollLeft > 0,
+         right:
+            Math.ceil(el.scrollLeft + el.clientWidth) <
+            el.scrollWidth,
+      };
+
+      if (
+         prev.left === next.left &&
+         prev.right === next.right
+      ) {
+         return prev;
+      }
+
+      return next;
+   });
+}, []);
+
+useEffect(() => {
+      const frame = requestAnimationFrame(() => {
+         checkMenuScroll();
+      });
+
+      const handleResize = () => {
+         checkMenuScroll();
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+         cancelAnimationFrame(frame);
+         window.removeEventListener("resize", handleResize);
+      };
+   }, [checkMenuScroll, restaurantInfo]);
+
+const scrollMenuCarousel = (direction) => {
+   const container = document.getElementById(
+      "menu-carousel-list",
+   );
+
+   if (container) {
+      const scrollAmount = 300;
+      container.scrollBy({
+         left:
+            direction === "left"
+               ? -scrollAmount
+               : scrollAmount,
+         behavior: "smooth",
+      });
+   }
+};
+
    return (
       <div className="review">
          {/* ── Hero Banner ── */}
@@ -342,13 +412,12 @@ export default function Review() {
                >
                   Back to Restaurants
                </button>
+               
                <h1 className="review__title">
                   {restaurant.name}
                </h1>
 
-               <div className="review__metaRow">
-                  <StarRow value={restaurant.rating} />
-               </div>
+               <StarRow value={restaurant.rating} className="review__starsLarge" />
 
                <div className="review__chips">
                   {restaurant.tags.map((t) => (
@@ -366,8 +435,8 @@ export default function Review() {
                   type="button"
                   onClick={() => navigate("/gallery")}
                >
-                  <span className="review__photosDot" />{" "}
-                  view photos
+                  <Camera size={16} weight="bold" />
+                        <span>view photos</span>
                </button>
             </div>
          </section>
@@ -418,40 +487,59 @@ export default function Review() {
                            setIsWriteReviewOpen(true);
                         }}
                      >
-                        ✎ <span>write review</span>
+                        <PencilSimple size={16} weight="bold" />
+                        <span>write review</span>
                      </button>
                      <button className="pillBtn">
-                        📷 <span>add photos</span>
-                     </button>
-                     <button className="pillBtn">
-                        🔖 <span>saved</span>
+                        <Camera size={16} weight="bold" />
+                        <span>add photos</span>
                      </button>
                   </div>
                </div>
 
                <h2 className="review__h2">Menu</h2>
 
-               <div className="review__menuRow">
-                  {restaurant.menuImages.map((src, idx) => (
-                     <div
-                        key={idx}
-                        className="review__menuImgWrap"
+               <div className="review__carouselContainer">
+                  {canScrollMenu.left && (
+                     <button
+                        className="carousel-arrow left"
+                        onClick={() => scrollMenuCarousel("left")}
+                        aria-label="Scroll menu images left"
                      >
-                        <img
-                           className="review__menuImg"
-                           src={src}
-                           alt={`menu ${idx + 1}`}
-                           loading="lazy"
-                        />
-                     </div>
-                  ))}
-                  <button
-                     className="review__carouselNext"
-                     aria-label="Next"
+                        <CaretLeft size={20} weight="bold" />
+                     </button>
+                  )}
+
+                  <div
+                     className="review__menuRow"
+                     id="menu-carousel-list"
+                     onScroll={checkMenuScroll}
                   >
-                     ›
-                  </button>
-               </div>
+                     {restaurant.menuImages.map((src, idx) => (
+                        <div
+                           key={idx}
+                           className="review__menuImgWrap"
+                        >
+                           <img
+                              className="review__menuImg"
+                              src={src}
+                              alt={`menu ${idx + 1}`}
+                              loading="lazy"
+                           />
+                        </div>
+                     ))}
+                  </div>
+
+   {canScrollMenu.right && (
+      <button
+         className="carousel-arrow right"
+         onClick={() => scrollMenuCarousel("right")}
+         aria-label="Scroll menu images right"
+      >
+         <CaretRight size={20} weight="bold" />
+      </button>
+   )}
+</div>
 
                <button
                   className="pillBtn pillBtn--ghost"
@@ -459,7 +547,8 @@ export default function Review() {
                      navigate(`/restaurants/${id}/menu`)
                   }
                >
-                  👁 view menu and nutrition
+                  <Eye size={16} weight="bold" />
+                  <span>view menu and nutrition</span>
                </button>
             </section>
 
@@ -472,7 +561,7 @@ export default function Review() {
                   <div className="review__hours">
                      <div className="review__subHeader">
                         <span className="review__subIcon">
-                           🕒
+                           <Clock size={18} weight="fill" />
                         </span>
                         <span className="review__subTitle">
                            Hours
@@ -607,7 +696,8 @@ export default function Review() {
                               setIsWriteReviewOpen(true);
                            }}
                         >
-                           ✎ write review
+                           <PencilSimple size={16} weight="bold" />
+                           <span>write review</span>
                         </button>
                         <div
                            style={{ position: "relative" }}
@@ -873,11 +963,11 @@ export default function Review() {
 }
 
 // Renders a row of 5 stars filled based on a numeric rating value
-function StarRow({ value }) {
+function StarRow({ value, className = "" }) {
    const full = Math.floor(value);
    const half = value - full >= 0.5;
    return (
-      <div className="stars" aria-label={`Rating ${value}`}>
+      <div className={`stars ${className}`} aria-label={`Rating ${value}`}>
          {Array.from({ length: 5 }).map((_, i) => {
             const isFull = i < full;
             const isHalf = i === full && half;

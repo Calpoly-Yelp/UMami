@@ -194,11 +194,17 @@
    box-shadow: 0 10px 22px rgba(243, 107, 43, 0.25);
 }
 
-.review__photosDot {
-   width: 12px;
-   height: 12px;
-   border-radius: 999px;
-   background: #000;
+.review__photosBtn {
+   transition:
+      background 0.15s ease,
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
+}
+
+.review__photosBtn:hover {
+   background: #e65f20; /* slightly darker orange */
+   transform: translateY(-1px);
+   box-shadow: 0 12px 26px rgba(243, 107, 43, 0.3);
 }
 
 /* tabs container */
@@ -339,14 +345,6 @@
    border-color: rgba(0, 0, 0, 0.08);
 }
 
-.review__menuRow {
-   position: relative;
-   display: flex;
-   gap: 14px;
-   overflow: hidden;
-   padding: 10px 44px 10px 0;
-}
-
 .review__menuImgWrap {
    width: 170px;
    height: 110px;
@@ -400,7 +398,7 @@
    opacity: 0.9;
 }
 .review__subTitle {
-   font-size: 14px;
+   font-size: 18px;
 }
 
 .review__hoursList {
@@ -928,4 +926,83 @@
 
 .review__sectionHeaderRow {
    margin-bottom: 20px;
+}
+
+/* Stars */ 
+.review__starsLarge {
+   margin: 6px 0 10px;
+   gap: 6px;
+}
+
+.review__starsLarge .star {
+   font-size: 22px; /* bigger */
+   color: rgba(255, 255, 255, 0.4);
+}
+
+.review__starsLarge .star.is-full {
+   color: #f6c04b;
+   text-shadow: 0 0 10px rgba(246, 192, 75, 0.5);
+}
+
+.review__starsLarge .star.is-half {
+   background: linear-gradient(
+      90deg,
+      #f6c04b 50%,
+      rgba(255, 255, 255, 0.4) 50%
+   );
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+}
+
+.review__carouselContainer {
+   position: relative;
+}
+
+.review__menuRow {
+   display: flex;
+   gap: 14px;
+   overflow-x: auto;
+   overflow-y: hidden;
+   scroll-behavior: smooth;
+   padding: 10px 0;
+   scrollbar-width: none;
+}
+
+.review__menuRow::-webkit-scrollbar {
+   display: none;
+}
+
+.carousel-arrow {
+   position: absolute;
+   top: 50%;
+   transform: translateY(-50%);
+   width: 36px;
+   height: 36px;
+   border-radius: 999px;
+   border: 1px solid rgba(0, 0, 0, 0.1);
+   background: rgba(255, 255, 255, 0.95);
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 2;
+   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+   transition:
+      transform 0.12s ease,
+      background 0.15s ease,
+      box-shadow 0.15s ease;
+}
+
+.carousel-arrow.left {
+   left: -18px;
+}
+
+.carousel-arrow.right {
+   right: -18px;
+}
+
+.carousel-arrow:hover {
+   background: #fff;
+   transform: translateY(-50%) scale(1.04);
+   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
