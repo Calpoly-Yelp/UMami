@@ -9,15 +9,16 @@ export default function SignIn() {
 
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
+
    const [error, setError] = useState("");
    const [loading, setLoading] = useState(false);
 
    const handleSignIn = async (e) => {
       e.preventDefault();
-      setError("");
 
       try {
          setLoading(true);
+         setError("");
 
          const { data, error } =
             await supabase.auth.signInWithPassword({
@@ -25,7 +26,9 @@ export default function SignIn() {
                password,
             });
 
-         if (error) throw error;
+         if (error) {
+            throw error;
+         }
 
          if (!data.user) {
             throw new Error(
@@ -33,9 +36,33 @@ export default function SignIn() {
             );
          }
 
+         console.log("Supabase user:", data.user);
+
+         const response = await fetch(
+            `http://localhost:4000/api/users/${data.user.id}`,
+         );
+
+         const body = await response
+            .json()
+            .catch(() => ({}));
+
+         if (!response.ok) {
+            console.error("Backend error:", body);
+            throw new Error(
+               body.error ||
+                  `Failed to fetch user profile (${response.status})`,
+            );
+         }
+
+         console.log("Fetched user data:", body);
+
+         localStorage.setItem("user", JSON.stringify(body));
+
+         console.log("Saved to localStorage");
+
          navigate("/restaurants");
       } catch (err) {
-         console.error("Login failed", err);
+         console.error("Login failed:", err);
          setError(err.message || "Login failed");
       } finally {
          setLoading(false);
@@ -56,6 +83,8 @@ export default function SignIn() {
                role="dialog"
                aria-label="Sign in"
             >
+               <div className="auth__brand">umami</div>
+
                <h1 className="auth__title">
                   Sign into your account
                </h1>
@@ -84,7 +113,7 @@ export default function SignIn() {
                      <input
                         className="auth__input"
                         type="email"
-                        placeholder="Email"
+                        placeholder="email@domain.com"
                         autoComplete="email"
                         value={email}
                         onChange={(e) =>
@@ -114,7 +143,7 @@ export default function SignIn() {
                      <input
                         className="auth__input"
                         type="password"
-                        placeholder="Password"
+                        placeholder="password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) =>
@@ -133,11 +162,11 @@ export default function SignIn() {
                      type="submit"
                      disabled={loading}
                   >
-                     {loading ? "Signing in..." : "Sign In"}
+                     {loading ? "Signing In..." : "Sign In"}
                   </button>
 
                   <div className="auth__divider">
-                     <span>Don’t have an account?</span>
+                     <span>Don't have an account?</span>
                   </div>
 
                   <button

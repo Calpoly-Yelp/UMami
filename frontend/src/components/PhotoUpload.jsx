@@ -5,8 +5,10 @@ import uploadIcon from "../assets/upload-icon.svg";
 function PhotoUpload({ onPhotoSelected, onClose }) {
    const inputRef = useRef(null);
    const [previewUrl, setPreviewUrl] = useState(null);
+   const [selectedFile, setSelectedFile] = useState(null);
    const [photoType, setPhotoType] = useState("Menu Item");
    const [menuItem, setMenuItem] = useState("Menu Item");
+   const [error, setError] = useState(null);
 
    const handlePick = () => {
       inputRef.current?.click();
@@ -16,18 +18,23 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewUrl(imageUrl);
-
-      onPhotoSelected?.(imageUrl);
-      onClose?.();
+      // Show local preview immediately
+      const localUrl = URL.createObjectURL(file);
+      setPreviewUrl(localUrl);
+      setError(null);
+      setSelectedFile(file);
    };
 
    const handleSubmit = () => {
-      console.log("Submitting:");
-      console.log("Photo Type:", photoType);
-      console.log("Menu Item:", menuItem);
-      console.log("Image URL:", previewUrl);
+      if (selectedFile) {
+         onPhotoSelected?.({
+            file: selectedFile,
+            url: previewUrl,
+            type: photoType,
+            item: menuItem,
+         });
+         onClose?.();
+      }
    };
 
    return (
@@ -36,80 +43,109 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
             Shake Smart Photo Upload
          </h1>
 
-         {/* Upload Card */}
-         <div
-            className="upload-card"
-            onClick={handlePick}
-            role="button"
-            tabIndex={0}
-         >
-            <input
-               ref={inputRef}
-               className="file-input"
-               type="file"
-               accept="image/*"
-               onChange={handleFileChange}
-            />
+         <div className="photo-layout">
+            <div className="photo-left">
+               {/* Upload Card */}
+               <div
+                  className="upload-card"
+                  onClick={handlePick}
+                  role="button"
+                  tabIndex={0}
+               >
+                  <input
+                     ref={inputRef}
+                     className="file-input"
+                     type="file"
+                     accept="image/*"
+                     onChange={handleFileChange}
+                  />
 
-            {previewUrl ? (
-               <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="preview-img"
-               />
-            ) : (
-               <img
-                  className="upload-icon"
-                  src={uploadIcon}
-                  alt="Upload"
-               />
-            )}
-
-            <p>Drag and drop / Select photo here</p>
-         </div>
-
-         {/* Dropdown Row */}
-         <div className="form-row">
-            <div className="form-group">
-               <label>What is this a photo of?</label>
-               <div className="select-wrap">
-                  <select
-                     value={photoType}
-                     onChange={(e) =>
-                        setPhotoType(e.target.value)
-                     }
-                  >
-                     <option>Menu Item</option>
-                     <option>Vibe of the Restaurant</option>
-                     <option>Other</option>
-                  </select>
+                  {previewUrl ? (
+                     <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="preview-img"
+                     />
+                  ) : (
+                     <img
+                        className="upload-icon"
+                        src={uploadIcon}
+                        alt="Upload"
+                     />
+                  )}
+                  <p className="upload-text">
+                     Drag and drop / Select photo here
+                  </p>
                </div>
+               {error && (
+                  <p
+                     style={{
+                        color: "red",
+                        marginTop: "10px",
+                        textAlign: "center",
+                     }}
+                  >
+                     {error}
+                  </p>
+               )}
             </div>
 
-            <div className="form-group">
-               <label>What menu item is this?</label>
-               <div className="select-wrap">
-                  <select
-                     value={menuItem}
-                     onChange={(e) =>
-                        setMenuItem(e.target.value)
-                     }
+            <div className="photo-right">
+               <div className="form-fields">
+                  <div className="form-group">
+                     <label>What is this a photo of?</label>
+                     <div className="select-wrap">
+                        <select
+                           value={photoType}
+                           onChange={(e) =>
+                              setPhotoType(e.target.value)
+                           }
+                        >
+                           <option>Menu Item</option>
+                           <option>
+                              Vibe of the Restaurant
+                           </option>
+                           <option>Other</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  {photoType === "Menu Item" && (
+                     <div className="form-group">
+                        <label>
+                           What menu item is this?
+                        </label>
+                        <div className="select-wrap">
+                           <select
+                              value={menuItem}
+                              onChange={(e) =>
+                                 setMenuItem(e.target.value)
+                              }
+                           >
+                              <option>Menu Item</option>
+                           </select>
+                        </div>
+                     </div>
+                  )}
+               </div>
+
+               {/* Submit Button */}
+               <div className="actions">
+                  <button
+                     className="cancel-btn"
+                     onClick={onClose}
                   >
-                     <option>Menu Item</option>
-                  </select>
+                     Cancel
+                  </button>
+                  <button
+                     className="submit-btn"
+                     onClick={handleSubmit}
+                     disabled={!selectedFile}
+                  >
+                     Submit
+                  </button>
                </div>
             </div>
-         </div>
-
-         {/* Submit Button */}
-         <div className="actions">
-            <button
-               className="submit-btn"
-               onClick={handleSubmit}
-               disabled={!previewUrl}
-            >
-               Submit Photo
-            </button>
          </div>
       </div>
    );

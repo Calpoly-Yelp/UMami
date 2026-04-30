@@ -3,7 +3,6 @@ import ReviewCard from "../components/ReviewCard.jsx";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import FollowedUserCard from "../components/FollowUserCard.jsx";
 import {
-   UserCheck,
    CaretLeft,
    CaretRight,
 } from "@phosphor-icons/react";
@@ -16,6 +15,7 @@ import "./User.css";
 
 // This is our user page layout
 function User({
+   session,
    user: initialUser,
    reviews: initialReviews,
    restaurants: initialRestaurants,
@@ -35,24 +35,6 @@ function User({
       }
    };
 
-   // Logic to scroll the horizontal lists
-   const scrollContainer = (containerId, direction) => {
-      const container = document.querySelector(
-         `#${containerId} .review-list, #${containerId} .restaurant-list, #${containerId} .following-list`,
-      );
-
-      if (container) {
-         const scrollAmount = 300; // Approximate width of a card + gap
-         container.scrollBy({
-            left:
-               direction === "left"
-                  ? -scrollAmount
-                  : scrollAmount,
-            behavior: "smooth",
-         });
-      }
-   };
-
    // Data Extraction from DB
    const [user, setUser] = useState(
       initialUser || {
@@ -63,7 +45,13 @@ function User({
       },
    );
    const [reviews, setReviews] = useState(
-      initialReviews || [],
+      initialReviews
+         ? [...initialReviews].sort(
+              (a, b) =>
+                 (b.date ? new Date(b.date).getTime() : 0) -
+                 (a.date ? new Date(a.date).getTime() : 0),
+           )
+         : [],
    );
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
@@ -95,13 +83,70 @@ function User({
    );
    const followingIdsRef = useRef(new Set());
 
+   // State to track whether a carousel can scroll left or right
+   const [canScroll, setCanScroll] = useState({
+      reviews: { left: false, right: false },
+      restaurants: { left: false, right: false },
+      following: { left: false, right: false },
+   });
+
+   // Checks the DOM properties of the carousel to see if there is scrollable space
+   const checkScroll = (id) => {
+      const el = document.getElementById(`${id}-list`);
+      if (!el) return;
+      setCanScroll((prev) => ({
+         ...prev,
+         [id]: {
+            left: el.scrollLeft > 0,
+            right:
+               Math.ceil(el.scrollLeft + el.clientWidth) <
+               el.scrollWidth,
+         },
+      }));
+   };
+
+   // Re-evaluate scroll capabilities whenever the data changes or window resizes
    useEffect(() => {
-      followingIdsRef.current = followingIds;
-   }, [followingIds]);
+      checkScroll("reviews");
+      checkScroll("restaurants");
+      checkScroll("following");
+
+      const handleResize = () => {
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () =>
+         window.removeEventListener("resize", handleResize);
+   }, [reviews, restaurants, following]);
+
+   // Logic to scroll the horizontal lists
+   const scrollContainer = (containerId, direction) => {
+      const container = document.getElementById(
+         `${containerId}-list`,
+      );
+
+      if (container) {
+         const scrollAmount = 300; // Approximate width of a card + gap
+         container.scrollBy({
+            left:
+               direction === "left"
+                  ? -scrollAmount
+                  : scrollAmount,
+            behavior: "smooth",
+         });
+      }
+   };
 
    useEffect(() => {
       bookmarkedIdsRef.current = bookmarkedIds;
    }, [bookmarkedIds]);
+
+   useEffect(() => {
+      followingIdsRef.current = followingIds;
+   }, [followingIds]);
 
    useEffect(() => {
       // check if we are in testing mode
@@ -121,13 +166,46 @@ function User({
       //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
-            const storedUser = JSON.parse(
-               localStorage.getItem("user"),
-            );
+            const sessionUser = session?.user || null;
+            const storedUserRaw =
+               localStorage.getItem("user");
+            const storedUser = storedUserRaw
+               ? JSON.parse(storedUserRaw)
+               : null;
 
             // assign user data to object
-            const userData =
-               storedUser || initialUser || {};
+            const userData = {
+               ...(storedUser || {}),
+               ...(initialUser || {}),
+               id:
+                  sessionUser?.id ||
+                  initialUser?.id ||
+                  storedUser?.id ||
+                  "",
+               name:
+                  initialUser?.name ||
+                  storedUser?.name ||
+                  sessionUser?.user_metadata?.name ||
+                  "Anonymous",
+               avatar_url:
+                  initialUser?.avatar_url ||
+                  storedUser?.avatar_url ||
+                  sessionUser?.user_metadata?.avatar_url ||
+                  "",
+               is_verified:
+                  initialUser?.is_verified ||
+                  storedUser?.is_verified ||
+                  false,
+            };
+
+            if (!userData.id) {
+               setRestaurants([]);
+               setBookmarkedIds(new Set());
+               setFollowing([]);
+               setFollowingIds(new Set());
+               return;
+            }
+
             if (userData.id) {
                setUser({
                   id: userData.id,
@@ -172,9 +250,10 @@ function User({
                console.log("Fetched reviews:", reviewsData);
 
                // filter reviews for this user
-               const userReviews = reviewsData.map(
-                  (review) => ({
+               const userReviews = reviewsData
+                  .map((review) => ({
                      id: review.id,
+                     user_id: userData.id,
                      avatar_url: userData.avatar_url || "",
                      userName: userData.name || "Anonymous",
                      is_verified:
@@ -184,8 +263,16 @@ function User({
                      comments: review.comment || "",
                      tags: review.tags || [],
                      photos: review.photo_urls || [],
-                  }),
-               );
+                  }))
+                  .sort(
+                     (a, b) =>
+                        (b.date
+                           ? new Date(b.date).getTime()
+                           : 0) -
+                        (a.date
+                           ? new Date(a.date).getTime()
+                           : 0),
+                  );
 
                setReviews(userReviews);
             } else {
@@ -267,6 +354,7 @@ function User({
       };
       fetchData();
    }, [
+      session,
       initialUser,
       initialReviews,
       initialRestaurants,
@@ -396,6 +484,31 @@ function User({
       });
    };
 
+   // Deletes a review from the backend and updates local state
+   const handleDeleteReview = async (reviewId) => {
+      try {
+         const response = await fetch(
+            `http://localhost:4000/api/reviews/${reviewId}`,
+            {
+               method: "DELETE",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ user_id: user.id }),
+            },
+         );
+         if (response.ok) {
+            setReviews((prev) =>
+               prev.filter((r) => r.id !== reviewId),
+            );
+         } else {
+            console.error("Failed to delete review");
+         }
+      } catch (error) {
+         console.error("Error deleting review:", error);
+      }
+   };
+
    return (
       <div className="user-page">
          {/* Content Section */}
@@ -468,9 +581,11 @@ function User({
                <div className="reviews" id="reviews">
                   <div className="activity-header">
                      <h2>My Reviews</h2>
-                     <div className="scroll-buttons-container">
+                  </div>
+                  <div className="carousel-container">
+                     {canScroll.reviews.left && (
                         <button
-                           className="scroll-button"
+                           className="carousel-arrow left"
                            onClick={() =>
                               scrollContainer(
                                  "reviews",
@@ -479,12 +594,42 @@ function User({
                            }
                         >
                            <CaretLeft
-                              size={18}
+                              size={24}
                               weight="bold"
                            />
                         </button>
+                     )}
+                     <div
+                        className="review-list"
+                        id="reviews-list"
+                        onScroll={() =>
+                           checkScroll("reviews")
+                        }
+                     >
+                        {/* map all the users reviews */}
+                        {reviews.length > 0 ? (
+                           reviews.map((review, index) => (
+                              <ReviewCard
+                                 key={
+                                    review.id ??
+                                    `${review.date ?? "review"}-${index}`
+                                 }
+                                 review={review}
+                                 currentUserId={user.id}
+                                 onDelete={
+                                    handleDeleteReview
+                                 }
+                              />
+                           ))
+                        ) : (
+                           <p className="no-content-message">
+                              No reviews yet.
+                           </p>
+                        )}
+                     </div>
+                     {canScroll.reviews.right && (
                         <button
-                           className="scroll-button"
+                           className="carousel-arrow right"
                            onClick={() =>
                               scrollContainer(
                                  "reviews",
@@ -493,28 +638,10 @@ function User({
                            }
                         >
                            <CaretRight
-                              size={18}
+                              size={24}
                               weight="bold"
                            />
                         </button>
-                     </div>
-                  </div>
-                  <div className="review-list">
-                     {/* map all the users reviews */}
-                     {reviews.length > 0 ? (
-                        reviews.map((review, index) => (
-                           <ReviewCard
-                              key={
-                                 review.id ??
-                                 `${review.date ?? "review"}-${index}`
-                              }
-                              review={review}
-                           />
-                        ))
-                     ) : (
-                        <p className="no-content-message">
-                           No reviews yet.
-                        </p>
                      )}
                   </div>
                </div>
@@ -525,9 +652,11 @@ function User({
                >
                   <div className="activity-header">
                      <h2>My Saved Restaurants</h2>
-                     <div className="scroll-buttons-container">
+                  </div>
+                  <div className="carousel-container">
+                     {canScroll.restaurants.left && (
                         <button
-                           className="scroll-button"
+                           className="carousel-arrow left"
                            onClick={() =>
                               scrollContainer(
                                  "restaurants",
@@ -536,12 +665,62 @@ function User({
                            }
                         >
                            <CaretLeft
-                              size={18}
+                              size={24}
                               weight="bold"
                            />
                         </button>
+                     )}
+                     <div
+                        className="restaurant-list"
+                        id="restaurants-list"
+                        onScroll={() =>
+                           checkScroll("restaurants")
+                        }
+                     >
+                        {/* map all the users favorited restaurants */}
+                        {restaurants.length > 0 ? (
+                           restaurants.map(
+                              (restaurant, index) => (
+                                 <div
+                                    key={
+                                       restaurant.id ??
+                                       `${restaurant.name ?? "restaurant"}-${index}`
+                                    }
+                                    onClick={() =>
+                                       navigate(
+                                          `/restaurants/${restaurant.id}`,
+                                       )
+                                    }
+                                    style={{
+                                       cursor: "pointer",
+                                    }}
+                                 >
+                                    <RestaurantCard
+                                       restaurant={
+                                          restaurant
+                                       }
+                                       isBookmarked={bookmarkedIds.has(
+                                          restaurant.id,
+                                       )}
+                                       onToggle={() =>
+                                          handleBookmarkToggle(
+                                             restaurant.id,
+                                          )
+                                       }
+                                       className="compact"
+                                    />
+                                 </div>
+                              ),
+                           )
+                        ) : (
+                           <p className="no-content-message">
+                              No saved restaurants yet.
+                           </p>
+                        )}
+                     </div>
+                     {canScroll.restaurants.right && (
                         <button
-                           className="scroll-button"
+                           className="carousel-arrow right"
                            onClick={() =>
                               scrollContainer(
                                  "restaurants",
@@ -550,48 +729,10 @@ function User({
                            }
                         >
                            <CaretRight
-                              size={18}
+                              size={24}
                               weight="bold"
                            />
                         </button>
-                     </div>
-                  </div>
-                  <div className="restaurant-list">
-                     {/* map all the users favorited restaurants */}
-                     {restaurants.length > 0 ? (
-                        restaurants.map(
-                           (restaurant, index) => (
-                              <div
-                                 key={
-                                    restaurant.id ??
-                                    `${restaurant.name ?? "restaurant"}-${index}`
-                                 }
-                                 onClick={() =>
-                                    navigate(
-                                       `/restaurants/${restaurant.id}`,
-                                    )
-                                 }
-                                 className="restaurant-card-click"
-                              >
-                                 <RestaurantCard
-                                    restaurant={restaurant}
-                                    isBookmarked={bookmarkedIds.has(
-                                       restaurant.id,
-                                    )}
-                                    onToggle={() =>
-                                       handleBookmarkToggle(
-                                          restaurant.id,
-                                       )
-                                    }
-                                    className="compact"
-                                 />
-                              </div>
-                           ),
-                        )
-                     ) : (
-                        <p className="no-content-message">
-                           No saved restaurants yet.
-                        </p>
                      )}
                   </div>
                </div>
@@ -599,10 +740,11 @@ function User({
                <div className="following" id="following">
                   <div className="activity-header">
                      <h2>Following</h2>
-                     <UserCheck size={32} />
-                     <div className="scroll-buttons-container">
+                  </div>
+                  <div className="carousel-container">
+                     {canScroll.following.left && (
                         <button
-                           className="scroll-button"
+                           className="carousel-arrow left"
                            onClick={() =>
                               scrollContainer(
                                  "following",
@@ -611,12 +753,50 @@ function User({
                            }
                         >
                            <CaretLeft
-                              size={18}
+                              size={24}
                               weight="bold"
                            />
                         </button>
+                     )}
+                     <div
+                        className="following-list"
+                        id="following-list"
+                        onScroll={() =>
+                           checkScroll("following")
+                        }
+                     >
+                        {/* map all the users followed accounts */}
+                        {following.length === 0 ? (
+                           <p className="no-content-message">
+                              Not following anyone yet.
+                           </p>
+                        ) : (
+                           following.map(
+                              (followedUser, index) => (
+                                 <FollowedUserCard
+                                    key={
+                                       followedUser.id ??
+                                       `${followedUser.name ?? "user"}-${index}`
+                                    }
+                                    followedUser={
+                                       followedUser
+                                    }
+                                    isFollowing={followingIds.has(
+                                       followedUser.id,
+                                    )}
+                                    onToggleFollow={() =>
+                                       handleFollowToggle(
+                                          followedUser.id,
+                                       )
+                                    }
+                                 />
+                              ),
+                           )
+                        )}
+                     </div>
+                     {canScroll.following.right && (
                         <button
-                           className="scroll-button"
+                           className="carousel-arrow right"
                            onClick={() =>
                               scrollContainer(
                                  "following",
@@ -625,38 +805,10 @@ function User({
                            }
                         >
                            <CaretRight
-                              size={18}
+                              size={24}
                               weight="bold"
                            />
                         </button>
-                     </div>
-                  </div>
-                  <div className="following-list">
-                     {/* map all the users followed accounts */}
-                     {following.length === 0 ? (
-                        <p className="no-content-message">
-                           Not following anyone yet.
-                        </p>
-                     ) : (
-                        following.map(
-                           (followedUser, index) => (
-                              <FollowedUserCard
-                                 key={
-                                    followedUser.id ??
-                                    `${followedUser.name ?? "user"}-${index}`
-                                 }
-                                 followedUser={followedUser}
-                                 isFollowing={followingIds.has(
-                                    followedUser.id,
-                                 )}
-                                 onToggleFollow={() =>
-                                    handleFollowToggle(
-                                       followedUser.id,
-                                    )
-                                 }
-                              />
-                           ),
-                        )
                      )}
                   </div>
                </div>

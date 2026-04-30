@@ -16,7 +16,6 @@ import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import RestaurantInfo from "./pages/RestaurantInfo";
 import RestaurantMenu from "./pages/RestaurantMenu";
-import Review from "./pages/Review";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
 
@@ -119,7 +118,7 @@ function AppLayout() {
                   path="/user"
                   element={
                      <ProtectedRoute session={session}>
-                        <UserPage />
+                        <UserPage session={session} />
                      </ProtectedRoute>
                   }
                />
@@ -148,15 +147,6 @@ function AppLayout() {
                   element={
                      <ProtectedRoute session={session}>
                         <RestaurantMenu />
-                     </ProtectedRoute>
-                  }
-               />
-
-               <Route
-                  path="/review"
-                  element={
-                     <ProtectedRoute session={session}>
-                        <Review />
                      </ProtectedRoute>
                   }
                />

@@ -11,12 +11,12 @@ import request from "supertest";
 import app from "../index.js";
 import { supabase } from "../config/supabaseClient.js";
 
-// Mock the supabase client
+// Mock the shared Supabase client used by the routes
 jest.mock("../config/supabaseClient.js");
 
 describe("User Endpoints", () => {
    beforeAll(() => {
-      // Suppress console.log during tests to keep output clean
+      // Keep test output clean
       jest
          .spyOn(console, "log")
          .mockImplementation(() => {});
@@ -34,7 +34,9 @@ describe("User Endpoints", () => {
       jest.clearAllMocks();
    });
 
-   // --- Success Tests ---
+   // -----------------------------------
+   // GET /api/users
+   // -----------------------------------
 
    it("GET /api/users should return a list of users", async () => {
       const mockUsers = [
@@ -57,6 +59,7 @@ describe("User Endpoints", () => {
             is_verified: true,
          },
       ];
+
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
@@ -68,7 +71,7 @@ describe("User Endpoints", () => {
       const res = await request(app).get("/api/users");
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.length).toBe(2);
+      expect(res.body).toHaveLength(2);
       expect(res.body[0].name).toBe("Eli");
       expect(supabase.from).toHaveBeenCalledWith("users");
    });
@@ -97,10 +100,13 @@ describe("User Endpoints", () => {
       });
 
       const res = await request(app).get("/api/users");
+
       expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({
+         error: " returned error",
+      });
    });
 
-   // Covers line 16 (error in GET /)
    it("GET /api/users should catch unexpected errors", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
@@ -112,24 +118,44 @@ describe("User Endpoints", () => {
       const res = await request(app).get("/api/users");
 
       expect(res.statusCode).toBe(500);
-      // The console.error is mocked, so we just check response
       expect(res.body.error).toBe("Unexpected error");
+   });
+
+   it("GET /api/users should handle errors without a message", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         limit: jest.fn().mockResolvedValue({
+            data: null,
+            error: {}, // No message property
+         }),
+      });
+
+      const res = await request(app).get("/api/users");
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 
    it("POST /api/users should create a new user", async () => {
       const newUser = {
-         id: "new-user-id",
+         id: "b677be85-81db-4245-91ca-acb713bd5564",
          email: "new@example.com",
          name: "New User",
          avatar_url: null,
          is_verified: false,
+         created_at: new Date().toISOString(),
+      };
+
+      const insertedUser = {
+         ...newUser,
+         password_hash: null,
       };
 
       supabase.from.mockReturnValue({
          insert: jest.fn().mockReturnThis(),
          select: jest.fn().mockReturnThis(),
          single: jest.fn().mockResolvedValue({
-            data: newUser,
+            data: insertedUser,
             error: null,
          }),
       });
@@ -139,16 +165,18 @@ describe("User Endpoints", () => {
          .send(newUser);
 
       expect(res.statusCode).toBe(201);
-      expect(res.body).toEqual(newUser);
+      expect(res.body).toMatchObject(newUser);
+      expect(res.body.password_hash).toBeNull();
    });
 
    it("POST /api/users should handle creation errors", async () => {
       const newUser = {
-         id: "new-user-id",
+         id: "b677be85-81db-4245-91ca-acb713bd5564",
          email: "new@example.com",
          name: "New User",
          avatar_url: null,
          is_verified: false,
+         created_at: new Date().toISOString(),
       };
 
       supabase.from.mockReturnValue({
@@ -168,6 +196,33 @@ describe("User Endpoints", () => {
       expect(res.body).toEqual({ error: "Creation error" });
    });
 
+   it("POST /api/users should handle creation errors without a message", async () => {
+      const newUser = {
+         id: "b677be85-81db-4245-91ca-acb713bd5564",
+         email: "new@example.com",
+         name: "New User",
+         avatar_url: null,
+         is_verified: false,
+         created_at: new Date().toISOString(),
+      };
+
+      supabase.from.mockReturnValue({
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: {}, // No message property
+         }),
+      });
+
+      const res = await request(app)
+         .post("/api/users")
+         .send(newUser);
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
+   });
+
    it("GET /api/users/:id should return a single user", async () => {
       const mockUser = {
          id: "b677be85-81db-4245-91ca-acb713bd5564",
@@ -178,6 +233,7 @@ describe("User Endpoints", () => {
          avatar_url: null,
          is_verified: false,
       };
+
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
          eq: jest.fn().mockReturnThis(),
@@ -206,10 +262,11 @@ describe("User Endpoints", () => {
       });
 
       const res = await request(app).get(
-         "/api/users/uuid-999",
+         "/api/users/550e8400-e29b-41d4-a716-446655440000",
       );
 
       expect(res.statusCode).toBe(404);
+      expect(res.body).toEqual({ error: "User not found" });
    });
 
    it("GET /api/users/:id should handle generic errors", async () => {
@@ -223,10 +280,28 @@ describe("User Endpoints", () => {
       });
 
       const res = await request(app).get(
-         "/api/users/generic-error-id",
+         "/api/users/550e8400-e29b-41d4-a716-446655440001",
       );
+
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({ error: "Generic error" });
+   });
+
+   it("GET /api/users/:id should handle errors without a message", async () => {
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         single: jest.fn().mockResolvedValue({
+            data: null,
+            error: {}, // No message property
+         }),
+      });
+
+      const res = await request(app).get(
+         "/api/users/550e8400-e29b-41d4-a716-446655440009",
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 
    it("GET /api/users/:id/follows should return followed users", async () => {
@@ -247,6 +322,7 @@ describe("User Endpoints", () => {
             following_id: followingId2,
          },
       ];
+
       const mockFollowingUsers = [
          { id: followingId1, name: "Jane" },
          { id: followingId2, name: "Bob" },
@@ -268,6 +344,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "users") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -277,6 +354,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "reviews") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -286,6 +364,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
@@ -294,7 +373,7 @@ describe("User Endpoints", () => {
       );
 
       expect(res.statusCode).toBe(200);
-      expect(res.body.length).toBe(2);
+      expect(res.body).toHaveLength(2);
       expect(res.body[0].name).toBe("Jane");
       expect(res.body[0].numReviews).toBe(2);
       expect(res.body[1].name).toBe("Bob");
@@ -322,6 +401,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "users") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -331,15 +411,17 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "reviews") {
             return {
                select: jest.fn().mockReturnThis(),
                in: jest.fn().mockResolvedValue({
-                  data: [], // Simulate no reviews
+                  data: [],
                   error: null,
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
@@ -352,7 +434,8 @@ describe("User Endpoints", () => {
    });
 
    it("GET /api/users/:id/follows should handle fetch follows error", async () => {
-      const followerId = "user-id";
+      const followerId =
+         "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
       supabase.from.mockImplementation((table) => {
          if (table === "follows") {
@@ -364,12 +447,14 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
       const res = await request(app).get(
          `/api/users/${followerId}/follows`,
       );
+
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({
          error: "Fetch follows error",
@@ -377,7 +462,8 @@ describe("User Endpoints", () => {
    });
 
    it("GET /api/users/:id/follows should return empty list if no follows", async () => {
-      const followerId = "user-id";
+      const followerId =
+         "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
       supabase.from.mockImplementation((table) => {
          if (table === "follows") {
@@ -389,12 +475,14 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
       const res = await request(app).get(
          `/api/users/${followerId}/follows`,
       );
+
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual([]);
    });
@@ -420,6 +508,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "users") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -429,6 +518,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
@@ -463,6 +553,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "users") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -472,6 +563,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          if (table === "reviews") {
             return {
                select: jest.fn().mockReturnThis(),
@@ -481,6 +573,7 @@ describe("User Endpoints", () => {
                }),
             };
          }
+
          return { select: jest.fn() };
       });
 
@@ -492,6 +585,30 @@ describe("User Endpoints", () => {
       expect(res.body).toEqual({
          error: "Fetch reviews error",
       });
+   });
+
+   it("GET /api/users/:id/follows should handle errors without a message", async () => {
+      const followerId =
+         "550e8400-e29b-41d4-a716-446655440002";
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "follows") {
+            return {
+               select: jest.fn().mockReturnThis(),
+               eq: jest.fn().mockResolvedValue({
+                  data: null,
+                  error: {}, // No message property
+               }),
+            };
+         }
+         return { select: jest.fn() };
+      });
+
+      const res = await request(app).get(
+         `/api/users/${followerId}/follows`,
+      );
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 
    it("POST /api/users/follows/sync should sync follows", async () => {
@@ -595,8 +712,11 @@ describe("User Endpoints", () => {
    });
 
    it("POST /api/users/follows/sync should handle errors", async () => {
-      const followerId = "user-id";
-      const added = ["id1"];
+      const followerId =
+         "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+      const added = [
+         "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      ];
 
       const mockInsert = jest
          .fn()
@@ -615,5 +735,29 @@ describe("User Endpoints", () => {
 
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({ error: "Sync error" });
+   });
+
+   it("POST /api/users/follows/sync should handle errors without a message", async () => {
+      const followerId =
+         "550e8400-e29b-41d4-a716-446655440002";
+      const added = [
+         "550e8400-e29b-41d4-a716-446655440003",
+      ];
+
+      const mockInsert = jest.fn().mockRejectedValue({}); // Throwing an empty object
+
+      supabase.from.mockReturnValue({
+         insert: mockInsert,
+         delete: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         in: jest.fn().mockResolvedValue({ error: null }),
+      });
+
+      const res = await request(app)
+         .post("/api/users/follows/sync")
+         .send({ follower_id: followerId, added });
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Internal Server Error");
    });
 });

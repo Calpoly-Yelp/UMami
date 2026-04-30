@@ -1,11 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import UserName from "./UserName.jsx";
-import { Tag, ThumbsUp } from "@phosphor-icons/react";
+import {
+   Tag,
+   ThumbsUp,
+   Trash,
+} from "@phosphor-icons/react";
 import "./ReviewCard.css";
 
-function ReviewCard({ review = {}, showHelpful = false }) {
+function ReviewCard({
+   review = {},
+   showHelpful = false,
+   currentUserId,
+   onDelete,
+}) {
    // assign our review object to variables
    const {
+      id,
+      user_id,
       userName,
       avatar_url,
       is_verified,
@@ -26,6 +37,12 @@ function ReviewCard({ review = {}, showHelpful = false }) {
    const [isExpandable, setIsExpandable] = useState(false);
    const [areTagsExpanded, setAreTagsExpanded] =
       useState(false);
+   const [isDeletePrimed, setIsDeletePrimed] =
+      useState(false);
+   const deleteTimeoutRef = useRef(null);
+
+   const isOwner =
+      currentUserId && user_id && currentUserId === user_id;
 
    // commentRef: used to measure comment height/overflow
    // cardRef: used to detect when the card leaves the viewport
@@ -106,6 +123,11 @@ function ReviewCard({ review = {}, showHelpful = false }) {
 
       obs.observe(el);
       return () => obs.disconnect();
+   }, []);
+
+   // Cleanup the delete confirmation timeout if the component unmounts
+   useEffect(() => {
+      return () => clearTimeout(deleteTimeoutRef.current);
    }, []);
 
    // Changes expanded state
@@ -216,28 +238,70 @@ function ReviewCard({ review = {}, showHelpful = false }) {
                   />
                </div>
 
-               {/* Helpful Button */}
-               {showHelpful && (
-                  <button
-                     type="button"
-                     className={`review-helpful-btn ${hasVotedHelpful ? "active" : ""}`}
-                     onClick={handleHelpfulClick}
-                     aria-label="Mark review as helpful"
-                  >
-                     <span className="review-helpful-icon">
-                        <ThumbsUp
-                           weight={
-                              hasVotedHelpful
-                                 ? "fill"
-                                 : "bold"
+               {/* Actions Wrapper */}
+               <div className="review-actions">
+                  {/* Helpful Button */}
+                  {showHelpful && (
+                     <button
+                        type="button"
+                        className={`review-helpful-btn ${hasVotedHelpful ? "active" : ""}`}
+                        onClick={handleHelpfulClick}
+                        aria-label="Mark review as helpful"
+                     >
+                        <span className="review-helpful-icon">
+                           <ThumbsUp
+                              weight={
+                                 hasVotedHelpful
+                                    ? "fill"
+                                    : "bold"
+                              }
+                           />
+                        </span>
+                        <span className="review-helpful-count">
+                           {helpfulVotes}
+                        </span>
+                     </button>
+                  )}
+
+                  {/* Delete Button (Only visible to review owner) */}
+                  {isOwner && (
+                     <button
+                        type="button"
+                        className={`review-delete-btn ${isDeletePrimed ? "is-primed" : ""}`}
+                        onClick={(e) => {
+                           e.stopPropagation();
+                           if (isDeletePrimed) {
+                              if (onDelete) onDelete(id);
+                           } else {
+                              setIsDeletePrimed(true);
+                              deleteTimeoutRef.current =
+                                 setTimeout(() => {
+                                    setIsDeletePrimed(
+                                       false,
+                                    );
+                                 }, 3000);
                            }
-                        />
-                     </span>
-                     <span className="review-helpful-count">
-                        {helpfulVotes}
-                     </span>
-                  </button>
-               )}
+                        }}
+                        aria-label={
+                           isDeletePrimed
+                              ? "Click again to confirm deletion"
+                              : "Delete review"
+                        }
+                        title={
+                           isDeletePrimed
+                              ? "Click again to confirm deletion"
+                              : "Delete review"
+                        }
+                     >
+                        <Trash size={18} weight="bold" />
+                        {isDeletePrimed && (
+                           <span className="review-delete-confirm-text">
+                              Confirm?
+                           </span>
+                        )}
+                     </button>
+                  )}
+               </div>
             </div>
             {/* Display the rating in stars */}
             <div className="review-rating">

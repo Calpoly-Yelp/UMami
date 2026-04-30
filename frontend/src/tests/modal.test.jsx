@@ -92,10 +92,9 @@ describe("Modal component", () => {
    });
 
    test("calls onClose when overlay is clicked", async () => {
-      const user = userEvent.setup();
       const onClose = jest.fn();
 
-      const { container } = render(
+      const { baseElement } = render(
          <Modal
             open={true}
             onClose={onClose}
@@ -105,19 +104,18 @@ describe("Modal component", () => {
          </Modal>,
       );
 
-      const overlay = container.querySelector(
+      const overlay = baseElement.querySelector(
          ".modal-overlay",
       );
-      await user.click(overlay);
+      fireEvent.mouseDown(overlay);
 
       expect(onClose).toHaveBeenCalledTimes(1);
    });
 
    test("does not call onClose when modal panel is clicked", async () => {
-      const user = userEvent.setup();
       const onClose = jest.fn();
 
-      const { container } = render(
+      const { baseElement } = render(
          <Modal
             open={true}
             onClose={onClose}
@@ -127,8 +125,9 @@ describe("Modal component", () => {
          </Modal>,
       );
 
-      const panel = container.querySelector(".modal-panel");
-      await user.click(panel);
+      const panel =
+         baseElement.querySelector(".modal-panel");
+      fireEvent.mouseDown(panel);
 
       expect(onClose).not.toHaveBeenCalled();
    });

@@ -184,20 +184,6 @@
    color: var(--color-text);
 }
 
-.modal-overlay {
-   position: fixed;
-   top: 0;
-   left: 0;
-   right: 0;
-   bottom: 0;
-   background: rgba(0, 0, 0, 0.5);
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   z-index: 1000;
-   backdrop-filter: blur(4px);
-}
-
 .modal-content {
    background: linear-gradient(
       to bottom,
@@ -212,7 +198,7 @@
    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-.modal-close {
+<<<<<<< HEAD .modal-close {
    position: absolute;
    top: 15px;
    right: 15px;
@@ -236,7 +222,8 @@
    color: var(--color-text);
 }
 
-.modal-portion {
+=======>>>>>>>a633e2dc06c84e956f4ae759f7d1faa085ae2d07
+   .modal-portion {
    color: var(--color-text-soft);
    margin-bottom: 20px;
    font-weight: 600;

@@ -1,12 +1,8 @@
-import {
-   useState,
-   useEffect,
-   useRef,
-   useMemo,
-} from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
+import { supabase } from "../lib/supabase";
 import "./Restaurants.css";
 
 function Restaurants({ restaurants: initialRestaurants }) {
@@ -17,11 +13,9 @@ function Restaurants({ restaurants: initialRestaurants }) {
       initialRestaurants || [],
    );
    const [bookmarkedIds, setBookmarkedIds] = useState(
-      () =>
-         new Set(
-            initialRestaurants?.map((r) => r.id) || [],
-         ),
+      new Set(),
    );
+   const [userId, setUserId] = useState(null);
    const [loading, setLoading] = useState(
       !initialRestaurants,
    );
@@ -29,85 +23,91 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
    const navigate = useNavigate();
 
-   const originalBookmarkedIdsRef = useRef(
-      new Set(initialRestaurants?.map((r) => r.id) || []),
-   );
-   const bookmarkedIdsRef = useRef(new Set());
-
    useEffect(() => {
-      bookmarkedIdsRef.current = bookmarkedIds;
-   }, [bookmarkedIds]);
-
-   useEffect(() => {
-      if (initialRestaurants) return;
-
-      const fetchData = async () => {
+      const loadData = async () => {
          try {
             setLoading(true);
             setError("");
 
-            const storedUser = JSON.parse(
-               localStorage.getItem("user"),
-            );
-            const userId = storedUser?.id;
+            const {
+               data: { user },
+               error: userError,
+            } = await supabase.auth.getUser();
 
-            const restaurantsResponse = await fetch(
-               "http://localhost:4000/api/restaurants",
-            );
-
-            if (!restaurantsResponse.ok) {
-               let message = "Failed to fetch restaurants";
-               try {
-                  const err =
-                     await restaurantsResponse.json();
-                  message = err.error || message;
-               } catch {
-                  // ignore
-               }
-               throw new Error(message);
+            if (userError) {
+               throw userError;
             }
 
-            const restaurantsData =
-               await restaurantsResponse.json();
+            setUserId(user?.id || null);
 
-            const mappedRestaurants = restaurantsData.map(
-               (r) => ({
-                  id: r.id,
-                  name: r.name || "Unnamed Restaurant",
-                  image:
-                     r.image_urls?.[0] ||
-                     "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
-                  avg_rating: r.avg_rating ?? 0,
-                  location: Array.isArray(r.location)
-                     ? r.location.join(", ")
-                     : r.location || "",
-                  tags: r.tags || [],
-                  hours: r.hours || [],
-                  rating_count: r.rating_count ?? 0,
-                  rating_sum: r.rating_sum ?? 0,
-                  is_open_now: r.is_open_now ?? false,
-               }),
-            );
+            let mappedRestaurants =
+               initialRestaurants || [];
 
-            setRestaurants(mappedRestaurants);
-
-            if (userId) {
-               const bookmarksResponse = await fetch(
-                  `http://localhost:4000/api/restaurants/bookmarks/${userId}`,
+            if (!initialRestaurants) {
+               const restaurantsResponse = await fetch(
+                  "http://localhost:4000/api/restaurants",
                );
 
-               if (bookmarksResponse.ok) {
-                  const bookmarkedRestaurants =
-                     await bookmarksResponse.json();
-
-                  const ids = new Set(
-                     bookmarkedRestaurants.map((r) => r.id),
-                  );
-
-                  setBookmarkedIds(ids);
-                  originalBookmarkedIdsRef.current =
-                     new Set(ids);
+               if (!restaurantsResponse.ok) {
+                  let message =
+                     "Failed to fetch restaurants";
+                  try {
+                     const err =
+                        await restaurantsResponse.json();
+                     message = err.error || message;
+                  } catch {
+                     // ignore
+                  }
+                  throw new Error(message);
                }
+
+               const restaurantsData =
+                  await restaurantsResponse.json();
+
+               mappedRestaurants = restaurantsData.map(
+                  (r) => ({
+                     id: r.id,
+                     name: r.name || "Unnamed Restaurant",
+                     image:
+                        r.image_urls?.[0] ||
+                        "https://placehold.co/300x200/003831/FFFFFF?text=Restaurant",
+                     avg_rating: r.avg_rating ?? 0,
+                     location: Array.isArray(r.location)
+                        ? r.location.join(", ")
+                        : r.location || "",
+                     tags: r.tags || [],
+                     hours: r.hours || [],
+                     rating_count: r.rating_count ?? 0,
+                     rating_sum: r.rating_sum ?? 0,
+                     is_open_now: r.is_open_now ?? false,
+                  }),
+               );
+
+               setRestaurants(mappedRestaurants);
+            }
+
+            if (user) {
+               const {
+                  data: bookmarkRows,
+                  error: bookmarkError,
+               } = await supabase
+                  .from("bookmarks")
+                  .select("restaurant_id")
+                  .eq("user_id", user.id);
+
+               if (bookmarkError) {
+                  throw bookmarkError;
+               }
+
+               const ids = new Set(
+                  (bookmarkRows || []).map(
+                     (row) => row.restaurant_id,
+                  ),
+               );
+
+               setBookmarkedIds(ids);
+            } else {
+               setBookmarkedIds(new Set());
             }
          } catch (err) {
             console.error("Error loading data:", err);
@@ -119,63 +119,17 @@ function Restaurants({ restaurants: initialRestaurants }) {
          }
       };
 
-      fetchData();
+      loadData();
    }, [initialRestaurants]);
 
-   useEffect(() => {
-      const syncBookmarks = () => {
-         const storedUser = JSON.parse(
-            localStorage.getItem("user"),
-         );
-         const userId = storedUser?.id;
+   const handleBookmarkToggle = async (restaurantId) => {
+      if (!userId) {
+         setError("You must be signed in to bookmark.");
+         return;
+      }
 
-         if (!userId) return;
+      const wasBookmarked = bookmarkedIds.has(restaurantId);
 
-         const original = originalBookmarkedIdsRef.current;
-         const current = bookmarkedIdsRef.current;
-
-         const added = [...current].filter(
-            (id) => !original.has(id),
-         );
-         const removed = [...original].filter(
-            (id) => !current.has(id),
-         );
-
-         if (added.length === 0 && removed.length === 0)
-            return;
-
-         fetch(
-            "http://localhost:4000/api/restaurants/bookmarks/sync",
-            {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  user_id: userId,
-                  added,
-                  removed,
-               }),
-               keepalive: true,
-            },
-         );
-      };
-
-      window.addEventListener(
-         "beforeunload",
-         syncBookmarks,
-      );
-
-      return () => {
-         window.removeEventListener(
-            "beforeunload",
-            syncBookmarks,
-         );
-         syncBookmarks();
-      };
-   }, []);
-
-   const handleBookmarkToggle = (restaurantId) => {
       setBookmarkedIds((prev) => {
          const next = new Set(prev);
          if (next.has(restaurantId)) {
@@ -185,6 +139,47 @@ function Restaurants({ restaurants: initialRestaurants }) {
          }
          return next;
       });
+
+      try {
+         if (wasBookmarked) {
+            const { error } = await supabase
+               .from("bookmarks")
+               .delete()
+               .eq("user_id", userId)
+               .eq("restaurant_id", restaurantId);
+
+            if (error) {
+               throw error;
+            }
+         } else {
+            const { error } = await supabase
+               .from("bookmarks")
+               .insert({
+                  user_id: userId,
+                  restaurant_id: restaurantId,
+               });
+
+            if (error) {
+               throw error;
+            }
+         }
+      } catch (err) {
+         console.error("Error updating bookmark:", err);
+
+         setBookmarkedIds((prev) => {
+            const next = new Set(prev);
+            if (wasBookmarked) {
+               next.add(restaurantId);
+            } else {
+               next.delete(restaurantId);
+            }
+            return next;
+         });
+
+         setError(
+            err.message || "Failed to update bookmark.",
+         );
+      }
    };
 
    const handleCardClick = (restaurant) => {

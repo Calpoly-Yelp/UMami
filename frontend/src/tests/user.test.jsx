@@ -380,16 +380,6 @@ describe("User Profile Page", () => {
          screen.getByRole("heading", { name: "Following" }),
       ).toBeInTheDocument();
    });
-
-   // Verify that scroll controls (left/right arrows) are rendered for the horizontal lists
-   test("renders scroll buttons for lists", () => {
-      render(<UserPage user={testUser} />);
-      const scrollButtons = document.querySelectorAll(
-         ".scroll-button",
-      );
-      // 2 buttons (left/right) * 3 sections = 6 buttons
-      expect(scrollButtons.length).toBe(6);
-   });
 });
 
 describe("User Profile Page Edge Cases", () => {

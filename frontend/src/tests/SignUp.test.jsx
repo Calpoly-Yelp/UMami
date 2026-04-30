@@ -159,7 +159,9 @@ describe("SignUp component", () => {
                   id: "test-user-id",
                   name: "Adrian",
                   email: "adrian@example.com",
-                  avatar_url: "",
+                  avatar_url:
+                     "https://ui-avatars.com/api/?name=Adrian",
+
                   is_verified: false,
                }),
             },
