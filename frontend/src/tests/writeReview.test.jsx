@@ -86,7 +86,9 @@ describe("WriteReview component", () => {
       ).toBeInTheDocument();
 
       expect(
-         screen.getByText(/show your experience \(0\/10\):/i),
+         screen.getByText(
+            /show your experience \(0\/10\):/i,
+         ),
       ).toBeInTheDocument();
    });
 

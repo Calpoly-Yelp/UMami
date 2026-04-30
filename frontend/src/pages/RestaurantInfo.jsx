@@ -377,32 +377,31 @@ export default function Review() {
             className="review__tabs"
             aria-label="Sections"
          >
-            <button
-               className={`review__tab ${activeTab === "menu" ? "is-active" : ""}`}
-               onClick={() => scrollTo("menu")}
-            >
-               Menu
-            </button>
-            <button
-               className={`review__tab ${activeTab === "info" ? "is-active" : ""}`}
-               onClick={() => scrollTo("info")}
-            >
-               Info
-            </button>
-            <button
-               className={`review__tab ${activeTab === "reviews" ? "is-active" : ""}`}
-               onClick={() => scrollTo("reviews")}
-            >
-               Reviews
-            </button>
+            <div className="review__tabsInner">
+               <button
+                  className={`review__tab ${activeTab === "menu" ? "is-active" : ""}`}
+                  onClick={() => scrollTo("menu")}
+               >
+                  Menu
+               </button>
+               <button
+                  className={`review__tab ${activeTab === "info" ? "is-active" : ""}`}
+                  onClick={() => scrollTo("info")}
+               >
+                  Info
+               </button>
+               <button
+                  className={`review__tab ${activeTab === "reviews" ? "is-active" : ""}`}
+                  onClick={() => scrollTo("reviews")}
+               >
+                  Reviews
+               </button>
+            </div>
          </nav>
 
          <main className="review__main">
             {/* ── Menu Section ── */}
-            <section
-               className="card card--section"
-               id="section-menu"
-            >
+            <section>
                <div className="review__sectionHeaderRow">
                   <div className="review__actions">
                      {/* Pass restaurant id as query param so WriteReview
@@ -421,7 +420,8 @@ export default function Review() {
                      >
                         ✎ <span>write review</span>
                      </button>
-                     <button className="pillBtn">
+                     <button 
+                        className="pillBtn">
                         📷 <span>add photos</span>
                      </button>
                      <button className="pillBtn">
@@ -465,10 +465,7 @@ export default function Review() {
             </section>
 
             {/* ── Info Section ── */}
-            <section
-               className="card card--section"
-               id="section-info"
-            >
+            <section id="section-info">
                <h2 className="review__h2">Info</h2>
 
                <div className="review__infoGrid">
@@ -509,9 +506,9 @@ export default function Review() {
                         ))}
                      </div>
 
-                     <button className="pillBtn pillBtn--orange">
+                     <div className="orderIndicator">
                         order in-person
-                     </button>
+                     </div>
                   </div>
 
                   {/* Map */}
@@ -533,7 +530,7 @@ export default function Review() {
                   </div>
                </div>
 
-               {/* Peak Hours Chart */}
+               {/* Peak Hours Chart
                <div className="review__peak">
                   <div className="review__subHeader">
                      <span className="review__subIcon">
@@ -584,10 +581,11 @@ export default function Review() {
                         <span>9pm</span>
                      </div>
                   </div>
-               </div>
+               </div> */}
             </section>
 
             {/* ── Reviews Section ── */}
+            
             <section
                className="review__reviewsGrid"
                id="section-reviews"
