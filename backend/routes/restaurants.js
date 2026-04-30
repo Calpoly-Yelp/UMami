@@ -3,6 +3,7 @@ import { supabase } from "../config/supabaseClient.js";
 import {
    Restaurant,
    Bookmark,
+   MenuItem,
 } from "../models/restaurantModel.js";
 import { z } from "zod";
 
@@ -113,6 +114,77 @@ router.post("/bookmarks/sync", async (req, res) => {
       }
 
       res.status(200).json({ message: "Sync successful" });
+   } catch (error) {
+      res.status(500).json({ error: error.message });
+   }
+});
+
+// Get menu items by restaurant id
+router.get("/:id/menu", async (req, res) => {
+   try {
+      const restaurantId = Number(req.params.id);
+      const { meal_period: mealPeriod } = req.query;
+
+      if (Number.isNaN(restaurantId)) {
+         return res
+            .status(400)
+            .json({ error: "Invalid restaurant id" });
+      }
+
+      if (
+         mealPeriod &&
+         (Array.isArray(mealPeriod) ||
+            typeof mealPeriod !== "string")
+      ) {
+         return res
+            .status(400)
+            .json({ error: "Invalid meal period" });
+      }
+
+      let query = supabase
+         .from("menu_items")
+         .select("*")
+         .eq("restaurant_id", restaurantId)
+         .order("category", { ascending: true })
+         .order("name", { ascending: true });
+
+      if (mealPeriod) {
+         query = query.eq("meal_period", mealPeriod);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+         throw error;
+      }
+
+      const validatedData = z
+         .array(MenuItem)
+         .parse(data || []);
+
+      const sections = validatedData.reduce(
+         (acc, item) => {
+            const category =
+               item.category || "Uncategorized";
+            const existingSection = acc.find(
+               (section) => section.category === category,
+            );
+
+            if (existingSection) {
+               existingSection.items.push(item);
+            } else {
+               acc.push({
+                  category,
+                  items: [item],
+               });
+            }
+
+            return acc;
+         },
+         [],
+      );
+
+      res.status(200).json(sections);
    } catch (error) {
       res.status(500).json({ error: error.message });
    }

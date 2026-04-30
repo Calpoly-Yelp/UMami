@@ -21,10 +21,32 @@ export const Restaurant = z.object({
    lat: z.number().nullable().optional(),
    lng: z.number().nullable().optional(),
    street_address: z.string().nullable().optional(),
+   menu_source_url: z.string().nullable().optional(),
 });
 
 // Schema for the 'bookmarks' table
 export const Bookmark = z.object({
    user_id: z.string().uuid(),
    restaurant_id: z.number(),
+});
+
+// Schema for the 'menu_items' table
+export const MenuItem = z.object({
+   id: z.number(),
+   restaurant_id: z.number(),
+   category: z.string().nullable(),
+   name: z.string(),
+   description: z.string().nullable().optional(),
+   portion: z.string().nullable().optional(),
+   price: z.coerce.number().nullable().optional(),
+   calories: z.number().nullable().optional(),
+   fat: z.string().nullable().optional(),
+   carbs: z.string().nullable().optional(),
+   protein: z.string().nullable().optional(),
+   allergens: z.array(z.string()).nullable().default([]),
+   dietary_tags: z.array(z.string()).nullable().default([]),
+   source_url: z.string().nullable().optional(),
+   meal_period: z.string().nullable().optional(),
+   last_scraped_at: z.string().nullable().optional(),
+   created_at: z.string().nullable().optional(),
 });

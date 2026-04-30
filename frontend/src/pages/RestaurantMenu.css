@@ -107,6 +107,11 @@
    color: var(--color-text);
 }
 
+.menu-categories li.is-disabled {
+   color: #8e9089;
+   cursor: default;
+}
+
 .menu-section {
    margin-bottom: 40px;
    scroll-margin-top: 20px;
@@ -182,6 +187,13 @@
 .menu-table tbody tr:hover td {
    background-color: rgba(0, 0, 0, 0.04);
    color: var(--color-text);
+}
+
+.menu-empty {
+   margin: 0;
+   color: #54585a;
+   font-size: 15px;
+   font-weight: 600;
 }
 
 .modal-content {
