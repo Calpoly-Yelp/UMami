@@ -205,4 +205,22 @@
       white-space: normal;
       text-align: center;
    }
+   .signup__checkRow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin: 10px 0 6px 0;
+   }
+
+   .signup__checkRow a {
+      color: var(--color-text);
+      font-weight: 600;
+      text-decoration: none;
+   }
+
+   .signup__checkRow a:hover {
+      text-decoration: underline;
+   }
 }

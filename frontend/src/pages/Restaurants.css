@@ -102,6 +102,6 @@
       justify-content: flex-end;
    }
    .restaurant-card-click {
-   cursor: pointer;
-}
+      cursor: pointer;
+   }
 }

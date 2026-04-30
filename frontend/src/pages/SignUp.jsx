@@ -38,7 +38,9 @@ export default function SignUp() {
          const user = data.user;
 
          if (!user) {
-            throw new Error("User account was not created.");
+            throw new Error(
+               "User account was not created.",
+            );
          }
 
          const response = await fetch(
@@ -55,14 +57,14 @@ export default function SignUp() {
                   avatar_url: "",
                   is_verified: false,
                }),
-            }
+            },
          );
 
          const result = await response.json();
 
          if (!response.ok) {
             throw new Error(
-               result.error || "Failed to save user."
+               result.error || "Failed to save user.",
             );
          }
 
@@ -89,17 +91,25 @@ export default function SignUp() {
                   className="signup__logo"
                />
 
-               <h1 className="signup__title">Get started now</h1>
+               <h1 className="signup__title">
+                  Get started now
+               </h1>
 
                <form
                   className="signup__form"
                   onSubmit={handleSubmit}
                >
-                  <label className="signup__label" htmlFor="name">
+                  <label
+                     className="signup__label"
+                     htmlFor="name"
+                  >
                      Name
                   </label>
                   <div className="signup__inputWrap">
-                     <span className="signup__icon" aria-hidden="true">
+                     <span
+                        className="signup__icon"
+                        aria-hidden="true"
+                     >
                         <svg
                            viewBox="0 0 24 24"
                            width="20"
@@ -122,11 +132,17 @@ export default function SignUp() {
                      />
                   </div>
 
-                  <label className="signup__label" htmlFor="email">
-                     Email
+                  <label
+                     className="signup__label"
+                     htmlFor="email"
+                  >
+                     Email Address
                   </label>
                   <div className="signup__inputWrap">
-                     <span className="signup__icon" aria-hidden="true">
+                     <span
+                        className="signup__icon"
+                        aria-hidden="true"
+                     >
                         <svg
                            viewBox="0 0 24 24"
                            width="20"
@@ -156,7 +172,10 @@ export default function SignUp() {
                      Password
                   </label>
                   <div className="signup__inputWrap">
-                     <span className="signup__icon" aria-hidden="true">
+                     <span
+                        className="signup__icon"
+                        aria-hidden="true"
+                     >
                         <svg
                            viewBox="0 0 24 24"
                            width="20"
@@ -179,8 +198,21 @@ export default function SignUp() {
                      />
                   </div>
 
+                  <label className="signup__checkRow">
+                     <input
+                        type="checkbox"
+                        name="terms"
+                        required
+                     />
+                     <span>
+                        I agree to the Terms and Conditions
+                     </span>
+                  </label>
+
                   {error && (
-                     <p className="signup__error">{error}</p>
+                     <p className="signup__error">
+                        {error}
+                     </p>
                   )}
 
                   <button
@@ -188,7 +220,7 @@ export default function SignUp() {
                      type="submit"
                      disabled={loading}
                   >
-                     {loading ? "Creating Account..." : "Create Account"}
+                     {loading ? "Signing Up..." : "Sign Up"}
                   </button>
 
                   <div className="signup__footer">
@@ -198,7 +230,9 @@ export default function SignUp() {
                         <button
                            className="signup__link"
                            type="button"
-                           onClick={() => navigate("/signin")}
+                           onClick={() =>
+                              navigate("/signin")
+                           }
                         >
                            Sign in
                         </button>

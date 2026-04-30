@@ -87,15 +87,21 @@ export default function Onboarding() {
    });
 
    const step = steps[currentStep];
-   const selectedValues = answers[step.key] || [];
-
+   const selectedValues = useMemo(
+      () => answers[step.key] || [],
+      [answers, step.key],
+   );
    const progressPercent = useMemo(
-      () => Math.round(((currentStep + 1) / steps.length) * 100),
-      [currentStep]
+      () =>
+         Math.round(
+            ((currentStep + 1) / steps.length) * 100,
+         ),
+      [currentStep],
    );
 
    const isStepValid = useMemo(() => {
-      if (step.type === "single") return selectedValues.length === 1;
+      if (step.type === "single")
+         return selectedValues.length === 1;
       if (step.type === "multi-limit") {
          return (
             selectedValues.length >= 1 &&
@@ -115,14 +121,15 @@ export default function Onboarding() {
             return { ...prev, [step.key]: [option] };
          }
 
-         const alreadySelected = currentValues.includes(option);
+         const alreadySelected =
+            currentValues.includes(option);
 
          if (step.type === "multi-limit") {
             if (alreadySelected) {
                return {
                   ...prev,
                   [step.key]: currentValues.filter(
-                     (item) => item !== option
+                     (item) => item !== option,
                   ),
                };
             }
@@ -144,7 +151,7 @@ export default function Onboarding() {
             ...prev,
             [step.key]: alreadySelected
                ? currentValues.filter(
-                    (item) => item !== option
+                    (item) => item !== option,
                  )
                : [...currentValues, option],
          };
@@ -213,7 +220,9 @@ export default function Onboarding() {
 
          <main className="onboarding__main">
             <section className="onboarding__card">
-               <h1 className="onboarding__title">{step.title}</h1>
+               <h1 className="onboarding__title">
+                  {step.title}
+               </h1>
 
                {step.subtitle ? (
                   <p className="onboarding__subtitle">
@@ -264,7 +273,9 @@ export default function Onboarding() {
                </div>
 
                {error ? (
-                  <p className="onboarding__error">{error}</p>
+                  <p className="onboarding__error">
+                     {error}
+                  </p>
                ) : null}
 
                <div className="onboarding__footer">

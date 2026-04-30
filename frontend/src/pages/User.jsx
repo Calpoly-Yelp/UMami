@@ -567,7 +567,9 @@ function User({
                                     `${restaurant.name ?? "restaurant"}-${index}`
                                  }
                                  onClick={() =>
-                                    navigate(`/restaurants/${restaurant.id}`)
+                                    navigate(
+                                       `/restaurants/${restaurant.id}`,
+                                    )
                                  }
                                  className="restaurant-card-click"
                               >

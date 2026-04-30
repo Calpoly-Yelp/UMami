@@ -28,7 +28,9 @@ export default function SignIn() {
          if (error) throw error;
 
          if (!data.user) {
-            throw new Error("No user returned from sign in.");
+            throw new Error(
+               "No user returned from sign in.",
+            );
          }
 
          navigate("/restaurants");
@@ -63,7 +65,10 @@ export default function SignIn() {
                   onSubmit={handleSignIn}
                >
                   <div className="auth__field">
-                     <span className="auth__icon" aria-hidden="true">
+                     <span
+                        className="auth__icon"
+                        aria-hidden="true"
+                     >
                         <svg
                            viewBox="0 0 24 24"
                            width="20"
@@ -82,13 +87,18 @@ export default function SignIn() {
                         placeholder="Email"
                         autoComplete="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) =>
+                           setEmail(e.target.value)
+                        }
                         required
                      />
                   </div>
 
                   <div className="auth__field">
-                     <span className="auth__icon" aria-hidden="true">
+                     <span
+                        className="auth__icon"
+                        aria-hidden="true"
+                     >
                         <svg
                            viewBox="0 0 24 24"
                            width="20"
