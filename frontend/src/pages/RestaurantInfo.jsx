@@ -420,8 +420,7 @@ export default function Review() {
                      >
                         ✎ <span>write review</span>
                      </button>
-                     <button 
-                        className="pillBtn">
+                     <button className="pillBtn">
                         📷 <span>add photos</span>
                      </button>
                      <button className="pillBtn">
@@ -585,7 +584,7 @@ export default function Review() {
             </section>
 
             {/* ── Reviews Section ── */}
-            
+
             <section
                className="review__reviewsGrid"
                id="section-reviews"
