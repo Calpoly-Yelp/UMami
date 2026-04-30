@@ -17,7 +17,6 @@ export default function SignUp() {
       if (!e.target.checkValidity()) return;
 
       const formData = new FormData(e.target);
-
       const name = formData.get("name");
       const email = formData.get("email");
       const password = formData.get("password");
@@ -30,22 +29,16 @@ export default function SignUp() {
                email,
                password,
                options: {
-                  data: {
-                     name,
-                  },
+                  data: { name },
                },
             });
 
-         if (signUpError) {
-            throw signUpError;
-         }
+         if (signUpError) throw signUpError;
 
          const user = data.user;
 
          if (!user) {
-            throw new Error(
-               "User account was not created.",
-            );
+            throw new Error("User account was not created.");
          }
 
          const response = await fetch(
@@ -62,14 +55,14 @@ export default function SignUp() {
                   avatar_url: "",
                   is_verified: false,
                }),
-            },
+            }
          );
 
          const result = await response.json();
 
          if (!response.ok) {
             throw new Error(
-               result.error || "Failed to save user.",
+               result.error || "Failed to save user."
             );
          }
 
@@ -87,133 +80,140 @@ export default function SignUp() {
    };
 
    return (
-      <div className="signupForm">
-         <div className="signupForm__left">
-            <div className="signupForm__brand">
+      <div className="signup">
+         <div className="signup__left">
+            <div className="signup__content">
                <img
                   src={logo}
                   alt="Umami logo"
-                  className="signupForm__logo"
-               />
-            </div>
-
-            <h1 className="signupForm__title">
-               Get started now
-            </h1>
-
-            <div
-               className="signupForm__icon"
-               aria-hidden="true"
-            >
-               <svg
-                  viewBox="0 0 24 24"
-                  width="64"
-                  height="64"
-               >
-                  <path
-                     fill="currentColor"
-                     d="M12 12a4 4 0 1 0-4-4a4 4 0 0 0 4 4m0 2c-4.42 0-8 2-8 4.5V21h16v-2.5c0-2.5-3.58-4.5-8-4.5"
-                  />
-               </svg>
-            </div>
-
-            <form
-               className="signupForm__form"
-               onSubmit={handleSubmit}
-            >
-               <label
-                  className="signupForm__label"
-                  htmlFor="name"
-               >
-                  Name
-               </label>
-               <input
-                  className="signupForm__input"
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter your name"
-                  autoComplete="name"
-                  required
+                  className="signup__logo"
                />
 
-               <label
-                  className="signupForm__label"
-                  htmlFor="email"
+               <h1 className="signup__title">Get started now</h1>
+
+               <form
+                  className="signup__form"
+                  onSubmit={handleSubmit}
                >
-                  Email address
-               </label>
-               <input
-                  className="signupForm__input"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  autoComplete="email"
-                  required
-               />
+                  <label className="signup__label" htmlFor="name">
+                     Name
+                  </label>
+                  <div className="signup__inputWrap">
+                     <span className="signup__icon" aria-hidden="true">
+                        <svg
+                           viewBox="0 0 24 24"
+                           width="20"
+                           height="20"
+                        >
+                           <path
+                              fill="currentColor"
+                              d="M12 12a4 4 0 1 0-4-4a4 4 0 0 0 4 4Zm0 2c-4.42 0-8 1.79-8 4v1h16v-1c0-2.21-3.58-4-8-4Z"
+                           />
+                        </svg>
+                     </span>
+                     <input
+                        className="signup__input"
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Name"
+                        autoComplete="name"
+                        required
+                     />
+                  </div>
 
-               <label
-                  className="signupForm__label"
-                  htmlFor="password"
-               >
-                  Password
-               </label>
-               <input
-                  className="signupForm__input"
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter a password"
-                  autoComplete="new-password"
-                  required
-               />
+                  <label className="signup__label" htmlFor="email">
+                     Email
+                  </label>
+                  <div className="signup__inputWrap">
+                     <span className="signup__icon" aria-hidden="true">
+                        <svg
+                           viewBox="0 0 24 24"
+                           width="20"
+                           height="20"
+                        >
+                           <path
+                              fill="currentColor"
+                              d="M20 6H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Zm0 2v.01L12 13L4 8.01V8h16ZM4 16V10.3l7.4 4.62a1 1 0 0 0 1.2 0L20 10.3V16H4Z"
+                           />
+                        </svg>
+                     </span>
+                     <input
+                        className="signup__input"
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Email"
+                        autoComplete="email"
+                        required
+                     />
+                  </div>
 
-               <label className="signupForm__checkRow">
-                  <input type="checkbox" required />
-                  <span>
-                     I agree to the{" "}
-                     <a
-                        href="#"
-                        onClick={(e) => e.preventDefault()}
-                     >
-                        terms &amp; policy
-                     </a>
-                  </span>
-               </label>
-
-               {error && (
-                  <p className="signupForm__error">
-                     {error}
-                  </p>
-               )}
-
-               <button
-                  className="signupForm__primary"
-                  type="submit"
-                  disabled={loading}
-               >
-                  {loading ? "Signing up..." : "Sign up"}
-               </button>
-
-               <div className="signupForm__footer">
-                  <span>Have an account?</span>
-                  <button
-                     className="signupForm__linkBtn"
-                     type="button"
-                     onClick={() => navigate("/signin")}
+                  <label
+                     className="signup__label"
+                     htmlFor="password"
                   >
-                     Sign In
+                     Password
+                  </label>
+                  <div className="signup__inputWrap">
+                     <span className="signup__icon" aria-hidden="true">
+                        <svg
+                           viewBox="0 0 24 24"
+                           width="20"
+                           height="20"
+                        >
+                           <path
+                              fill="currentColor"
+                              d="M17 8h-1V6a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V6Zm7 12H7v-8h10v8Z"
+                           />
+                        </svg>
+                     </span>
+                     <input
+                        className="signup__input"
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Password"
+                        autoComplete="new-password"
+                        required
+                     />
+                  </div>
+
+                  {error && (
+                     <p className="signup__error">{error}</p>
+                  )}
+
+                  <button
+                     className="btn btn-primary signup__button"
+                     type="submit"
+                     disabled={loading}
+                  >
+                     {loading ? "Creating Account..." : "Create Account"}
                   </button>
-               </div>
-            </form>
+
+                  <div className="signup__footer">
+                     <span className="signup__footerLine" />
+                     <span className="signup__footerText">
+                        Have an account already?{" "}
+                        <button
+                           className="signup__link"
+                           type="button"
+                           onClick={() => navigate("/signin")}
+                        >
+                           Sign in
+                        </button>
+                     </span>
+                     <span className="signup__footerLine" />
+                  </div>
+               </form>
+            </div>
          </div>
 
-         <div className="signupForm__right">
+         <div className="signup__right">
             <img
-               className="signupForm__img"
                src={heroImg}
                alt="Food preparation"
+               className="signup__image"
             />
          </div>
       </div>

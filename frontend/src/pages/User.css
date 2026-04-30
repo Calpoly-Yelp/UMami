@@ -1,27 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap");
-html,
-body {
-   margin: 0;
-   padding: 0;
-   height: 100vh;
-   overflow: hidden;
-}
-
-:root {
-   --primary-gray: #8e9089;
-   --light-gray-bg: #8e908926;
-   --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-   --standard-gap: 20px;
-   --standard-padding-horizontal: 5vw;
-   --standard-padding-vertical: 4vh;
-}
-
 .user-page {
-   margin: 0;
-   font-family: "Poppins", sans-serif;
-   height: 100%;
+   min-height: 100vh;
    width: 100%;
-   background: linear-gradient(#f5f5f2, #e4e3d3);
+   background: var(--color-bg-page);
    overflow: hidden;
 }
 
@@ -33,7 +13,7 @@ body {
 }
 
 .user-content {
-   height: 100%;
+   min-height: 100vh;
    overflow: hidden;
 }
 
@@ -41,8 +21,7 @@ body {
    display: flex;
    flex-direction: column;
    width: 30vw;
-   padding: var(--standard-padding-vertical)
-      var(--standard-padding-horizontal);
+   padding: 4vh 5vw;
 }
 
 .user-card {
@@ -50,10 +29,10 @@ body {
    flex-direction: column;
    align-items: center;
    justify-content: space-evenly;
-   height: 40vh;
+   min-height: 40vh;
    border-radius: 2vw;
-   background-color: var(--light-gray-bg);
-   box-shadow: var(--card-shadow);
+   background-color: rgba(142, 144, 137, 0.15);
+   box-shadow: var(--shadow-sm);
 }
 
 .user-profile-picture {
@@ -66,7 +45,8 @@ body {
 
 .edit-icons {
    display: flex;
-   gap: var(--standard-gap);
+   gap: 20px;
+   color: var(--color-text-soft);
 }
 
 .edit-icon-wrapper {
@@ -86,16 +66,12 @@ body {
    height: auto;
 }
 
-.edit-icons,
-.navigation-links a {
-   color: var(--primary-gray);
-}
-
 .navigation-links a {
    display: block;
    padding: 10px 0;
    text-decoration: none;
-   border-bottom: 1px solid var(--primary-gray);
+   border-bottom: 1px solid var(--color-text-soft);
+   color: var(--color-text-soft);
 }
 
 .navigation-links a:last-child {
@@ -104,7 +80,7 @@ body {
 
 .user-activity {
    flex: 1;
-   height: 100%;
+   min-height: 100vh;
    overflow-y: auto;
    font-size: 24px;
    color: #333;
@@ -113,10 +89,9 @@ body {
 
 .activity-header {
    display: flex;
-   margin-bottom: 20px;
-   padding-right: var(--standard-padding-horizontal);
+   padding-right: 5vw;
    font-size: 20px;
-   color: black;
+   color: var(--color-text);
    align-items: center;
    margin: 0;
    gap: 10px;
@@ -133,8 +108,8 @@ body {
 }
 
 .scroll-button {
-   background-color: #154734;
-   color: #e4e3d3;
+   background-color: var(--color-primary-dark);
+   color: var(--color-bg-bottom);
    border: none;
    border-radius: 50%;
    width: 32px;
@@ -155,12 +130,12 @@ body {
 .reviews,
 .restaurants,
 .following {
-   padding-right: var(--standard-padding-horizontal);
+   padding-right: 5vw;
 }
 
 .restaurant-list,
 .following-list {
-   gap: var(--standard-gap);
+   gap: 20px;
    overflow-x: auto;
    padding: 10px;
 }
@@ -168,9 +143,8 @@ body {
 .review-list {
    display: flex;
    overflow-x: auto;
-   gap: var(--standard-gap);
+   gap: 20px;
    padding: 10px;
-
    scroll-behavior: smooth;
    -webkit-overflow-scrolling: touch;
    scroll-snap-type: x mandatory;
@@ -189,6 +163,55 @@ body {
 
 .no-content-message {
    padding: 20px;
-   color: var(--primary-gray);
+   color: var(--color-text-soft);
    font-style: italic;
+}
+
+@media (max-width: 900px) {
+   .user-page {
+      overflow: auto;
+   }
+
+   .user-content {
+      flex-direction: column;
+      min-height: auto;
+   }
+
+   .user-info {
+      width: 100%;
+      padding: 24px 20px;
+   }
+
+   .user-card {
+      border-radius: 20px;
+      padding: 24px;
+      min-height: auto;
+      gap: 18px;
+   }
+
+   .user-profile-picture {
+      width: 96px;
+      height: 96px;
+   }
+
+   .edit-icons img {
+      width: 56px;
+   }
+
+   .user-activity {
+      min-height: auto;
+      overflow: visible;
+      padding-bottom: 24px;
+   }
+
+   .activity-header,
+   .reviews,
+   .restaurants,
+   .following {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+   .restaurant-card-click {
+   cursor: pointer;
+}
 }

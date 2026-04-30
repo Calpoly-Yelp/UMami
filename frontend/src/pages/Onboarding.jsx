@@ -1,618 +1,323 @@
 import React, { useMemo, useState } from "react";
-import "./Onboarding.css";
 import { useNavigate } from "react-router-dom";
-// remember to import { supabase } from "../supabaseClient";
+import "./Onboarding.css";
+import logo from "../assets/logo.png";
 
-const STEPS = [
-   { key: "role", label: "Who are you?" },
-   { key: "budget", label: "Budget" },
-   { key: "diet", label: "Dietary Needs" },
-   { key: "priorities", label: "What matters most?" },
-   { key: "notifications", label: "Notifications" },
+const steps = [
+   {
+      id: 1,
+      key: "role",
+      navLabel: "Who are you?",
+      title: "What best describes you?",
+      subtitle: "",
+      type: "single",
+      options: [
+         "Cal Poly student",
+         "Faculty/Staff",
+         "Visitor/Local",
+      ],
+   },
+   {
+      id: 2,
+      key: "budget",
+      navLabel: "Budget",
+      title: "What is your typical budget per meal?",
+      subtitle: "",
+      type: "single",
+      options: ["Under $10", "$10-$20", "$20-$25", "$25+"],
+   },
+   {
+      id: 3,
+      key: "dietary",
+      navLabel: "Dietary Needs",
+      title: "Do you have any dietary preferences or restrictions?",
+      subtitle: "Select all that apply:",
+      type: "multi",
+      options: [
+         "Vegetarian",
+         "Vegan",
+         "Gluten-free",
+         "Dairy-free",
+         "No restrictions",
+      ],
+   },
+   {
+      id: 4,
+      key: "priorities",
+      navLabel: "What matters most?",
+      title: "What matters most to you when choosing restaurants?",
+      subtitle: "Choose up to 2",
+      type: "multi-limit",
+      limit: 2,
+      options: [
+         "Food quality",
+         "Price",
+         "Short wait time",
+         "Healthy",
+         "Study-friendly",
+      ],
+   },
+   {
+      id: 5,
+      key: "notifications",
+      navLabel: "Notifications",
+      title: "What updates would you like to receive?",
+      subtitle: "Select all that apply:",
+      type: "multi",
+      options: [
+         "Restaurant menu updates",
+         "Best times to order (avoid long waits)",
+         "Friend activity (reviews, new friend requests)",
+         "No notifications",
+      ],
+   },
 ];
 
 export default function Onboarding() {
    const navigate = useNavigate();
-   const [stepIdx, setStepIdx] = useState(0);
+   const [currentStep, setCurrentStep] = useState(0);
+   const [error, setError] = useState("");
 
-   const [form, setForm] = useState({
-      role: "",
-      budget: "",
-      diet: [],
+   const [answers, setAnswers] = useState({
+      role: [],
+      budget: [],
+      dietary: [],
       priorities: [],
       notifications: [],
    });
 
-   const currentStep = STEPS[stepIdx];
+   const step = steps[currentStep];
+   const selectedValues = answers[step.key] || [];
 
-   const progressPct = useMemo(() => {
-      return Math.round(
-         ((stepIdx + 1) / STEPS.length) * 100,
-      );
-   }, [stepIdx]);
+   const progressPercent = useMemo(
+      () => Math.round(((currentStep + 1) / steps.length) * 100),
+      [currentStep]
+   );
 
-   const canGoNext = useMemo(() => {
-      switch (currentStep.key) {
-         case "role":
-            return !!form.role;
-         case "budget":
-            return !!form.budget;
-         case "diet":
-            return form.diet.length > 0;
-         case "priorities":
-            return (
-               form.priorities.length > 0 &&
-               form.priorities.length <= 2
-            );
-         case "notifications":
-            return form.notifications.length > 0;
-         default:
-            return false;
+   const isStepValid = useMemo(() => {
+      if (step.type === "single") return selectedValues.length === 1;
+      if (step.type === "multi-limit") {
+         return (
+            selectedValues.length >= 1 &&
+            selectedValues.length <= step.limit
+         );
       }
-   }, [currentStep.key, form]);
+      return selectedValues.length >= 1;
+   }, [selectedValues, step]);
 
-   function next() {
-      if (!canGoNext) return;
-      if (stepIdx < STEPS.length - 1)
-         setStepIdx((s) => s + 1);
-      else finish();
-   }
+   const handleOptionToggle = (option) => {
+      setError("");
 
-   function prev() {
-      if (stepIdx > 0) setStepIdx((s) => s - 1);
-   }
+      setAnswers((prev) => {
+         const currentValues = prev[step.key] || [];
 
-   function setSingle(name, value) {
-      setForm((p) => ({ ...p, [name]: value }));
-   }
-
-   async function finish() {
-      // remember to also do this
-      // const { data: { user } } = await supabase.auth.getUser();
-      // if (user) {
-      //   await supabase.from("profiles").upsert({
-      //     id: user.id,
-      //     role: form.role,
-      //     budget: form.budget,
-      //     diet: form.diet,
-      //     priorities: form.priorities,
-      //     notifications: form.notifications,
-      //     onboarded: true,
-      //   });
-      // }
-      navigate("/restaurants");
-   }
-
-   function toggleMulti(name, value, options = {}) {
-      const { exclusiveValue, max } = options;
-
-      setForm((p) => {
-         const current = p[name];
-         let nextArr = Array.isArray(current)
-            ? [...current]
-            : [];
-
-         if (exclusiveValue && value === exclusiveValue) {
-            return { ...p, [name]: [exclusiveValue] };
+         if (step.type === "single") {
+            return { ...prev, [step.key]: [option] };
          }
 
-         if (
-            exclusiveValue &&
-            nextArr.includes(exclusiveValue)
-         ) {
-            nextArr = nextArr.filter(
-               (v) => v !== exclusiveValue,
-            );
+         const alreadySelected = currentValues.includes(option);
+
+         if (step.type === "multi-limit") {
+            if (alreadySelected) {
+               return {
+                  ...prev,
+                  [step.key]: currentValues.filter(
+                     (item) => item !== option
+                  ),
+               };
+            }
+
+            if (
+               step.limit &&
+               currentValues.length >= step.limit
+            ) {
+               return prev;
+            }
+
+            return {
+               ...prev,
+               [step.key]: [...currentValues, option],
+            };
          }
 
-         if (nextArr.includes(value)) {
-            nextArr = nextArr.filter((v) => v !== value);
-         } else {
-            if (max && nextArr.length >= max) return p;
-            nextArr.push(value);
-         }
-
-         return { ...p, [name]: nextArr };
+         return {
+            ...prev,
+            [step.key]: alreadySelected
+               ? currentValues.filter(
+                    (item) => item !== option
+                 )
+               : [...currentValues, option],
+         };
       });
-   }
+   };
+
+   const handleNext = () => {
+      if (!isStepValid) {
+         setError("Please make a selection to continue.");
+         return;
+      }
+
+      setError("");
+
+      if (currentStep < steps.length - 1) {
+         setCurrentStep((prev) => prev + 1);
+      } else {
+         navigate("/restaurants");
+      }
+   };
+
+   const handlePrevious = () => {
+      setError("");
+      if (currentStep > 0) {
+         setCurrentStep((prev) => prev - 1);
+      }
+   };
+
+   const handleSkip = () => {
+      navigate("/restaurants");
+   };
 
    return (
-      <div className="ob">
-         <aside className="ob__side">
-            <div className="ob__sideInner">
-               <div className="ob__sideTitle">umami</div>
+      <div className="onboarding">
+         <aside className="onboarding__sidebar">
+            <img
+               src={logo}
+               alt="Umami logo"
+               className="onboarding__logo"
+            />
 
-               <nav className="ob__nav">
-                  {STEPS.map((s, idx) => (
-                     <button
-                        key={s.key}
-                        type="button"
-                        className={
-                           "ob__navItem " +
-                           (idx === stepIdx
-                              ? "is-active"
-                              : "") +
-                           (idx < stepIdx ? "is-done" : "")
-                        }
-                        onClick={() =>
-                           idx <= stepIdx && setStepIdx(idx)
-                        }
-                        aria-current={
-                           idx === stepIdx
-                              ? "step"
-                              : undefined
-                        }
+            <div className="onboarding__nav">
+               {steps.map((item, index) => {
+                  const isActive = index === currentStep;
+
+                  return (
+                     <div
+                        key={item.key}
+                        className={`onboarding__navItem ${
+                           isActive
+                              ? "onboarding__navItem--active"
+                              : ""
+                        }`}
                      >
-                        {s.label}
-                     </button>
-                  ))}
-               </nav>
+                        <span className="onboarding__navLabel">
+                           {item.navLabel}
+                        </span>
+                        <span className="onboarding__navCircle">
+                           {item.id}
+                        </span>
+                     </div>
+                  );
+               })}
             </div>
          </aside>
 
-         <main className="ob__main">
-            <div
-               className="ob__card"
-               role="dialog"
-               aria-label="Onboarding"
-            >
-               {currentStep.key === "role" && (
-                  <Step
-                     title="What best describes you?"
-                     subtitle="Select one:"
-                     progress={progressPct}
-                     footerLeft={<div />}
-                     footerRight={
-                        <div className="ob__footerBtns">
-                           <button
-                              type="button"
-                              className="ob__btn ob__btnGhost"
-                              onClick={() =>
-                                 navigate("/restaurants")
-                              }
-                           >
-                              Skip Survey
-                           </button>
-                           <button
-                              type="button"
-                              className="ob__btn ob__btnPrimary"
-                              disabled={!canGoNext}
-                              onClick={next}
-                           >
-                              Next →
-                           </button>
-                        </div>
-                     }
-                  >
-                     <CheckboxRow
-                        checked={form.role === "student"}
-                        label="Cal Poly student"
-                        onChange={() =>
-                           setSingle("role", "student")
-                        }
-                        single
-                     />
-                     <CheckboxRow
-                        checked={form.role === "staff"}
-                        label="Faculty/Staff"
-                        onChange={() =>
-                           setSingle("role", "staff")
-                        }
-                        single
-                     />
-                     <CheckboxRow
-                        checked={form.role === "visitor"}
-                        label="Visitor/local"
-                        onChange={() =>
-                           setSingle("role", "visitor")
-                        }
-                        single
-                     />
-                  </Step>
-               )}
+         <main className="onboarding__main">
+            <section className="onboarding__card">
+               <h1 className="onboarding__title">{step.title}</h1>
 
-               {currentStep.key === "budget" && (
-                  <Step
-                     title="What is your typical budget per meal?"
-                     subtitle=""
-                     progress={progressPct}
-                     footerLeft={
+               {step.subtitle ? (
+                  <p className="onboarding__subtitle">
+                     {step.subtitle}
+                  </p>
+               ) : null}
+
+               <div className="onboarding__options">
+                  {step.options.map((option) => {
+                     const checked =
+                        selectedValues.includes(option);
+
+                     return (
+                        <button
+                           key={option}
+                           type="button"
+                           className={`onboarding__option ${
+                              checked
+                                 ? "onboarding__option--selected"
+                                 : ""
+                           }`}
+                           onClick={() =>
+                              handleOptionToggle(option)
+                           }
+                        >
+                           <span className="onboarding__checkbox">
+                              {checked ? (
+                                 <svg
+                                    viewBox="0 0 24 24"
+                                    width="16"
+                                    height="16"
+                                    aria-hidden="true"
+                                 >
+                                    <path
+                                       fill="currentColor"
+                                       d="M9.2 16.6 4.9 12.3l-1.4 1.4 5.7 5.7L20.5 8.1l-1.4-1.4z"
+                                    />
+                                 </svg>
+                              ) : null}
+                           </span>
+
+                           <span className="onboarding__optionText">
+                              {option}
+                           </span>
+                        </button>
+                     );
+                  })}
+               </div>
+
+               {error ? (
+                  <p className="onboarding__error">{error}</p>
+               ) : null}
+
+               <div className="onboarding__footer">
+                  <div className="onboarding__progressWrap">
+                     <div className="onboarding__progressText">
+                        <span>Progress</span>
+                        <span className="onboarding__progressPercent">
+                           {progressPercent}%
+                        </span>
+                     </div>
+
+                     <div className="onboarding__progressBar">
+                        <div
+                           className="onboarding__progressFill"
+                           style={{
+                              width: `${progressPercent}%`,
+                           }}
+                        />
+                     </div>
+                  </div>
+
+                  <div className="onboarding__actions">
+                     {currentStep === 0 ? (
                         <button
                            type="button"
-                           className="ob__btn ob__btnOutline"
-                           onClick={prev}
+                           className="btn btn-outline onboarding__btn"
+                           onClick={handleSkip}
+                        >
+                           Skip Survey
+                        </button>
+                     ) : (
+                        <button
+                           type="button"
+                           className="btn btn-outline onboarding__btn"
+                           onClick={handlePrevious}
                         >
                            ← Previous
                         </button>
-                     }
-                     footerRight={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnPrimary"
-                           disabled={!canGoNext}
-                           onClick={next}
-                        >
-                           Next →
-                        </button>
-                     }
-                  >
-                     <CheckboxRow
-                        checked={form.budget === "under10"}
-                        label="Under $10"
-                        onChange={() =>
-                           setSingle("budget", "under10")
-                        }
-                        single
-                     />
-                     <CheckboxRow
-                        checked={form.budget === "10to20"}
-                        label="$10–$20"
-                        onChange={() =>
-                           setSingle("budget", "10to20")
-                        }
-                        single
-                     />
-                     <CheckboxRow
-                        checked={form.budget === "20to25"}
-                        label="$20–$25"
-                        onChange={() =>
-                           setSingle("budget", "20to25")
-                        }
-                        single
-                     />
-                     <CheckboxRow
-                        checked={form.budget === "25plus"}
-                        label="$25+"
-                        onChange={() =>
-                           setSingle("budget", "25plus")
-                        }
-                        single
-                     />
-                  </Step>
-               )}
-
-               {currentStep.key === "diet" && (
-                  <Step
-                     title="Do you have any dietary preferences or restrictions?"
-                     subtitle="Select all that apply:"
-                     progress={progressPct}
-                     footerLeft={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnOutline"
-                           onClick={prev}
-                        >
-                           ← Previous
-                        </button>
-                     }
-                     footerRight={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnPrimary"
-                           disabled={!canGoNext}
-                           onClick={next}
-                        >
-                           Next →
-                        </button>
-                     }
-                  >
-                     <CheckboxRow
-                        checked={form.diet.includes(
-                           "vegetarian",
-                        )}
-                        label="Vegetarian"
-                        onChange={() =>
-                           toggleMulti(
-                              "diet",
-                              "vegetarian",
-                              { exclusiveValue: "none" },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.diet.includes(
-                           "vegan",
-                        )}
-                        label="Vegan"
-                        onChange={() =>
-                           toggleMulti("diet", "vegan", {
-                              exclusiveValue: "none",
-                           })
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.diet.includes(
-                           "glutenfree",
-                        )}
-                        label="Gluten-free"
-                        onChange={() =>
-                           toggleMulti(
-                              "diet",
-                              "glutenfree",
-                              { exclusiveValue: "none" },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.diet.includes(
-                           "dairyfree",
-                        )}
-                        label="Dairy-free"
-                        onChange={() =>
-                           toggleMulti(
-                              "diet",
-                              "dairyfree",
-                              { exclusiveValue: "none" },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.diet.includes("none")}
-                        label="No restrictions"
-                        onChange={() =>
-                           toggleMulti("diet", "none", {
-                              exclusiveValue: "none",
-                           })
-                        }
-                     />
-                  </Step>
-               )}
-
-               {currentStep.key === "priorities" && (
-                  <Step
-                     title="What matters most to you when choosing restaurants?"
-                     subtitle="Choose up to 2"
-                     progress={progressPct}
-                     footerLeft={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnOutline"
-                           onClick={prev}
-                        >
-                           ← Previous
-                        </button>
-                     }
-                     footerRight={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnPrimary"
-                           disabled={!canGoNext}
-                           onClick={next}
-                        >
-                           Next →
-                        </button>
-                     }
-                  >
-                     <CheckboxRow
-                        checked={form.priorities.includes(
-                           "quality",
-                        )}
-                        label="Food quality"
-                        onChange={() =>
-                           toggleMulti(
-                              "priorities",
-                              "quality",
-                              { max: 2 },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.priorities.includes(
-                           "price",
-                        )}
-                        label="Price"
-                        onChange={() =>
-                           toggleMulti(
-                              "priorities",
-                              "price",
-                              { max: 2 },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.priorities.includes(
-                           "wait",
-                        )}
-                        label="Short wait time"
-                        onChange={() =>
-                           toggleMulti(
-                              "priorities",
-                              "wait",
-                              { max: 2 },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.priorities.includes(
-                           "healthy",
-                        )}
-                        label="Healthy"
-                        onChange={() =>
-                           toggleMulti(
-                              "priorities",
-                              "healthy",
-                              { max: 2 },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.priorities.includes(
-                           "study",
-                        )}
-                        label="Study-friendly"
-                        onChange={() =>
-                           toggleMulti(
-                              "priorities",
-                              "study",
-                              { max: 2 },
-                           )
-                        }
-                     />
-
-                     {form.priorities.length >= 2 && (
-                        <div className="ob__hint">
-                           You’ve selected 2. Uncheck one to
-                           change.
-                        </div>
                      )}
-                  </Step>
-               )}
 
-               {currentStep.key === "notifications" && (
-                  <Step
-                     title="What updates would you like to receive?"
-                     subtitle="Select all that apply:"
-                     progress={progressPct}
-                     footerLeft={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnOutline"
-                           onClick={prev}
-                        >
-                           ← Previous
-                        </button>
-                     }
-                     footerRight={
-                        <button
-                           type="button"
-                           className="ob__btn ob__btnPrimary"
-                           disabled={!canGoNext}
-                           onClick={next}
-                        >
-                           Finish →
-                        </button>
-                     }
-                  >
-                     <CheckboxRow
-                        checked={form.notifications.includes(
-                           "menu",
-                        )}
-                        label="Restaurant menu updates"
-                        onChange={() =>
-                           toggleMulti(
-                              "notifications",
-                              "menu",
-                              {
-                                 exclusiveValue: "none",
-                              },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.notifications.includes(
-                           "besttimes",
-                        )}
-                        label="Best times to order (avoid long waits)"
-                        onChange={() =>
-                           toggleMulti(
-                              "notifications",
-                              "besttimes",
-                              {
-                                 exclusiveValue: "none",
-                              },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.notifications.includes(
-                           "friends",
-                        )}
-                        label="Friend activity (reviews, new friend requests)"
-                        onChange={() =>
-                           toggleMulti(
-                              "notifications",
-                              "friends",
-                              {
-                                 exclusiveValue: "none",
-                              },
-                           )
-                        }
-                     />
-                     <CheckboxRow
-                        checked={form.notifications.includes(
-                           "none",
-                        )}
-                        label="No notifications"
-                        onChange={() =>
-                           toggleMulti(
-                              "notifications",
-                              "none",
-                              {
-                                 exclusiveValue: "none",
-                              },
-                           )
-                        }
-                     />
-                  </Step>
-               )}
-            </div>
+                     <button
+                        type="button"
+                        className="btn btn-secondary onboarding__btn"
+                        onClick={handleNext}
+                     >
+                        {currentStep === steps.length - 1
+                           ? "Done"
+                           : "Next →"}
+                     </button>
+                  </div>
+               </div>
+            </section>
          </main>
       </div>
-   );
-}
-
-function Step({
-   title,
-   subtitle,
-   progress,
-   children,
-   footerLeft,
-   footerRight,
-}) {
-   return (
-      <>
-         <h1 className="ob__title">{title}</h1>
-         {subtitle ? (
-            <div className="ob__subtitle">{subtitle}</div>
-         ) : (
-            <div className="ob__subtitle" />
-         )}
-
-         <div className="ob__content">{children}</div>
-
-         <div className="ob__progressWrap">
-            <div className="ob__progressLabel">
-               <span>Progress</span>
-               <span className="ob__progressPct">
-                  {progress}%
-               </span>
-            </div>
-            <div
-               className="ob__progressBar"
-               aria-label="Progress"
-            >
-               <div
-                  className="ob__progressFill"
-                  style={{ width: `${progress}%` }}
-               />
-            </div>
-         </div>
-
-         <div className="ob__footer">
-            <div>{footerLeft}</div>
-            <div>{footerRight}</div>
-         </div>
-      </>
-   );
-}
-
-function CheckboxRow({ checked, label, onChange, single }) {
-   return (
-      <label className="ob__row">
-         <input
-            type="checkbox"
-            className="ob__checkbox"
-            checked={checked}
-            onChange={onChange}
-            aria-checked={checked}
-         />
-         <span
-            className={
-               "ob__rowLabel " + (single ? "is-single" : "")
-            }
-         >
-            {label}
-         </span>
-      </label>
    );
 }

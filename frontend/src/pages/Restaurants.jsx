@@ -327,16 +327,14 @@ function Restaurants({ restaurants: initialRestaurants }) {
             <div className="restaurants-grid">
                {visibleRestaurants.map(
                   (restaurant, index) => (
-                     <div
-                        key={
-                           restaurant.id ??
-                           `${restaurant.name ?? "restaurant"}-${index}`
-                        }
-                        onClick={() =>
-                           handleCardClick(restaurant)
-                        }
-                        style={{ cursor: "pointer" }}
-                     >
+                   <div
+   key={
+      restaurant.id ??
+      `${restaurant.name ?? "restaurant"}-${index}`
+   }
+   onClick={() => handleCardClick(restaurant)}
+   className="restaurant-card-click"
+>
                         <RestaurantCard
                            restaurant={restaurant}
                            isBookmarked={bookmarkedIds.has(

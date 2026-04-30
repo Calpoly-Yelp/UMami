@@ -90,7 +90,6 @@ export default function Review() {
       // Fetches all the individual reviews associated with this restaurant
       const fetchReviews = async () => {
          try {
-            // You'll want to replace this dummy ID with your actual logged-in user ID later
             const CURRENT_USER_ID =
                "b677be85-81db-4245-91ca-acb713bd5564";
 
@@ -100,7 +99,6 @@ export default function Review() {
             if (response.ok) {
                const data = await response.json();
 
-               // Map the backend ReviewModel to the frontend ReviewCard props
                const formattedReviews = data.map((rev) => ({
                   id: rev.id,
                   userName:
@@ -132,13 +130,10 @@ export default function Review() {
       fetchReviews();
    }, [id]);
 
-   // Calculates the total count of each star rating (1-5) from the fetched reviews array.
-   // This is used to populate the filled percentages on the "Overall Rating" bar chart.
    const computedRatings = useMemo(() => {
       const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
       reviews.forEach((r) => {
-         // Only count valid number ratings between 1 and 5
          if (typeof r.rating === "number" && r.rating > 0) {
             const roundedRating = Math.max(
                1,
@@ -151,7 +146,6 @@ export default function Review() {
       return { counts };
    }, [reviews]);
 
-   // Filters the reviews based on the selected star rating filter
    const filteredReviews = useMemo(() => {
       if (!ratingFilter) return reviews;
       return reviews.filter((r) => {
@@ -201,7 +195,7 @@ export default function Review() {
                   {restaurant.tags.map((t) => (
                      <span
                         key={t}
-                        className="chip chip--light"
+                        className="review-chip review-chip--light"
                      >
                         {t}
                      </span>
@@ -245,7 +239,7 @@ export default function Review() {
 
          <main className="review__main">
             <section
-               className="card card--section"
+               className="review-card review-card--section"
                id="section-menu"
             >
                <div className="review__sectionHeaderRow">
@@ -300,7 +294,7 @@ export default function Review() {
             </section>
 
             <section
-               className="card card--section"
+               className="review-card review-card--section"
                id="section-info"
             >
                <h2 className="review__h2">Info</h2>
@@ -356,7 +350,7 @@ export default function Review() {
                      />
 
                      <div className="review__locationChipRow">
-                        <span className="chip chip--outline">
+                        <span className="review-chip chip--outline">
                            {restaurant.locationLabel}
                         </span>
                      </div>
@@ -420,7 +414,7 @@ export default function Review() {
                className="review__reviewsGrid"
                id="section-reviews"
             >
-               <div className="card card--section">
+               <div className="review-card review-card--section">
                   <div className="review__reviewsHeader">
                      <h2 className="review__h2">Reviews</h2>
 
@@ -466,7 +460,7 @@ export default function Review() {
                   </div>
                </div>
 
-               <aside className="card card--section review__ratingCard">
+               <aside className="review-card review-card--section review__ratingCard">
                   <div className="review__ratingTop">
                      <div className="review__ratingValue">
                         {restaurant.rating.toFixed(1)}
@@ -507,13 +501,10 @@ export default function Review() {
 
 // Renders a visual row of 5 stars based on a numeric value
 function StarRow({ value }) {
-   // Calculate number of completely filled stars
    const full = Math.floor(value);
-   // Determine if a half-filled star is needed
    const half = value - full >= 0.5;
    return (
       <div className="stars" aria-label={`Rating ${value}`}>
-         {/* Generate exactly 5 stars */}
          {Array.from({ length: 5 }).map((_, i) => {
             const isFull = i < full;
             const isHalf = i === full && half;
@@ -538,7 +529,6 @@ function RatingBar({
    isActive,
    onClick,
 }) {
-   // Calculate what percentage of total reviews this star rating makes up
    const totalPct =
       total > 0 ? Math.round((count / total) * 100) : 0;
    return (

@@ -16,7 +16,7 @@ const PhotoGallery = () => {
             </button>
          </div>
 
-         <section className="section">
+         <section className="gallery-section">
             <h2>Menu Items</h2>
 
             <div className="image-grid">
@@ -28,7 +28,7 @@ const PhotoGallery = () => {
             </div>
          </section>
 
-         <section className="section">
+         <section className="gallery-section">
             <h2>Ambience</h2>
 
             <div className="image-grid">

@@ -567,13 +567,9 @@ function User({
                                     `${restaurant.name ?? "restaurant"}-${index}`
                                  }
                                  onClick={() =>
-                                    navigate(
-                                       `/restaurants/${restaurant.id}`,
-                                    )
+                                    navigate(`/restaurants/${restaurant.id}`)
                                  }
-                                 style={{
-                                    cursor: "pointer",
-                                 }}
+                                 className="restaurant-card-click"
                               >
                                  <RestaurantCard
                                     restaurant={restaurant}
