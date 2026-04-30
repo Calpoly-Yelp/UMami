@@ -61,7 +61,9 @@ export default function RestaurantMenu() {
             }
 
             const data = await response.json();
-            const sections = Array.isArray(data) ? data : [];
+            const sections = Array.isArray(data)
+               ? data
+               : [];
 
             setMenuData(sections);
             setActiveCategory(sections[0]?.category || "");
@@ -152,7 +154,9 @@ export default function RestaurantMenu() {
 
             <main className="menu-items">
                {isMenuLoading && (
-                  <p className="menu-empty">Loading menu...</p>
+                  <p className="menu-empty">
+                     Loading menu...
+                  </p>
                )}
 
                {!isMenuLoading && menuError && (
@@ -192,9 +196,14 @@ export default function RestaurantMenu() {
                               {(section.items || []).map(
                                  (item) => (
                                     <tr
-                                       key={item.id || item.name}
+                                       key={
+                                          item.id ||
+                                          item.name
+                                       }
                                        onClick={() =>
-                                          setSelectedItem(item)
+                                          setSelectedItem(
+                                             item,
+                                          )
                                        }
                                     >
                                        <td>{item.name}</td>
@@ -258,7 +267,9 @@ export default function RestaurantMenu() {
                      <div className="modal-nutrient-row">
                         <span>Total Carbohydrates</span>
                         <span>
-                           {displayValue(selectedItem.carbs)}
+                           {displayValue(
+                              selectedItem.carbs,
+                           )}
                         </span>
                      </div>
                      <div className="modal-nutrient-row">

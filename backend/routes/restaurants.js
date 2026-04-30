@@ -162,27 +162,23 @@ router.get("/:id/menu", async (req, res) => {
          .array(MenuItem)
          .parse(data || []);
 
-      const sections = validatedData.reduce(
-         (acc, item) => {
-            const category =
-               item.category || "Uncategorized";
-            const existingSection = acc.find(
-               (section) => section.category === category,
-            );
+      const sections = validatedData.reduce((acc, item) => {
+         const category = item.category || "Uncategorized";
+         const existingSection = acc.find(
+            (section) => section.category === category,
+         );
 
-            if (existingSection) {
-               existingSection.items.push(item);
-            } else {
-               acc.push({
-                  category,
-                  items: [item],
-               });
-            }
+         if (existingSection) {
+            existingSection.items.push(item);
+         } else {
+            acc.push({
+               category,
+               items: [item],
+            });
+         }
 
-            return acc;
-         },
-         [],
-      );
+         return acc;
+      }, []);
 
       res.status(200).json(sections);
    } catch (error) {

@@ -161,7 +161,8 @@ describe("Restaurant Endpoints", () => {
             restaurant_id: 108,
             category: "Signature Shakes",
             name: "Acai Energy",
-            description: "Acai smoothie with fruit and protein.",
+            description:
+               "Acai smoothie with fruit and protein.",
             portion: "24 oz",
             price: null,
             calories: 350,

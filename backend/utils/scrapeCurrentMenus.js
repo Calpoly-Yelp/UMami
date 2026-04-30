@@ -51,10 +51,12 @@ export function getCurrentMealPeriod(date = new Date()) {
       hour12: false,
    }).formatToParts(date);
    const hour = Number(
-      parts.find((part) => part.type === "hour")?.value || 0,
+      parts.find((part) => part.type === "hour")?.value ||
+         0,
    );
    const minute = Number(
-      parts.find((part) => part.type === "minute")?.value || 0,
+      parts.find((part) => part.type === "minute")?.value ||
+         0,
    );
    const minutes = hour * 60 + minute;
 
@@ -75,7 +77,10 @@ export function getCurrentMealPeriod(date = new Date()) {
 
 export function buildMenuUrl(
    sourceUrl,
-   { date = getTodayDate(), mealPeriod = getCurrentMealPeriod() } = {},
+   {
+      date = getTodayDate(),
+      mealPeriod = getCurrentMealPeriod(),
+   } = {},
 ) {
    if (!sourceUrl) {
       return null;
@@ -142,7 +147,11 @@ function normalizeText(value) {
 }
 
 function normalizeNumber(value) {
-   if (value === null || value === undefined || value === "") {
+   if (
+      value === null ||
+      value === undefined ||
+      value === ""
+   ) {
       return null;
    }
 
@@ -185,7 +194,11 @@ function getNestedValue(item, keys) {
             item,
          );
 
-      if (value !== undefined && value !== null && value !== "") {
+      if (
+         value !== undefined &&
+         value !== null &&
+         value !== ""
+      ) {
          return value;
       }
    }
@@ -244,7 +257,11 @@ function findNutrientValue(item, names) {
 }
 
 function looksLikeMenuItem(item) {
-   if (!item || typeof item !== "object" || Array.isArray(item)) {
+   if (
+      !item ||
+      typeof item !== "object" ||
+      Array.isArray(item)
+   ) {
       return false;
    }
 
@@ -271,15 +288,19 @@ function looksLikeMenuItem(item) {
          "calories",
          "category",
       ]) ||
-         item.nutrition ||
-         item.nutrients ||
-         item.nutrition_facts ||
-         item.nutritional_info,
+      item.nutrition ||
+      item.nutrients ||
+      item.nutrition_facts ||
+      item.nutritional_info,
    );
 }
 
 function getContextName(value, key = "") {
-   if (!value || typeof value !== "object" || Array.isArray(value)) {
+   if (
+      !value ||
+      typeof value !== "object" ||
+      Array.isArray(value)
+   ) {
       return null;
    }
 
@@ -302,7 +323,11 @@ function getContextName(value, key = "") {
 }
 
 function getDisplayName(value) {
-   if (!value || typeof value !== "object" || Array.isArray(value)) {
+   if (
+      !value ||
+      typeof value !== "object" ||
+      Array.isArray(value)
+   ) {
       return null;
    }
 
@@ -328,7 +353,10 @@ function normalizeMenuItem(
             "nutrition.calories",
             "nutrition_facts.calories",
          ]),
-      ) ?? normalizeNumber(findNutrientValue(item, ["calories"]));
+      ) ??
+      normalizeNumber(
+         findNutrientValue(item, ["calories"]),
+      );
 
    const fat =
       normalizeText(
@@ -339,7 +367,9 @@ function normalizeMenuItem(
             "nutrition_facts.fat",
          ]),
       ) ||
-      normalizeText(findNutrientValue(item, ["fat", "total fat"]));
+      normalizeText(
+         findNutrientValue(item, ["fat", "total fat"]),
+      );
 
    const carbs =
       normalizeText(
@@ -451,14 +481,21 @@ function walkForItems(
 
    if (Array.isArray(value)) {
       for (const entry of value) {
-         walkForItems(entry, context, items, seenObjects, key);
+         walkForItems(
+            entry,
+            context,
+            items,
+            seenObjects,
+            key,
+         );
       }
       return;
    }
 
    const nextContext = {
       ...context,
-      category: getContextName(value, key) || context.category,
+      category:
+         getContextName(value, key) || context.category,
    };
 
    if (looksLikeMenuItem(value)) {
@@ -478,7 +515,13 @@ function walkForItems(
             getDisplayName(child) || keyContext.category;
       }
 
-      walkForItems(child, keyContext, items, seenObjects, key);
+      walkForItems(
+         child,
+         keyContext,
+         items,
+         seenObjects,
+         key,
+      );
    }
 }
 
@@ -574,7 +617,8 @@ export async function fetchMenuSource(url) {
       headers: {
          "User-Agent":
             "UMamiApp/1.0 (CSC308-Student-Project; menu scraper)",
-         Accept: "application/json,text/html;q=0.9,*/*;q=0.8",
+         Accept:
+            "application/json,text/html;q=0.9,*/*;q=0.8",
          "Accept-Language": "en-US,en;q=0.9",
       },
    });
@@ -601,7 +645,9 @@ export async function fetchMenuSource(url) {
 }
 
 export async function fetchDineOnCampusSource(url) {
-   const browser = await chromium.launch({ headless: true });
+   const browser = await chromium.launch({
+      headless: true,
+   });
 
    try {
       const context = await browser.newContext({
@@ -670,7 +716,10 @@ async function replaceRestaurantMenu({
       .eq("restaurant_id", restaurantId);
 
    if (mealPeriod) {
-      deleteQuery = deleteQuery.eq("meal_period", mealPeriod);
+      deleteQuery = deleteQuery.eq(
+         "meal_period",
+         mealPeriod,
+      );
    }
 
    const { error: deleteError } = await deleteQuery;
@@ -707,10 +756,13 @@ export async function scrapeRestaurantMenu(
       dryRun = false,
    } = {},
 ) {
-   const sourceUrl = buildMenuUrl(restaurant.menu_source_url, {
-      date,
-      mealPeriod,
-   });
+   const sourceUrl = buildMenuUrl(
+      restaurant.menu_source_url,
+      {
+         date,
+         mealPeriod,
+      },
+   );
 
    if (!sourceUrl) {
       return {
@@ -798,11 +850,14 @@ async function scrapeCurrentMenus() {
             `Scraping ${restaurant.name || `Restaurant ${restaurant.id}`}...`,
          );
 
-         const result = await scrapeRestaurantMenu(restaurant, {
-            date,
-            mealPeriod,
-            dryRun,
-         });
+         const result = await scrapeRestaurantMenu(
+            restaurant,
+            {
+               date,
+               mealPeriod,
+               dryRun,
+            },
+         );
 
          console.log(`Source: ${result.sourceUrl}`);
          console.log(
