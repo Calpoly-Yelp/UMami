@@ -14,6 +14,30 @@ import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
 import UserPage from "../pages/User.jsx";
 
+// Mock Supabase to avoid 'import.meta' Vite errors in Jest and prevent real DB calls
+jest.mock("../lib/supabase", () => {
+   const mockChain = {
+      select: function () {
+         return this;
+      },
+      insert: function () {
+         return this;
+      },
+      delete: function () {
+         return this;
+      },
+      eq: function () {
+         return this;
+      },
+      then: function (resolve) {
+         resolve({ data: [], error: null });
+      },
+   };
+   return {
+      supabase: { from: () => mockChain },
+   };
+});
+
 // Custom render function that wraps components in MemoryRouter so React Router hooks work
 const render = (ui, options) =>
    rtlRender(ui, { wrapper: MemoryRouter, ...options });

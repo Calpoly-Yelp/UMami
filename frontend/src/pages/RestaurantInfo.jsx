@@ -19,6 +19,8 @@ import {
    CaretLeft,
    CaretRight,
 } from "@phosphor-icons/react";
+import { useBookmarks } from "../hooks/useBookmarks";
+import { supabase } from "../lib/supabase";
 
 export default function Review() {
    const navigate = useNavigate();
@@ -41,6 +43,12 @@ export default function Review() {
       left: false,
       right: false,
    });
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks();
+   const isBookmarked = bookmarkedIds.has(parseInt(id, 10));
 
    // Retrieve the actual logged-in user from localStorage
    const [currentUser] = useState(() => {
@@ -473,15 +481,58 @@ export default function Review() {
       }
    }, [id]);
 
+   const fetchBookmarkStatus = useCallback(async () => {
+      if (!CURRENT_USER_ID) return;
+      try {
+         const { data, error } = await supabase
+            .from("bookmarks")
+            .select("restaurant_id")
+            .eq("user_id", CURRENT_USER_ID)
+            .eq("restaurant_id", id);
+
+         if (!error && data && data.length > 0) {
+            setBookmarkedIds((prev) =>
+               new Set(prev).add(parseInt(id, 10)),
+            );
+         } else {
+            setBookmarkedIds((prev) => {
+               const next = new Set(prev);
+               next.delete(parseInt(id, 10));
+               return next;
+            });
+         }
+      } catch (err) {
+         console.error(
+            "Failed to fetch bookmark status:",
+            err,
+         );
+      }
+   }, [id, CURRENT_USER_ID, setBookmarkedIds]);
+
+   const handleBookmarkToggle = async () => {
+      if (!CURRENT_USER_ID) {
+         alert("Please log in to bookmark a restaurant!");
+         return;
+      }
+      const { error } = await toggleBookmark(
+         CURRENT_USER_ID,
+         id,
+      );
+      if (error) {
+         console.error(error);
+      }
+   };
+
    useEffect(() => {
       const loadData = async () => {
          await Promise.all([
             fetchRestaurant(),
             fetchReviews(),
+            fetchBookmarkStatus(),
          ]);
       };
       loadData();
-   }, [fetchRestaurant, fetchReviews]);
+   }, [fetchRestaurant, fetchReviews, fetchBookmarkStatus]);
 
    // Deletes a review from the backend and updates local state
    const handleDeleteReview = async (reviewId) => {
@@ -721,9 +772,27 @@ export default function Review() {
                   Back to Restaurants
                </button>
 
-               <h1 className="review__title">
-                  {restaurant.name}
-               </h1>
+               <div className="review__titleRow">
+                  <h1 className="review__title">
+                     {restaurant.name}
+                  </h1>
+                  <button
+                     className={`review__bookmarkBtn ${isBookmarked ? "is-bookmarked" : ""}`}
+                     onClick={handleBookmarkToggle}
+                     aria-label={
+                        isBookmarked
+                           ? `Remove bookmark for ${restaurant.name}`
+                           : `Bookmark ${restaurant.name}`
+                     }
+                  >
+                     <Bookmark
+                        weight={
+                           isBookmarked ? "fill" : "bold"
+                        }
+                        size={32}
+                     />
+                  </button>
+               </div>
 
                <StarRow
                   value={restaurant.rating}

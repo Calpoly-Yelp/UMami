@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { supabase } from "../lib/supabase";
+import { useBookmarks } from "../hooks/useBookmarks";
 import "./Restaurants.css";
 
 function Restaurants({ restaurants: initialRestaurants }) {
@@ -12,9 +13,11 @@ function Restaurants({ restaurants: initialRestaurants }) {
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
    );
-   const [bookmarkedIds, setBookmarkedIds] = useState(
-      new Set(),
-   );
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks();
    const [userId, setUserId] = useState(null);
    const [loading, setLoading] = useState(
       !initialRestaurants,
@@ -120,64 +123,20 @@ function Restaurants({ restaurants: initialRestaurants }) {
       };
 
       loadData();
-   }, [initialRestaurants]);
+   }, [initialRestaurants, setBookmarkedIds]);
 
    const handleBookmarkToggle = async (restaurantId) => {
       if (!userId) {
          setError("You must be signed in to bookmark.");
          return;
       }
-
-      const wasBookmarked = bookmarkedIds.has(restaurantId);
-
-      setBookmarkedIds((prev) => {
-         const next = new Set(prev);
-         if (next.has(restaurantId)) {
-            next.delete(restaurantId);
-         } else {
-            next.add(restaurantId);
-         }
-         return next;
-      });
-
-      try {
-         if (wasBookmarked) {
-            const { error } = await supabase
-               .from("bookmarks")
-               .delete()
-               .eq("user_id", userId)
-               .eq("restaurant_id", restaurantId);
-
-            if (error) {
-               throw error;
-            }
-         } else {
-            const { error } = await supabase
-               .from("bookmarks")
-               .insert({
-                  user_id: userId,
-                  restaurant_id: restaurantId,
-               });
-
-            if (error) {
-               throw error;
-            }
-         }
-      } catch (err) {
-         console.error("Error updating bookmark:", err);
-
-         setBookmarkedIds((prev) => {
-            const next = new Set(prev);
-            if (wasBookmarked) {
-               next.add(restaurantId);
-            } else {
-               next.delete(restaurantId);
-            }
-            return next;
-         });
-
+      const { error } = await toggleBookmark(
+         userId,
+         restaurantId,
+      );
+      if (error) {
          setError(
-            err.message || "Failed to update bookmark.",
+            error.message || "Failed to update bookmark.",
          );
       }
    };

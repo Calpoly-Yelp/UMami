@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
+import { useBookmarks } from "../hooks/useBookmarks";
 import "./User.css";
 
 // This is our user page layout
@@ -56,11 +57,12 @@ function User({
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
    );
-   const [bookmarkedIds, setBookmarkedIds] = useState(
-      () =>
-         new Set(
-            initialRestaurants?.map((r) => r.id) || [],
-         ),
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks(
+      initialRestaurants?.map((r) => r.id) || [],
    );
    const originalBookmarkedIdsRef = useRef(
       new Set(initialRestaurants?.map((r) => r.id) || []),
@@ -359,6 +361,7 @@ function User({
       initialReviews,
       initialRestaurants,
       initialFollowing,
+      setBookmarkedIds,
    ]);
 
    // Sync bookmarks on page refresh
@@ -461,15 +464,7 @@ function User({
    }, [user.id]);
 
    const handleBookmarkToggle = (restaurantId) => {
-      setBookmarkedIds((prev) => {
-         const next = new Set(prev);
-         if (next.has(restaurantId)) {
-            next.delete(restaurantId);
-         } else {
-            next.add(restaurantId);
-         }
-         return next;
-      });
+      toggleBookmark(user.id, restaurantId, true);
    };
 
    const handleFollowToggle = (followedUserId) => {
