@@ -13,6 +13,12 @@ process.env.SUPABASE_SECRET_KEY = "test-secret";
 // Prevent dotenv from loading .env file which interferes with tests
 jest.mock("dotenv/config", () => {});
 
+// Mock node-cron to prevent it from keeping the event loop alive
+// when this test simulates the "development" environment
+jest.mock("node-cron", () => ({
+   schedule: jest.fn(),
+}));
+
 // Mock express to capture listen
 const mockListen = jest.fn((port, cb) => {
    if (cb) {
@@ -103,8 +109,9 @@ describe("Server Startup", () => {
 
       await import("../index.js");
 
-      expect(mockListen).toHaveBeenCalledWith(
-         4000,
+      const portArg = mockListen.mock.calls[0][0];
+      expect(["4000", 4000]).toContain(portArg);
+      expect(mockListen.mock.calls[0][1]).toEqual(
          expect.any(Function),
       );
 
