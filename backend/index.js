@@ -7,6 +7,7 @@ import restaurantsRouter from "./routes/restaurants.js";
 import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
 import uploadsRouter from "./routes/uploads.js"; // Import uploads router
+import "./utils/restaurantScraper.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;

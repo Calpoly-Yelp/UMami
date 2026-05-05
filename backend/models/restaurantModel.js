@@ -23,6 +23,7 @@ export const Restaurant = z.object({
    avg_rating: z.number().nullable(),
    lat: z.number().nullable().optional(),
    lng: z.number().nullable().optional(),
+   location_mapping: z.any().nullable().optional(),
    menu_source_url: z.string().nullable().optional(),
 });
 

@@ -41,7 +41,7 @@ async function geocodeAllRestaurants() {
    console.log("Fetching restaurants from database...");
    const { data: restaurants, error } = await supabase
       .from("restaurants")
-      .select("id, street_address, name, lat, lng");
+      .select("id, location, name, lat, lng");
 
    if (error) {
       console.error("Error fetching restaurants:", error);
@@ -73,21 +73,21 @@ async function geocodeAllRestaurants() {
    );
 
    for (const restaurant of restaurants) {
-      // Skip if no street_address is provided
-      if (!restaurant.street_address) {
+      // Skip if no location is provided
+      if (!restaurant.location) {
          console.log(
-            `Skipping ${restaurant.name || `Restaurant ${restaurant.id}`} (no street address)`,
+            `Skipping ${restaurant.name || `Restaurant ${restaurant.id}`} (no location)`,
          );
          continue;
       }
 
       console.log(
-         `Geocoding ${restaurant.name || `Restaurant ${restaurant.id}`} at "${restaurant.street_address}"...`,
+         `Geocoding ${restaurant.name || `Restaurant ${restaurant.id}`} at "${restaurant.location}"...`,
       );
 
       try {
          const coords = await getCoordinates(
-            restaurant.street_address,
+            restaurant.location,
          );
 
          if (coords) {
