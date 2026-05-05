@@ -22,6 +22,8 @@ frontend/.env.local
 !.vscode/setting.json
 .idea
 .DS_Store
+.agents
+skills-lock.json
 *.suo
 *.ntvs*
 *.njsproj
