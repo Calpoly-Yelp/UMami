@@ -885,7 +885,10 @@ async function scrapeCurrentMenus() {
    }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMainMenuScraper =
+   process.argv[1] &&
+   process.argv[1].endsWith("scrapeCurrentMenus.js");
+if (isMainMenuScraper) {
    scrapeCurrentMenus().catch((error) => {
       console.error(error);
       process.exitCode = 1;
