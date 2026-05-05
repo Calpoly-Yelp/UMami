@@ -12,7 +12,10 @@ export const Restaurant = z.object({
    // Array fields default to [] if null so Zod doesn't throw
    // "expected array, received null" validation errors
    tags: z.array(z.string()).nullable().default([]),
-   hours: z.array(z.string()).nullable().default([]),
+   hours: z
+      .array(z.string().nullable())
+      .nullable()
+      .default([]),
    image_urls: z.array(z.string()).nullable().default([]),
 
    rating_count: z.number().nullable(),
@@ -20,7 +23,6 @@ export const Restaurant = z.object({
    avg_rating: z.number().nullable(),
    lat: z.number().nullable().optional(),
    lng: z.number().nullable().optional(),
-   street_address: z.string().nullable().optional(),
    menu_source_url: z.string().nullable().optional(),
 });
 

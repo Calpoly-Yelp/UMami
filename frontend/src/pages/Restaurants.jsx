@@ -205,7 +205,8 @@ function Restaurants({ restaurants: initialRestaurants }) {
             .includes(lowerQuery);
 
          const tagsMatch = (restaurant.tags || []).some(
-            (tag) => tag.toLowerCase().includes(lowerQuery),
+            (tag) =>
+               tag?.toLowerCase().includes(lowerQuery),
          );
 
          return nameMatch || locationMatch || tagsMatch;
@@ -330,7 +331,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         onClick={() =>
                            handleCardClick(restaurant)
                         }
-                        className="restaurant-card-click"
+                        style={{ cursor: "pointer" }}
                      >
                         <RestaurantCard
                            restaurant={restaurant}

@@ -71,13 +71,159 @@ export default function Review() {
          return `${formattedHour}${formattedMinute}${ampm}`;
       };
 
-      // Format open/close hours from the array returned by the API
-      const timeString =
-         restaurantInfo?.hours?.length === 2
-            ? `${formatTime(restaurantInfo.hours[0])} - ${formatTime(
-                 restaurantInfo.hours[1],
-              )}`
-            : "Loading...";
+      const days = [
+         "Monday",
+         "Tuesday",
+         "Wednesday",
+         "Thursday",
+         "Friday",
+         "Saturday",
+         "Sunday",
+      ];
+      let parsedHours = [];
+      const hoursArray = restaurantInfo?.hours || [];
+
+      const now = new Date();
+      const currentDayIndex = (now.getDay() + 6) % 7; // 0 for Monday, 6 for Sunday
+      const currentDayStr = days[currentDayIndex];
+      const currentTimeInMinutes =
+         now.getHours() * 60 + now.getMinutes();
+
+      const parseTimeStrToMinutes = (t) => {
+         if (!t) return null;
+         const [h, m] = t.split(":");
+         return parseInt(h, 10) * 60 + parseInt(m, 10);
+      };
+
+      let globalIsOpenNow = false;
+
+      if (
+         hoursArray.length === 2 &&
+         !hoursArray.includes(null)
+      ) {
+         // Fallback: 1 open/close pair applied to all days
+         const openMins = parseTimeStrToMinutes(
+            hoursArray[0],
+         );
+         const closeMins = parseTimeStrToMinutes(
+            hoursArray[1],
+         );
+         if (openMins !== null && closeMins !== null) {
+            if (closeMins >= openMins) {
+               if (
+                  currentTimeInMinutes >= openMins &&
+                  currentTimeInMinutes <= closeMins
+               ) {
+                  globalIsOpenNow = true;
+               }
+            } else {
+               // Shift crosses midnight
+               if (
+                  currentTimeInMinutes >= openMins ||
+                  currentTimeInMinutes <= closeMins
+               ) {
+                  globalIsOpenNow = true;
+               }
+            }
+         }
+
+         const timeString = `${formatTime(hoursArray[0])} - ${formatTime(hoursArray[1])}`;
+         parsedHours = days.map((day) => ({
+            day,
+            time: timeString,
+            isToday: day === currentDayStr,
+            isOpenNow: globalIsOpenNow,
+         }));
+      } else if (hoursArray.length >= 14) {
+         // Assume 7 days, with 2, 4, or 6 elements per day (14, 28, or 42 total slots)
+         const elementsPerDay = Math.floor(
+            hoursArray.length / 7,
+         );
+
+         parsedHours = days.map((day, dayIndex) => {
+            const dayTimes = [];
+            // Parse all shifts for this day
+            for (let i = 0; i < elementsPerDay; i += 2) {
+               const openTime =
+                  hoursArray[dayIndex * elementsPerDay + i];
+               const closeTime =
+                  hoursArray[
+                     dayIndex * elementsPerDay + i + 1
+                  ];
+               if (openTime && closeTime) {
+                  dayTimes.push(
+                     `${formatTime(openTime)} - ${formatTime(closeTime)}`,
+                  );
+
+                  const openMins =
+                     parseTimeStrToMinutes(openTime);
+                  const closeMins =
+                     parseTimeStrToMinutes(closeTime);
+
+                  if (
+                     openMins !== null &&
+                     closeMins !== null
+                  ) {
+                     if (dayIndex === currentDayIndex) {
+                        if (closeMins >= openMins) {
+                           if (
+                              currentTimeInMinutes >=
+                                 openMins &&
+                              currentTimeInMinutes <=
+                                 closeMins
+                           ) {
+                              globalIsOpenNow = true;
+                           }
+                        } else {
+                           // Crosses midnight, so open tonight after openMins
+                           if (
+                              currentTimeInMinutes >=
+                              openMins
+                           ) {
+                              globalIsOpenNow = true;
+                           }
+                        }
+                     } else if (
+                        dayIndex ===
+                        (currentDayIndex - 1 + 7) % 7
+                     ) {
+                        // Yesterday's shift, see if it crossed midnight into this morning
+                        if (closeMins < openMins) {
+                           if (
+                              currentTimeInMinutes <=
+                              closeMins
+                           ) {
+                              globalIsOpenNow = true;
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+
+            return {
+               day,
+               time:
+                  dayTimes.length > 0
+                     ? dayTimes.join(", ")
+                     : "Closed",
+               isToday: day === currentDayStr,
+            };
+         });
+
+         parsedHours = parsedHours.map((ph) => ({
+            ...ph,
+            isOpenNow: globalIsOpenNow,
+         }));
+      } else {
+         // Empty or unknown format
+         parsedHours = days.map((day) => ({
+            day,
+            time: "Not Available",
+            isToday: day === currentDayStr,
+            isOpenNow: false,
+         }));
+      }
 
       return {
          name: restaurantInfo?.name || "Loading...",
@@ -85,19 +231,7 @@ export default function Review() {
          tags: restaurantInfo?.tags || [],
          rating: restaurantInfo?.avg_rating ?? 0,
          ratingCount: restaurantInfo?.rating_count ?? 0,
-         hours: [
-            { day: "Monday", time: timeString },
-            {
-               day: "Tuesday",
-               time: timeString,
-               open: true,
-            },
-            { day: "Wednesday", time: timeString },
-            { day: "Thursday", time: timeString },
-            { day: "Friday", time: timeString },
-            { day: "Saturday", time: timeString },
-            { day: "Sunday", time: timeString },
-         ],
+         hours: parsedHours,
          locationLabel:
             restaurantInfo?.location || "Loading...",
          street_address:
@@ -608,12 +742,17 @@ export default function Review() {
                               <span
                                  className="review__open"
                                  style={{
-                                    visibility: h.open
+                                    visibility: h.isToday
                                        ? "visible"
                                        : "hidden",
+                                    color: h.isOpenNow
+                                       ? "#2f8a3b"
+                                       : "#d32f2f",
                                  }}
                               >
-                                 open
+                                 {h.isOpenNow
+                                    ? "open"
+                                    : "closed"}
                               </span>
                               <span className="review__time">
                                  {h.time}
