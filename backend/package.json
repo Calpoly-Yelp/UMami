@@ -6,6 +6,7 @@
    "scripts": {
       "start": "node index.js",
       "dev": "nodemon index.js",
+      "scrape:menus": "node utils/scrapeCurrentMenus.js",
       "test": "jest",
       "lint": "eslint .",
       "lint:fix": "eslint . --fix"
@@ -30,6 +31,7 @@
       "express": "^5.2.1",
       "multer": "^2.1.1",
       "node-cron": "^3.0.3",
+      "playwright": "^1.59.1",
       "zod": "^4.3.6"
    },
    "devDependencies": {

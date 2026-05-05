@@ -16,8 +16,37 @@ jest.mock("../lib/uploadPhoto", () => ({
 
 // Mock PhotoUpload so we do not test upload internals here
 jest.mock("../components/PhotoUpload.jsx", () => {
-   return function MockPhotoUpload() {
-      return <div>Mock Photo Upload</div>;
+   return function MockPhotoUpload({
+      onPhotoSelected,
+      onClose,
+   }) {
+      return (
+         <div>
+            <div>Mock Photo Upload</div>
+            <button
+               type="button"
+               onClick={() =>
+                  onPhotoSelected({
+                     file: new File(
+                        ["dummy"],
+                        "photo.png",
+                        {
+                           type: "image/png",
+                        },
+                     ),
+                     url: "mock-local-photo-url",
+                     type: "Other",
+                     item: "",
+                  })
+               }
+            >
+               Add Mock Photo
+            </button>
+            <button type="button" onClick={onClose}>
+               Close Mock Upload
+            </button>
+         </div>
+      );
    };
 });
 
@@ -34,7 +63,7 @@ describe("WriteReview component", () => {
       );
    });
 
-   test("renders the basic UI elements", async () => {
+   test("renders the basic UI elements", () => {
       render(
          <WriteReview
             restaurantId={1}
@@ -43,16 +72,27 @@ describe("WriteReview component", () => {
       );
 
       expect(
-         await screen.findByText(/rate your experience/i),
+         screen.getByText(/rate your experience/i),
       ).toBeInTheDocument();
+
       expect(
          screen.getByPlaceholderText(
             /talk about your experience/i,
          ),
       ).toBeInTheDocument();
+
+      expect(
+         screen.getByText(/tags \(0\/15\):/i),
+      ).toBeInTheDocument();
+
+      expect(
+         screen.getByText(
+            /show your experience \(0\/10\):/i,
+         ),
+      ).toBeInTheDocument();
    });
 
-   test("allows user to select a star rating", async () => {
+   test("allows user to select a star rating", () => {
       render(
          <WriteReview
             restaurantId={1}
@@ -60,8 +100,7 @@ describe("WriteReview component", () => {
          />,
       );
 
-      const starButtons =
-         await screen.findAllByRole("radio");
+      const starButtons = screen.getAllByRole("radio");
 
       fireEvent.click(starButtons[3]);
 
@@ -71,7 +110,7 @@ describe("WriteReview component", () => {
       );
    });
 
-   test("allows user to type a review", async () => {
+   test("allows user to type a review", () => {
       render(
          <WriteReview
             restaurantId={1}
@@ -79,7 +118,7 @@ describe("WriteReview component", () => {
          />,
       );
 
-      const textarea = await screen.findByPlaceholderText(
+      const textarea = screen.getByPlaceholderText(
          /talk about your experience/i,
       );
 
@@ -115,7 +154,7 @@ describe("WriteReview component", () => {
       expect(screen.getByText("Vegan")).toBeInTheDocument();
    });
 
-   test("renders the photo upload overlay", async () => {
+   test("opens the photo upload overlay when the empty photo box is clicked", async () => {
       render(
          <WriteReview
             restaurantId={1}
@@ -123,14 +162,68 @@ describe("WriteReview component", () => {
          />,
       );
 
-      const btn = screen.getByRole("button", {
-         name: /\+ upload photo/i,
+      const emptyPhotoBox = screen.getByRole("button", {
+         name: /upload got pictures\? we'd love to see them!/i,
       });
-      fireEvent.click(btn);
+
+      fireEvent.click(emptyPhotoBox);
 
       expect(
          await screen.findByText(/mock photo upload/i),
       ).toBeInTheDocument();
+   });
+
+   test("shows '+ Upload Another Photo' only after a photo has been added", async () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
+
+      expect(
+         screen.queryByRole("button", {
+            name: /\+ upload another photo/i,
+         }),
+      ).not.toBeInTheDocument();
+
+      const emptyPhotoBox = screen.getByRole("button", {
+         name: /upload got pictures\? we'd love to see them!/i,
+      });
+
+      fireEvent.click(emptyPhotoBox);
+
+      fireEvent.click(
+         await screen.findByRole("button", {
+            name: /add mock photo/i,
+         }),
+      );
+
+      expect(
+         screen.getByRole("button", {
+            name: /\+ upload another photo/i,
+         }),
+      ).toBeInTheDocument();
+   });
+
+   test("submit button is disabled until a rating is selected", () => {
+      render(
+         <WriteReview
+            restaurantId={1}
+            userId="test-user"
+         />,
+      );
+
+      const submitButton = screen.getByRole("button", {
+         name: /^submit$/i,
+      });
+
+      expect(submitButton).toBeDisabled();
+
+      const starButtons = screen.getAllByRole("radio");
+      fireEvent.click(starButtons[3]);
+
+      expect(submitButton).not.toBeDisabled();
    });
 
    test("submits review and calls callbacks after clicking submit", async () => {
@@ -146,11 +239,10 @@ describe("WriteReview component", () => {
          />,
       );
 
-      const starButtons =
-         await screen.findAllByRole("radio");
+      const starButtons = screen.getAllByRole("radio");
       fireEvent.click(starButtons[3]);
 
-      const textarea = await screen.findByPlaceholderText(
+      const textarea = screen.getByPlaceholderText(
          /talk about your experience/i,
       );
 
@@ -165,7 +257,15 @@ describe("WriteReview component", () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-         expect(global.fetch).toHaveBeenCalled();
+         expect(global.fetch).toHaveBeenCalledWith(
+            "/api/reviews",
+            expect.objectContaining({
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+            }),
+         );
       });
 
       await waitFor(() => {

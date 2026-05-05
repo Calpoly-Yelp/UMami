@@ -339,7 +339,7 @@ export default function AccountSettings() {
                   </div>
 
                   <button
-                     className="as-btn as-btn-wide"
+                     className="btn btn-secondary as-btn-wide"
                      type="button"
                   >
                      Make This a Verified Cal Poly Account
@@ -455,7 +455,7 @@ export default function AccountSettings() {
                   </div>
 
                   <button
-                     className="as-btn as-btn-wide as-save"
+                     className="btn btn-secondary as-btn-wide as-save"
                      type="button"
                   >
                      Save New Password
@@ -754,7 +754,7 @@ export default function AccountSettings() {
                   </div>
 
                   <button
-                     className="as-btn as-btn-wide as-save"
+                     className="btn btn-secondary as-btn-wide as-save"
                      type="button"
                   >
                      Save Changes

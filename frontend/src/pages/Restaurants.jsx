@@ -330,7 +330,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         onClick={() =>
                            handleCardClick(restaurant)
                         }
-                        style={{ cursor: "pointer" }}
+                        className="restaurant-card-click"
                      >
                         <RestaurantCard
                            restaurant={restaurant}

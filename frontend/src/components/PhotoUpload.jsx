@@ -6,8 +6,8 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
    const inputRef = useRef(null);
    const [previewUrl, setPreviewUrl] = useState(null);
    const [selectedFile, setSelectedFile] = useState(null);
-   const [photoType, setPhotoType] = useState("Menu Item");
-   const [menuItem, setMenuItem] = useState("Menu Item");
+   const [photoType, setPhotoType] = useState("Other");
+   const [menuItem, setMenuItem] = useState("");
    const [error, setError] = useState(null);
 
    const handlePick = () => {
@@ -97,15 +97,25 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                      <div className="select-wrap">
                         <select
                            value={photoType}
-                           onChange={(e) =>
-                              setPhotoType(e.target.value)
-                           }
+                           onChange={(e) => {
+                              const value = e.target.value;
+                              setPhotoType(value);
+
+                              // Clear menu item if switching away
+                              if (value !== "Menu Item") {
+                                 setMenuItem("");
+                              }
+                           }}
                         >
-                           <option>Menu Item</option>
-                           <option>
+                           <option value="Menu Item">
+                              Menu Item
+                           </option>
+                           <option value="Vibe">
                               Vibe of the Restaurant
                            </option>
-                           <option>Other</option>
+                           <option value="Other">
+                              Other
+                           </option>
                         </select>
                      </div>
                   </div>
@@ -142,7 +152,7 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                      onClick={handleSubmit}
                      disabled={!selectedFile}
                   >
-                     Submit
+                     Add Photo
                   </button>
                </div>
             </div>

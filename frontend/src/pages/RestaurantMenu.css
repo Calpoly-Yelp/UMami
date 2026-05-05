@@ -232,3 +232,70 @@
    border-bottom: none;
    padding-bottom: 0;
 }
+
+/* Back Button */
+
+.menu-backRow {
+   padding: 24px 32px 16px;
+}
+
+.menu-backBtn {
+   background: none;
+   border: none;
+   padding: 0;
+   font: inherit;
+   cursor: pointer;
+
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+
+   color: #ffffff;
+   font-weight: 600;
+
+   transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+}
+
+.menu-backBtn::before {
+   content: "←";
+   display: inline-block;
+   transform: translateX(0);
+   transition: transform 0.2s ease;
+}
+
+.menu-backBtn:hover {
+   transform: translateY(-1px);
+   opacity: 0.85;
+}
+
+.menu-backBtn:hover::before {
+   transform: translateX(-4px);
+}
+
+.hero-title--clickable {
+   cursor: pointer;
+   display: inline-flex;
+   align-items: center;
+   gap: 8px;
+   transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+}
+
+.hero-title--clickable::after {
+   opacity: 0;
+   transform: translateX(6px);
+   transition: all 0.2s ease;
+}
+
+.hero-title--clickable:hover {
+   transform: translateY(-2px);
+   opacity: 0.9;
+}
+
+.hero-title--clickable:hover::after {
+   opacity: 1;
+   transform: translateX(0);
+}
