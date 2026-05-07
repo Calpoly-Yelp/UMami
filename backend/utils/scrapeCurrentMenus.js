@@ -189,13 +189,15 @@ function resolveSubwayNutritionUrl(sourceUrl) {
 }
 
 function getRestaurantMenuSourceUrl(restaurant) {
+   if (isSubwayRestaurant(restaurant)) {
+      return SUBWAY_NUTRITION_PDF_URL;
+   }
+
    if (restaurant?.menu_source_url) {
       return restaurant.menu_source_url;
    }
 
-   return isSubwayRestaurant(restaurant)
-      ? SUBWAY_NUTRITION_PDF_URL
-      : null;
+   return null;
 }
 
 function normalizeText(value) {
@@ -909,11 +911,15 @@ async function fetchRestaurants({ restaurantId } = {}) {
    );
 }
 
-async function replaceRestaurantMenu({
+export async function replaceRestaurantMenu({
    restaurantId,
    items,
    mealPeriod,
 }) {
+   if (items.length === 0) {
+      return [];
+   }
+
    let deleteQuery = supabase
       .from("menu_items")
       .delete()
@@ -929,10 +935,6 @@ async function replaceRestaurantMenu({
    const { error: deleteError } = await deleteQuery;
    if (deleteError) {
       throw deleteError;
-   }
-
-   if (items.length === 0) {
-      return [];
    }
 
    const rows = items.map((item) => ({
@@ -1001,6 +1003,18 @@ export async function scrapeRestaurantMenu(
          sourceUrl,
          items,
          inserted: [],
+      };
+   }
+
+   if (items.length === 0) {
+      return {
+         restaurant,
+         sourceUrl,
+         items,
+         inserted: [],
+         skippedReplace: true,
+         warning:
+            "No menu items parsed; existing menu rows were left unchanged.",
       };
    }
 

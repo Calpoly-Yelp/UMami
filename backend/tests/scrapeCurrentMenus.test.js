@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
    buildMenuUrl,
    parseSubwayNutritionText,
+   replaceRestaurantMenu,
 } from "../utils/scrapeCurrentMenus.js";
 
 describe("Subway menu scraping", () => {
@@ -57,5 +58,17 @@ describe("Subway menu scraping", () => {
             protein: "2g",
          }),
       ]);
+   });
+});
+
+describe("menu replacement safety", () => {
+   it("does not delete existing rows when no items were parsed", async () => {
+      const result = await replaceRestaurantMenu({
+         restaurantId: 13,
+         items: [],
+         mealPeriod: "lunch",
+      });
+
+      expect(result).toEqual([]);
    });
 });
