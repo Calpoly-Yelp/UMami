@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { PDFParse } from "pdf-parse";
 import { chromium } from "playwright";
 import { supabase } from "../config/supabaseClient.js";
 
@@ -18,6 +19,30 @@ const DINE_ON_CAMPUS_PERIOD_IDS = {
    late_night: "3",
    "every-day": "1",
 };
+const SUBWAY_NUTRITION_PDF_URL =
+   "https://www.subway.com/en-us/-/media/northamerica/usa/nutrition/nutritiondocuments/2026/us_nutrition_en_1-2026.pdf";
+const SUBWAY_SOURCE_ALIASES = new Set([
+   "subway:nutrition",
+   "subway://nutrition",
+]);
+const SUBWAY_MAJOR_CATEGORIES = new Set([
+   '6" Sandwiches',
+   "Kids' Mini Sub",
+   "Wraps",
+   "Protein Pockets",
+   "Salads",
+   "No Bready Bowls",
+   "Breakfast",
+   '8" Pizza',
+   "Sliders",
+   "Cookies & Sides",
+   "Breads",
+   "Sandwich Condiments and Toppings",
+   "Seasonings and Spices",
+   "Vegetables",
+   "Cheese",
+   "Individual Proteins",
+]);
 
 const delay = (ms) =>
    new Promise((resolve) => setTimeout(resolve, ms));
@@ -86,6 +111,10 @@ export function buildMenuUrl(
       return null;
    }
 
+   if (isSubwayNutritionSource(sourceUrl)) {
+      return resolveSubwayNutritionUrl(sourceUrl);
+   }
+
    let url;
    try {
       url = new URL(sourceUrl);
@@ -131,6 +160,42 @@ export function buildMenuUrl(
    }
 
    return url.toString();
+}
+
+function isSubwayRestaurant(restaurant) {
+   return /subway/i.test(restaurant?.name || "");
+}
+
+function isSubwayNutritionSource(sourceUrl) {
+   if (!sourceUrl) {
+      return false;
+   }
+
+   const normalizedUrl = String(sourceUrl).toLowerCase();
+   return (
+      SUBWAY_SOURCE_ALIASES.has(normalizedUrl) ||
+      (normalizedUrl.includes("subway.com") &&
+         normalizedUrl.includes("nutritiondocuments") &&
+         normalizedUrl.endsWith(".pdf"))
+   );
+}
+
+function resolveSubwayNutritionUrl(sourceUrl) {
+   return SUBWAY_SOURCE_ALIASES.has(
+      String(sourceUrl).toLowerCase(),
+   )
+      ? SUBWAY_NUTRITION_PDF_URL
+      : sourceUrl;
+}
+
+function getRestaurantMenuSourceUrl(restaurant) {
+   if (restaurant?.menu_source_url) {
+      return restaurant.menu_source_url;
+   }
+
+   return isSubwayRestaurant(restaurant)
+      ? SUBWAY_NUTRITION_PDF_URL
+      : null;
 }
 
 function normalizeText(value) {
@@ -605,6 +670,144 @@ export function parseMenuPayload(payload, context = {}) {
    });
 }
 
+function shouldIgnoreSubwayHeading(line) {
+   return (
+      !line ||
+      /^-- \d+ of \d+ --$/.test(line) ||
+      /^Egg Patty on 12" Wrap/i.test(line) ||
+      /^[A-Z\s&]+INGREDIENTS$/.test(line) ||
+      /^(include|footlong=)/i.test(line) ||
+      /^2,000 calories/i.test(line) ||
+      /^Serving Size/i.test(line) ||
+      /^(Calories|Total Fat|Sat\. Fat|Trans Fat|Chol\.|Sodium|Carbohydrate|Dietary Fiber|Sugars|Added Sugars|Protein|Vitamin|Calcium|Iron)/i.test(
+         line,
+      ) ||
+      /^U\.S\. NUTRITION INFORMATION/i.test(line) ||
+      /^(SANDWICHES|SALADS|WRAPS)$/.test(line) ||
+      /^(Double values|Values include|dressing unless noted)/i.test(
+         line,
+      )
+   );
+}
+
+function cleanSubwayCategoryName(name) {
+   return normalizeText(
+      name
+         .replace(/\s*\*\*$/g, "")
+         .replace(/\*\*/g, "")
+         .replace(/\s+®/g, "®")
+         .replace(/\s+/g, " "),
+   );
+}
+
+function cleanSubwayItemName(name) {
+   return normalizeText(
+      name
+         .replace(/\s*\*\*$/g, "")
+         .replace(/\s+®/g, "®")
+         .replace(/\s+/g, " "),
+   );
+}
+
+function parseSubwayNutritionValue(value) {
+   const normalizedValue = String(value).replace(/^</, "");
+   return Number(normalizedValue);
+}
+
+export function parseSubwayNutritionText(
+   text,
+   { sourceUrl, mealPeriod = "every-day" } = {},
+) {
+   const lines = String(text)
+      .split(/\r?\n/)
+      .map(normalizeText)
+      .filter(Boolean);
+   const items = [];
+   let majorCategory = null;
+   let minorCategory = null;
+
+   for (const line of lines) {
+      const itemMatch = line.match(
+         /^(.+?)\s+((?:<?-?\d+(?:\.\d+)?\s+){15}<?-?\d+(?:\.\d+)?)$/,
+      );
+
+      if (itemMatch) {
+         const values = itemMatch[2]
+            .trim()
+            .split(/\s+/)
+            .map(parseSubwayNutritionValue);
+         const category =
+            majorCategory && minorCategory
+               ? `${majorCategory} - ${minorCategory}`
+               : majorCategory ||
+                 minorCategory ||
+                 "Subway Menu";
+
+         items.push({
+            category: cleanSubwayCategoryName(category),
+            name: cleanSubwayItemName(itemMatch[1]),
+            description: null,
+            portion: `${values[0]} g`,
+            price: null,
+            calories: values[1],
+            fat: `${values[2]}g`,
+            carbs: `${values[7]}g`,
+            protein: `${values[11]}g`,
+            allergens: [],
+            dietary_tags: [],
+            source_url: sourceUrl,
+            meal_period: mealPeriod,
+            last_scraped_at: new Date().toISOString(),
+         });
+         continue;
+      }
+
+      if (shouldIgnoreSubwayHeading(line)) {
+         continue;
+      }
+
+      if (/^Egg Patty on 6" Artisan Italian/i.test(line)) {
+         majorCategory = "Breakfast";
+         minorCategory = null;
+         continue;
+      }
+
+      if (SUBWAY_MAJOR_CATEGORIES.has(line)) {
+         majorCategory = cleanSubwayCategoryName(line);
+         minorCategory = null;
+      } else if (majorCategory) {
+         minorCategory = cleanSubwayCategoryName(line);
+      }
+   }
+
+   const seen = new Set();
+   return items.filter((item) => {
+      const key = [
+         item.category,
+         item.name,
+         item.meal_period,
+      ].join("|");
+
+      if (seen.has(key)) {
+         return false;
+      }
+
+      seen.add(key);
+      return true;
+   });
+}
+
+async function fetchSubwayNutritionText(url) {
+   const parser = new PDFParse({ url });
+
+   try {
+      const result = await parser.getText();
+      return result.text;
+   } finally {
+      await parser.destroy();
+   }
+}
+
 export async function fetchMenuSource(url) {
    if (
       url.includes("dineoncampus.com") ||
@@ -689,8 +892,7 @@ export async function fetchDineOnCampusSource(url) {
 async function fetchRestaurants({ restaurantId } = {}) {
    let query = supabase
       .from("restaurants")
-      .select("id,name,menu_source_url")
-      .not("menu_source_url", "is", null);
+      .select("id,name,menu_source_url");
 
    if (restaurantId) {
       query = query.eq("id", restaurantId);
@@ -702,7 +904,9 @@ async function fetchRestaurants({ restaurantId } = {}) {
       throw error;
    }
 
-   return data || [];
+   return (data || []).filter((restaurant) =>
+      Boolean(getRestaurantMenuSourceUrl(restaurant)),
+   );
 }
 
 async function replaceRestaurantMenu({
@@ -756,13 +960,12 @@ export async function scrapeRestaurantMenu(
       dryRun = false,
    } = {},
 ) {
-   const sourceUrl = buildMenuUrl(
-      restaurant.menu_source_url,
-      {
-         date,
-         mealPeriod,
-      },
-   );
+   const rawSourceUrl =
+      getRestaurantMenuSourceUrl(restaurant);
+   const sourceUrl = buildMenuUrl(rawSourceUrl, {
+      date,
+      mealPeriod,
+   });
 
    if (!sourceUrl) {
       return {
@@ -774,11 +977,23 @@ export async function scrapeRestaurantMenu(
       };
    }
 
-   const payload = await fetchMenuSource(sourceUrl);
-   const items = parseMenuPayload(payload, {
-      sourceUrl,
-      mealPeriod,
-   });
+   const isSubwaySource =
+      isSubwayNutritionSource(sourceUrl);
+   const effectiveMealPeriod = isSubwaySource
+      ? "every-day"
+      : mealPeriod;
+   const items = isSubwaySource
+      ? parseSubwayNutritionText(
+           await fetchSubwayNutritionText(sourceUrl),
+           {
+              sourceUrl,
+              mealPeriod: effectiveMealPeriod,
+           },
+        )
+      : parseMenuPayload(await fetchMenuSource(sourceUrl), {
+           sourceUrl,
+           mealPeriod: effectiveMealPeriod,
+        });
 
    if (dryRun) {
       return {
@@ -792,7 +1007,7 @@ export async function scrapeRestaurantMenu(
    const inserted = await replaceRestaurantMenu({
       restaurantId: restaurant.id,
       items,
-      mealPeriod,
+      mealPeriod: effectiveMealPeriod,
    });
 
    return {
@@ -885,7 +1100,7 @@ async function scrapeCurrentMenus() {
    }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1]?.endsWith("scrapeCurrentMenus.js")) {
    scrapeCurrentMenus().catch((error) => {
       console.error(error);
       process.exitCode = 1;
