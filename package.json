@@ -44,5 +44,8 @@
       "husky": "^9.1.7",
       "lint-staged": "^16.2.7",
       "prettier": "^3.8.1"
+   },
+   "dependencies": {
+      "node-cron": "^4.2.1"
    }
 }
