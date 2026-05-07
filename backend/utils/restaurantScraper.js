@@ -768,6 +768,7 @@ export const scrapeRestaurants = async () => {
          "salad bar at campus market",
          "campus market",
          "sweet bar",
+         "uu market",
       ];
 
       const restaurantsToUpsert = mappedRestaurants.filter(
