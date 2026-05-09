@@ -27,30 +27,21 @@ jobs:
            with:
               node-version: "22.x"
 
-         - name: Install root dependencies
-           run: npm install
+         - name: npm install, build, and test
+           run: |
+              npm install --workspaces=false
+              npm run -w backend test --if-present
+           working-directory: backend
 
-         - name: Install frontend dependencies
-           run: npm install --prefix frontend
-
-         - name: Install backend dependencies
-           run: npm install --prefix backend
-
-         - name: Build frontend
-           run: npm run build --prefix frontend
-
-         - name: Run tests
-           run: npm test
+         - name: Zip artifact for deployment
+           run: zip release.zip ./* -r
+           working-directory: backend
 
          - name: Upload artifact for deployment job
            uses: actions/upload-artifact@v4
            with:
               name: node-app
-              path: |
-                 .
-                 !./node_modules
-                 !./frontend/node_modules
-                 !./backend/node_modules
+              path: backend/release.zip
 
    deploy:
       runs-on: ubuntu-latest
@@ -78,4 +69,4 @@ jobs:
            with:
               app-name: "umami-api-calpoly"
               slot-name: "Production"
-              package: .
+              package: release.zip
