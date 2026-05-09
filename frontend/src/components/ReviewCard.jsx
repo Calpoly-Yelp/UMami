@@ -147,8 +147,9 @@ function ReviewCard({
            const d = new Date(date);
            const month = d.toLocaleString("en-US", {
               month: "short",
+              timeZone: "UTC",
            });
-           const day = d.getDate();
+           const day = d.getUTCDate();
            const year = d.getFullYear();
            return `${month}. ${day} ${year}`;
         })()
