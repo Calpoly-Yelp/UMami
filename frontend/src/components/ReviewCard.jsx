@@ -161,15 +161,6 @@ function ReviewCard({
       initialHasVotedHelpful,
    );
 
-   // Sync state if initial value changes (useful if data is refreshed)
-   // eslint-disable-next-line react-hooks/set-state-in-effect
-   useEffect(() => {
-      setHasVotedHelpful((prev) => {
-         if (prev === initialHasVotedHelpful) return prev;
-         return initialHasVotedHelpful;
-      });
-   }, [initialHasVotedHelpful]);
-
    const handleHelpfulClick = async (e) => {
       e.stopPropagation();
       const newCount = hasVotedHelpful
