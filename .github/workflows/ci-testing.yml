@@ -11,7 +11,6 @@ on:
 
 jobs:
    build:
-      # Use the latest Ubuntu virtual machine as the runner
       runs-on: ubuntu-latest
 
       # Pass Supabase credentials from GitHub Secrets as environment variables
@@ -28,13 +27,17 @@ jobs:
            with:
               node-version: 24
 
-         # Step 3: Clean install all root dependencies (equivalent to npm install but stricter)
+         # Step 3: Clean install root dependencies
          - run: npm ci
 
-         # Step 4: Run ESLint and Prettier checks on frontend and backend
+         # Step 4: Clean install frontend dependencies
+         - run: npm ci --prefix frontend
+
+         # Step 5: Clean install backend dependencies
+         - run: npm ci --prefix backend
+
+         # Step 6: Run ESLint and Prettier checks on frontend and backend
          - run: npm run lint
 
-         # Step 5: Run all frontend and backend Jest tests
+         # Step 7: Run all frontend and backend Jest tests
          - run: npm test
-
-         # Step 6: Build the Next.js application to ensure it compiles successfully
