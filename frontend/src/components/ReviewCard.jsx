@@ -163,7 +163,10 @@ function ReviewCard({
 
    // Sync state if initial value changes (useful if data is refreshed)
    useEffect(() => {
-      setHasVotedHelpful(initialHasVotedHelpful);
+      setHasVotedHelpful((prev) => {
+         if (prev === initialHasVotedHelpful) return prev;
+         return initialHasVotedHelpful;
+      });
    }, [initialHasVotedHelpful]);
 
    const handleHelpfulClick = async (e) => {
