@@ -105,6 +105,7 @@ function User({
       }));
    };
 
+   /*
    // Re-evaluate scroll capabilities whenever the data changes or window resizes
    useEffect(() => {
       checkScroll("reviews");
@@ -115,6 +116,41 @@ function User({
          checkScroll("reviews");
          checkScroll("restaurants");
          checkScroll("following");
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () =>
+         window.removeEventListener("resize", handleResize);
+   }, [reviews, restaurants, following]);
+   */
+
+   // -- UPDATED --
+   // Re-evaluate scroll capabilities whenever the data changes or window resizes
+
+   useEffect(() => {
+      const checkScrollInner = (id) => {
+         const el = document.getElementById(`${id}-list`);
+         if (!el) return;
+         setCanScroll((prev) => ({
+            ...prev,
+            [id]: {
+               left: el.scrollLeft > 0,
+               right:
+                  Math.ceil(
+                     el.scrollLeft + el.clientWidth,
+                  ) < el.scrollWidth,
+            },
+         }));
+      };
+
+      checkScrollInner("reviews");
+      checkScrollInner("restaurants");
+      checkScrollInner("following");
+
+      const handleResize = () => {
+         checkScrollInner("reviews");
+         checkScrollInner("restaurants");
+         checkScrollInner("following");
       };
 
       window.addEventListener("resize", handleResize);
