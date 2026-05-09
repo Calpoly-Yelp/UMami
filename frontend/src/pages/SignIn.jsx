@@ -39,7 +39,7 @@ export default function SignIn() {
          console.log("Supabase user:", data.user);
 
          const response = await fetch(
-            `http://localhost:4000/api/users/${data.user.id}`,
+            `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${data.user.id}`,
          );
 
          const body = await response

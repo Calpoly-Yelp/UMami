@@ -177,7 +177,7 @@ function ReviewCard({
          const CURRENT_USER_ID =
             "b677be85-81db-4245-91ca-acb713bd5564";
          const response = await fetch(
-            `http://localhost:4000/api/reviews/${review.id}/helpful`,
+            `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${review.id}/helpful`,
             {
                method: "POST",
                headers: {
