@@ -45,7 +45,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
             if (!initialRestaurants) {
                const restaurantsResponse = await fetch(
-                  "https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants",
+                  "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants",
                );
 
                if (!restaurantsResponse.ok) {

@@ -259,13 +259,13 @@ function User({
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?user_id=${userData.id}`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?user_id=${userData.id}`,
                ),
                fetch(
-                  `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/${userData.id}`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/${userData.id}`,
                ),
                fetch(
-                  `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userData.id}/follows`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userData.id}/follows`,
                ),
             ]);
 
@@ -418,7 +418,7 @@ function User({
 
          // sync the bookmarked restaurants
          fetch(
-            "https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/sync",
             {
                method: "POST",
                headers: {
@@ -468,7 +468,7 @@ function User({
             return;
 
          fetch(
-            "https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
             {
                method: "POST",
                headers: {
@@ -524,7 +524,7 @@ function User({
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {

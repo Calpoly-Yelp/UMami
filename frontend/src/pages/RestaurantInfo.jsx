@@ -316,7 +316,7 @@ export default function Review() {
    // Fetches all the individual reviews associated with this restaurant
    const fetchReviews = useCallback(async () => {
       try {
-         let url = `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?restaurant_id=${id}`;
+         let url = `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?restaurant_id=${id}`;
          if (CURRENT_USER_ID) {
             url += `&current_user_id=${CURRENT_USER_ID}`;
          }
@@ -353,7 +353,7 @@ export default function Review() {
    const fetchRestaurant = useCallback(async () => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
          );
          if (response.ok) {
             const data = await response.json();
@@ -381,7 +381,7 @@ export default function Review() {
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {

@@ -138,7 +138,7 @@ describe("Restaurant Menu Page", () => {
          ).toBeInTheDocument();
       });
       expect(global.fetch).toHaveBeenCalledWith(
-         "https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/1/menu",
+         "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/1/menu",
       );
    });
 

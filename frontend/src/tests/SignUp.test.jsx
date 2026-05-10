@@ -149,7 +149,7 @@ describe("SignUp component", () => {
 
       await waitFor(() => {
          expect(global.fetch).toHaveBeenCalledWith(
-            "https://umami-api-calpoly-bpqzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
             {
                method: "POST",
                headers: {
