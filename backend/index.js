@@ -6,33 +6,35 @@ import usersRouter from "./routes/users.js";
 import restaurantsRouter from "./routes/restaurants.js";
 import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
-import uploadsRouter from "./routes/uploads.js"; // Import uploads router
+import uploadsRouter from "./routes/uploads.js";
 import "./utils/restaurantScraper.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({ origin: "*" }));
-app.use(express.json());
+// CORS configuration — allows requests from the frontend and local dev
+// Must use specific origins (not "*") when credentials are involved
+app.use(
+   cors({
+      origin: [
+         "https://thankful-hill-0f3846d10.7.azurestaticapps.net", // Azure production frontend
+         "http://localhost:5173", // Local Vite dev server
+      ],
+      credentials: true, // Allow cookies and auth headers to be sent
+   }),
+);
 
-// Enable CORS to allow requests from the frontend
-app.use((req, res, next) => {
-   res.header("Access-Control-Allow-Origin", "*");
-   res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept",
-   );
-   next();
-});
+// Parse incoming JSON request bodies
+app.use(express.json());
 
 // Routes
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/restaurants", restaurantsRouter);
 app.use("/api/notifications", notificationsRouter);
-app.use("/api/uploads", uploadsRouter); // Use uploads router
+app.use("/api/uploads", uploadsRouter);
 
-/* Keep temporary debug route (optional) */
+// Temporary debug route to verify Supabase connection is working
 app.get("/test-supabase", async (req, res) => {
    const { data, error } = await supabase
       .from("restaurants")
@@ -46,6 +48,7 @@ app.get("/test-supabase", async (req, res) => {
    return res.json({ status: "Connected!", data });
 });
 
+// Only start the server if we're not in a test environment
 if (process.env.NODE_ENV !== "test") {
    app.listen(PORT, () => {
       console.log(
