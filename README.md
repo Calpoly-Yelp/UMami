@@ -1,5 +1,17 @@
 # UMami
 
+## Deployment
+
+### Live App
+
+🌐 [UMami](https://thankful-hill-0f3846d10.7.azurestaticapps.net)
+
+### CI/CD Status
+
+![Frontend Deploy](https://github.com/Calpoly-Yelp/UMami/actions/workflows/azure-static-web-apps-thankful-hill-0f3846d10.yml/badge.svg)
+![Backend Deploy](https://github.com/Calpoly-Yelp/UMami/actions/workflows/main_umami-api-calpoly.yml/badge.svg)
+![CI Testing](https://github.com/Calpoly-Yelp/UMami/actions/workflows/ci-testing.yml/badge.svg)
+
 ## Running Testing:
 
 ```console
