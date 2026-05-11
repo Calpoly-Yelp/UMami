@@ -68,4 +68,3 @@ jobs:
               app-name: "umami-api-calpoly"
               slot-name: "Production"
               package: release.zip
-              startup-command: "node index.js"
