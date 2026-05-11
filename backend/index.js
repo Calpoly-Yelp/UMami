@@ -48,6 +48,11 @@ app.get("/test-supabase", async (req, res) => {
    return res.json({ status: "Connected!", data });
 });
 
+// Root route
+app.get("/", (req, res) => {
+   res.json({ status: "UMami API is running!" });
+});
+
 // Only start the server if we're not in a test environment
 if (process.env.NODE_ENV !== "test") {
    app.listen(PORT, () => {
