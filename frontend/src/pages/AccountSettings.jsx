@@ -286,7 +286,10 @@ export default function AccountSettings() {
                         Name
                      </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
                            <User size={16} weight="fill" />
                         </span>
 
@@ -304,8 +307,14 @@ export default function AccountSettings() {
                         Email
                      </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
-                           <Envelope size={16} weight="fill" />
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
+                           <Envelope
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -340,8 +349,14 @@ export default function AccountSettings() {
                         Current Password
                      </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
-                           <LockSimple size={16} weight="fill" />
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -361,8 +376,14 @@ export default function AccountSettings() {
                         New Password
                      </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
-                           <LockSimple size={16} weight="fill" />
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -380,8 +401,14 @@ export default function AccountSettings() {
                         Confirm New Password
                      </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
-                           <LockSimple size={16} weight="fill" />
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input

@@ -113,7 +113,10 @@ export default function Review() {
             .maybeSingle();
 
          if (error) {
-            console.error("Failed to fetch bookmark:", error);
+            console.error(
+               "Failed to fetch bookmark:",
+               error,
+            );
             return;
          }
 
@@ -697,7 +700,9 @@ export default function Review() {
                      type="button"
                   >
                      <Bookmark
-                        weight={isBookmarked ? "fill" : "regular"}
+                        weight={
+                           isBookmarked ? "fill" : "regular"
+                        }
                         size={40}
                      />
                   </button>
