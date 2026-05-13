@@ -129,6 +129,13 @@ router.get("/:id", async (req, res) => {
       // Validate route param first so bad ids fail fast.
       const { id } = userIdParamsSchema.parse(req.params);
 
+      // 🔴 Debug
+      console.log("GET /api/users/:id id =", id);
+      console.log(
+         "SUPABASE_URL =",
+         process.env.SUPABASE_URL,
+      );
+
       const { data, error } = await supabase
          .from("users")
          .select("*")
