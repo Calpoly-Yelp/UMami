@@ -71,13 +71,219 @@ export default function Review() {
          return `${formattedHour}${formattedMinute}${ampm}`;
       };
 
-      // Format open/close hours from the array returned by the API
-      const timeString =
-         restaurantInfo?.hours?.length === 2
-            ? `${formatTime(restaurantInfo.hours[0])} - ${formatTime(
-                 restaurantInfo.hours[1],
-              )}`
-            : "Loading...";
+      const daysOfWeek = [
+         "Monday",
+         "Tuesday",
+         "Wednesday",
+         "Thursday",
+         "Friday",
+         "Saturday",
+         "Sunday",
+      ];
+      const currentDayIdx = (new Date().getDay() + 6) % 7; // JS getDay() returns 0 for Sunday, map it to 6
+
+      const formattedHours = daysOfWeek.map((day, idx) => {
+         let timeString = "Loading...";
+         let isOpenNow = false;
+         let isClosedNow = false;
+
+         let intervals = [];
+
+         if (restaurantInfo?.hours?.length === 42) {
+            for (let i = 0; i < 3; i++) {
+               const openTime =
+                  restaurantInfo.hours[idx * 6 + i * 2];
+               const closeTime =
+                  restaurantInfo.hours[idx * 6 + i * 2 + 1];
+               if (openTime && closeTime) {
+                  intervals.push({
+                     open: openTime,
+                     close: closeTime,
+                  });
+               }
+            }
+         } else if (restaurantInfo?.hours?.length === 14) {
+            const openTime = restaurantInfo.hours[idx * 2];
+            const closeTime =
+               restaurantInfo.hours[idx * 2 + 1];
+            if (openTime && closeTime) {
+               intervals.push({
+                  open: openTime,
+                  close: closeTime,
+               });
+            }
+         } else if (restaurantInfo?.hours?.length === 2) {
+            // Fallback for outdated db rows
+            const openTime = restaurantInfo.hours[0];
+            const closeTime = restaurantInfo.hours[1];
+            if (openTime && closeTime) {
+               intervals.push({
+                  open: openTime,
+                  close: closeTime,
+               });
+            }
+         }
+
+         if (
+            restaurantInfo &&
+            (!restaurantInfo.hours ||
+               restaurantInfo.hours.length === 0)
+         ) {
+            timeString = "Hours unavailable";
+         } else if (intervals.length > 0) {
+            timeString = intervals
+               .map(
+                  (i) =>
+                     `${formatTime(i.open)} - ${formatTime(i.close)}`,
+               )
+               .join(", ");
+         } else if (restaurantInfo?.hours) {
+            timeString = "Closed";
+         }
+
+         if (idx === currentDayIdx) {
+            if (timeString === "Closed") {
+               isClosedNow = true;
+            } else if (
+               timeString !== "Loading..." &&
+               timeString !== "Hours unavailable"
+            ) {
+               const now = new Date();
+               const currentHour = now.getHours();
+               const currentMinute = now.getMinutes();
+               const currentTimeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}:00`;
+
+               let anyOpen = false;
+               for (const { open, close } of intervals) {
+                  if (close < open) {
+                     if (
+                        currentTimeStr >= open ||
+                        currentTimeStr <= close
+                     )
+                        anyOpen = true;
+                  } else {
+                     if (
+                        currentTimeStr >= open &&
+                        currentTimeStr <= close
+                     )
+                        anyOpen = true;
+                  }
+               }
+
+               if (intervals.length > 0) {
+                  if (anyOpen) {
+                     isOpenNow = true;
+                  } else {
+                     isClosedNow = true;
+                  }
+               }
+            }
+         }
+
+         return {
+            day,
+            time: timeString,
+            open: isOpenNow,
+            closed: isClosedNow,
+            isCurrentDay: idx === currentDayIdx,
+         };
+      });
+
+      let displayLat = restaurantInfo?.lat || 35.2828;
+      let displayLng = restaurantInfo?.lng || -120.6596;
+      let displayLocationLabel =
+         restaurantInfo?.location || "Loading...";
+      let mapMarkers = [];
+
+      // Determine dynamic location if multiple sets of coordinates exist based on time (e.g., Lunch vs Dinner)
+      if (
+         restaurantInfo?.location_mapping?.locations &&
+         restaurantInfo?.location_mapping?.schedule
+      ) {
+         const currentDayIdx =
+            (new Date().getDay() + 6) % 7;
+         const now = new Date();
+         const currentTimeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:00`;
+
+         const todaySchedule =
+            restaurantInfo.location_mapping.schedule[
+               currentDayIdx
+            ] || [];
+         let activeSubNames = new Set();
+
+         // 1. Check if currently active in any interval
+         for (const interval of todaySchedule) {
+            let isActive = false;
+            if (interval.end < interval.start) {
+               if (
+                  currentTimeStr >= interval.start ||
+                  currentTimeStr <= interval.end
+               )
+                  isActive = true;
+            } else {
+               if (
+                  currentTimeStr >= interval.start &&
+                  currentTimeStr <= interval.end
+               )
+                  isActive = true;
+            }
+            if (isActive)
+               activeSubNames.add(interval.subName);
+         }
+
+         // 2. If not active, find the next upcoming interval today
+         if (activeSubNames.size === 0) {
+            const upcoming = todaySchedule.filter(
+               (i) => i.start > currentTimeStr,
+            );
+            if (upcoming.length > 0) {
+               const nextStart = upcoming[0].start;
+               upcoming
+                  .filter((i) => i.start === nextStart)
+                  .forEach((i) =>
+                     activeSubNames.add(i.subName),
+                  );
+            }
+         }
+
+         // 3. Fallback to the first interval of the day
+         if (
+            activeSubNames.size === 0 &&
+            todaySchedule.length > 0
+         ) {
+            const firstStart = todaySchedule[0].start;
+            todaySchedule
+               .filter((i) => i.start === firstStart)
+               .forEach((i) =>
+                  activeSubNames.add(i.subName),
+               );
+         }
+
+         // Collect all active locations
+         for (const subName of activeSubNames) {
+            const locData =
+               restaurantInfo.location_mapping.locations[
+                  subName
+               ];
+            if (locData && locData.lat && locData.lng) {
+               mapMarkers.push({
+                  lat: locData.lat,
+                  lng: locData.lng,
+                  name:
+                     locData.label || restaurantInfo.name,
+               });
+            }
+         }
+
+         // Swap out the primary coordinates for the first active interval (to center the map)
+         if (mapMarkers.length > 0) {
+            displayLat = mapMarkers[0].lat;
+            displayLng = mapMarkers[0].lng;
+            displayLocationLabel = mapMarkers
+               .map((m) => m.name)
+               .join(" / ");
+         }
+      }
 
       return {
          name: restaurantInfo?.name || "Loading...",
@@ -85,25 +291,11 @@ export default function Review() {
          tags: restaurantInfo?.tags || [],
          rating: restaurantInfo?.avg_rating ?? 0,
          ratingCount: restaurantInfo?.rating_count ?? 0,
-         hours: [
-            { day: "Monday", time: timeString },
-            {
-               day: "Tuesday",
-               time: timeString,
-               open: true,
-            },
-            { day: "Wednesday", time: timeString },
-            { day: "Thursday", time: timeString },
-            { day: "Friday", time: timeString },
-            { day: "Saturday", time: timeString },
-            { day: "Sunday", time: timeString },
-         ],
-         locationLabel:
-            restaurantInfo?.location || "Loading...",
-         street_address:
-            restaurantInfo?.street_address || "",
-         lat: restaurantInfo?.lat || 35.2828,
-         lng: restaurantInfo?.lng || -120.6596,
+         hours: formattedHours,
+         locationLabel: displayLocationLabel,
+         lat: displayLat,
+         lng: displayLng,
+         mapMarkers: mapMarkers,
          menuImages: [
             "/gallery/ss_food_1.jpg",
             "/gallery/ss_food_2.jpg",
@@ -124,7 +316,7 @@ export default function Review() {
    // Fetches all the individual reviews associated with this restaurant
    const fetchReviews = useCallback(async () => {
       try {
-         let url = `http://localhost:4000/api/reviews?restaurant_id=${id}`;
+         let url = `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?restaurant_id=${id}`;
          if (CURRENT_USER_ID) {
             url += `&current_user_id=${CURRENT_USER_ID}`;
          }
@@ -161,7 +353,7 @@ export default function Review() {
    const fetchRestaurant = useCallback(async () => {
       try {
          const response = await fetch(
-            `http://localhost:4000/api/restaurants/${id}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
          );
          if (response.ok) {
             const data = await response.json();
@@ -189,7 +381,7 @@ export default function Review() {
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `http://localhost:4000/api/reviews/${reviewId}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
@@ -608,12 +800,19 @@ export default function Review() {
                               <span
                                  className="review__open"
                                  style={{
-                                    visibility: h.open
-                                       ? "visible"
-                                       : "hidden",
+                                    visibility:
+                                       h.isCurrentDay &&
+                                       (h.open || h.closed)
+                                          ? "visible"
+                                          : "hidden",
+                                    color: h.open
+                                       ? "var(--umami-green)"
+                                       : "var(--orange)",
                                  }}
                               >
-                                 open
+                                 {h.open
+                                    ? "open"
+                                    : "closed"}
                               </span>
                               <span className="review__time">
                                  {h.time}
@@ -633,9 +832,6 @@ export default function Review() {
                         lat={restaurant.lat}
                         lng={restaurant.lng}
                         name={restaurant.name}
-                        street_address={
-                           restaurant.street_address
-                        }
                      />
 
                      <div className="review__locationChipRow">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bookmark } from "@phosphor-icons/react";
 
-import "./restaurantCard.css";
+import "./RestaurantCard.css";
 
 function RestaurantCard({
    restaurant,

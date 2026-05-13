@@ -44,15 +44,63 @@ const mockRestaurant = {
    ],
 };
 
+const mockMenu = [
+   {
+      category: "Signature Shakes",
+      items: [
+         {
+            id: 1,
+            name: "Acai Energy",
+            portion: "24 oz",
+            calories: 350,
+            fat: "8g",
+            carbs: "50g",
+            protein: "20g",
+         },
+         {
+            id: 2,
+            name: "Perfect 10",
+            portion: "24 oz",
+            calories: 420,
+            fat: "12g",
+            carbs: "60g",
+            protein: "30g",
+         },
+      ],
+   },
+   {
+      category: "Acai Bowls",
+      items: [
+         {
+            id: 3,
+            name: "Traditional Acai",
+            portion: "Bowl",
+            calories: 550,
+            fat: "15g",
+            carbs: "90g",
+            protein: "10g",
+         },
+      ],
+   },
+   {
+      category: "Toast",
+      items: [
+         {
+            id: 4,
+            name: "Avocado Toast",
+            portion: "1 slice",
+            calories: 250,
+            fat: "15g",
+            carbs: "20g",
+            protein: "6g",
+         },
+      ],
+   },
+];
+
 // --- Test Environment Setup ---
 beforeAll(() => {
-   global.fetch = jest.fn(() =>
-      Promise.resolve({
-         ok: true,
-         json: () => Promise.resolve(mockRestaurant),
-         status: 200,
-      }),
-   );
+   global.fetch = jest.fn();
 
    // Mock scrollIntoView because jsdom doesn't support it natively
    window.HTMLElement.prototype.scrollIntoView = jest.fn();
@@ -60,6 +108,21 @@ beforeAll(() => {
 
 beforeEach(() => {
    jest.clearAllMocks();
+   global.fetch.mockImplementation((url) => {
+      if (url.endsWith("/menu")) {
+         return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockMenu),
+            status: 200,
+         });
+      }
+
+      return Promise.resolve({
+         ok: true,
+         json: () => Promise.resolve(mockRestaurant),
+         status: 200,
+      });
+   });
 });
 
 describe("Restaurant Menu Page", () => {
@@ -74,6 +137,9 @@ describe("Restaurant Menu Page", () => {
             screen.getByText("Shake Smart"),
          ).toBeInTheDocument();
       });
+      expect(global.fetch).toHaveBeenCalledWith(
+         "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/1/menu",
+      );
    });
 
    test("renders all menu categories in the sidebar", async () => {
@@ -82,12 +148,8 @@ describe("Restaurant Menu Page", () => {
 
       const expectedCategories = [
          "Signature Shakes",
-         "Premium Shakes",
          "Acai Bowls",
-         "Cold Brew Coffee",
-         "Oatmeal & Yogurt",
          "Toast",
-         "Extras",
       ];
 
       expectedCategories.forEach((category) => {
@@ -162,9 +224,17 @@ describe("Restaurant Menu Page Edge Cases", () => {
       const consoleSpy = jest
          .spyOn(console, "error")
          .mockImplementation(() => {});
-      global.fetch.mockImplementationOnce(() =>
-         Promise.reject(new Error("Network error")),
-      );
+      global.fetch.mockImplementation((url) => {
+         if (url.endsWith("/menu")) {
+            return Promise.resolve({
+               ok: true,
+               json: () => Promise.resolve(mockMenu),
+               status: 200,
+            });
+         }
+
+         return Promise.reject(new Error("Network error"));
+      });
       render(<RestaurantMenu />);
 
       await waitFor(() => {
@@ -172,6 +242,31 @@ describe("Restaurant Menu Page Edge Cases", () => {
             screen.getByText("Unknown Restaurant"),
          ).toBeInTheDocument();
       });
+
+      consoleSpy.mockRestore();
+   });
+
+   test("displays a message if menu fetch fails", async () => {
+      const consoleSpy = jest
+         .spyOn(console, "error")
+         .mockImplementation(() => {});
+      global.fetch.mockImplementation((url) => {
+         if (url.endsWith("/menu")) {
+            return Promise.reject(new Error("Menu error"));
+         }
+
+         return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockRestaurant),
+            status: 200,
+         });
+      });
+
+      render(<RestaurantMenu />);
+
+      expect(
+         await screen.findByText("Menu unavailable."),
+      ).toBeInTheDocument();
 
       consoleSpy.mockRestore();
    });

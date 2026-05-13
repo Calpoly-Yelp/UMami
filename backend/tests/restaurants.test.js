@@ -154,6 +154,166 @@ describe("Restaurant Endpoints", () => {
       expect(res.statusCode).toBe(500);
    });
 
+   it("GET /api/restaurants/:id/menu should return menu items grouped by category", async () => {
+      const mockMenuItems = [
+         {
+            id: 1,
+            restaurant_id: 108,
+            category: "Signature Shakes",
+            name: "Acai Energy",
+            description:
+               "Acai smoothie with fruit and protein.",
+            portion: "24 oz",
+            price: null,
+            calories: 350,
+            fat: "8g",
+            carbs: "50g",
+            protein: "20g",
+            allergens: [],
+            dietary_tags: ["smoothie"],
+            source_url: "manual_seed",
+            meal_period: "lunch",
+            last_scraped_at: null,
+            created_at: null,
+         },
+         {
+            id: 2,
+            restaurant_id: 108,
+            category: "Signature Shakes",
+            name: "Perfect 10",
+            description: "Protein shake.",
+            portion: "24 oz",
+            price: null,
+            calories: 420,
+            fat: "12g",
+            carbs: "60g",
+            protein: "30g",
+            allergens: ["peanuts", "milk"],
+            dietary_tags: ["high protein"],
+            source_url: "manual_seed",
+            meal_period: "lunch",
+            last_scraped_at: null,
+            created_at: null,
+         },
+         {
+            id: 3,
+            restaurant_id: 108,
+            category: "Toast",
+            name: "Avocado Toast",
+            description: "Toast with avocado.",
+            portion: "1 slice",
+            price: null,
+            calories: 250,
+            fat: "15g",
+            carbs: "20g",
+            protein: "6g",
+            allergens: ["wheat"],
+            dietary_tags: ["vegetarian"],
+            source_url: "manual_seed",
+            meal_period: "lunch",
+            last_scraped_at: null,
+            created_at: null,
+         },
+      ];
+      const query = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: mockMenuItems, error: null }),
+      };
+
+      supabase.from.mockReturnValue(query);
+
+      const res = await request(app).get(
+         "/api/restaurants/108/menu",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual([
+         {
+            category: "Signature Shakes",
+            items: expect.arrayContaining([
+               expect.objectContaining({
+                  name: "Acai Energy",
+               }),
+               expect.objectContaining({
+                  name: "Perfect 10",
+               }),
+            ]),
+         },
+         {
+            category: "Toast",
+            items: [
+               expect.objectContaining({
+                  name: "Avocado Toast",
+               }),
+            ],
+         },
+      ]);
+      expect(supabase.from).toHaveBeenCalledWith(
+         "menu_items",
+      );
+      expect(query.eq).toHaveBeenCalledWith(
+         "restaurant_id",
+         108,
+      );
+   });
+
+   it("GET /api/restaurants/:id/menu should filter by meal period", async () => {
+      const query = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: [], error: null }),
+      };
+
+      supabase.from.mockReturnValue(query);
+
+      const res = await request(app).get(
+         "/api/restaurants/108/menu?meal_period=lunch",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual([]);
+      expect(query.eq).toHaveBeenCalledWith(
+         "meal_period",
+         "lunch",
+      );
+   });
+
+   it("GET /api/restaurants/:id/menu should reject invalid restaurant ids", async () => {
+      const res = await request(app).get(
+         "/api/restaurants/not-a-number/menu",
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("Invalid restaurant id");
+   });
+
+   it("GET /api/restaurants/:id/menu should handle errors", async () => {
+      const query = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({
+               data: null,
+               error: { message: "Menu Error" },
+            }),
+      };
+
+      supabase.from.mockReturnValue(query);
+
+      const res = await request(app).get(
+         "/api/restaurants/108/menu",
+      );
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe("Menu Error");
+   });
+
    it("GET /api/restaurants/:id/tags should return tags for a single restaurant", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),

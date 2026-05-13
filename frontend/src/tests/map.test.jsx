@@ -87,10 +87,9 @@ describe("Map", () => {
       ).toBeInTheDocument();
    });
 
-   test("opens Google Maps with address when marker is clicked", () => {
+   test("opens Google Maps with coordinates when marker is clicked", () => {
       const props = {
          name: "Burger Joint",
-         street_address: "123 Main St, Cityville",
          lat: 10,
          lng: 10,
       };
@@ -99,9 +98,9 @@ describe("Map", () => {
       const marker = screen.getByTestId("marker");
       fireEvent.click(marker);
 
-      // Expect URL encoded address
+      // Expect coordinates to be used instead of street address for exact pin drop
       const expectedUrl =
-         "https://www.google.com/maps/dir/?api=1&destination=123%20Main%20St%2C%20Cityville";
+         "https://www.google.com/maps/dir/?api=1&destination=10,10";
       expect(mockOpen).toHaveBeenCalledWith(
          expectedUrl,
          "_blank",
@@ -112,7 +111,6 @@ describe("Map", () => {
    test("opens Google Maps with coordinates when address is missing", () => {
       const props = {
          name: "Hidden Gem",
-         street_address: "",
          lat: 35.5,
          lng: -120.5,
       };
@@ -133,7 +131,8 @@ describe("Map", () => {
    test("opens Google Maps when clicking the popup content", () => {
       const props = {
          name: "Popup Click Test",
-         street_address: "456 Elm St",
+         lat: 35.3,
+         lng: -120.6,
       };
       render(<Map {...props} />);
 
@@ -144,7 +143,7 @@ describe("Map", () => {
       fireEvent.click(popupContent);
 
       const expectedUrl =
-         "https://www.google.com/maps/dir/?api=1&destination=456%20Elm%20St";
+         "https://www.google.com/maps/dir/?api=1&destination=35.3,-120.6";
       expect(mockOpen).toHaveBeenCalledWith(
          expectedUrl,
          "_blank",

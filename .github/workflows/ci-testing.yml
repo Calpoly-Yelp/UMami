@@ -1,0 +1,43 @@
+# ci-testing.yml
+# GitHub Actions workflow for continuous integration testing of the Supabase Next.js template
+
+# Name of the CI workflow shown in GitHub Actions tab
+name: CI Testing
+
+# Triggers: run this workflow on every push to main branch
+on:
+   push:
+      branches: [main]
+
+jobs:
+   build:
+      runs-on: ubuntu-latest
+
+      # Pass Supabase credentials from GitHub Secrets as environment variables
+      env:
+         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+         SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+
+      steps:
+         # Step 1: Check out the repository code onto the runner
+         - uses: actions/checkout@v4
+
+         # Step 2: Set up Node.js version matching local development environment
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 24
+
+         # Step 3: Clean install root dependencies
+         - run: npm ci
+
+         # Step 4: Clean install frontend dependencies
+         - run: npm ci --prefix frontend
+
+         # Step 5: Clean install backend dependencies
+         - run: npm ci --prefix backend
+
+         # Step 6: Run ESLint and Prettier checks on frontend and backend
+         - run: npm run lint
+
+         # Step 7: Run all frontend and backend Jest tests
+         - run: npm test
