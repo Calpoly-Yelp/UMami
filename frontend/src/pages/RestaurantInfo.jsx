@@ -10,6 +10,7 @@ import ReviewCard from "../components/ReviewCard";
 import Modal from "../components/Modal";
 import WriteReview from "../components/WriteReview";
 import "./RestaurantInfo.css";
+import { supabase } from "../lib/supabase";
 import {
    Camera,
    PencilSimple,
@@ -42,6 +43,47 @@ export default function Review() {
       right: false,
    });
 
+   // Tracks whether the current restaurant is bookmarked by the logged-in user
+   const [isBookmarked, setIsBookmarked] = useState(false);
+
+   const handleBookmarkToggle = async (e) => {
+      e.stopPropagation();
+
+      if (!CURRENT_USER_ID) {
+         alert("Please log in to bookmark restaurants!");
+         return;
+      }
+
+      const restaurantId = parseInt(id, 10);
+      const wasBookmarked = isBookmarked;
+
+      setIsBookmarked(!wasBookmarked);
+
+      try {
+         if (wasBookmarked) {
+            const { error } = await supabase
+               .from("bookmarks")
+               .delete()
+               .eq("user_id", CURRENT_USER_ID)
+               .eq("restaurant_id", restaurantId);
+
+            if (error) throw error;
+         } else {
+            const { error } = await supabase
+               .from("bookmarks")
+               .insert({
+                  user_id: CURRENT_USER_ID,
+                  restaurant_id: restaurantId,
+               });
+
+            if (error) throw error;
+         }
+      } catch (error) {
+         console.error("Failed to update bookmark:", error);
+         setIsBookmarked(wasBookmarked);
+      }
+   };
+
    // Retrieve the actual logged-in user from localStorage
    const [currentUser] = useState(() => {
       try {
@@ -56,6 +98,30 @@ export default function Review() {
       }
    });
    const CURRENT_USER_ID = currentUser?.id;
+
+   // Fetch whether this restaurant is bookmarked by the current user
+   // Runs when the user or restaurant ID changes
+   useEffect(() => {
+      const fetchBookmarkStatus = async () => {
+         if (!CURRENT_USER_ID || !id) return;
+
+         const { data, error } = await supabase
+            .from("bookmarks")
+            .select("restaurant_id")
+            .eq("user_id", CURRENT_USER_ID)
+            .eq("restaurant_id", parseInt(id, 10))
+            .maybeSingle();
+
+         if (error) {
+            console.error("Failed to fetch bookmark:", error);
+            return;
+         }
+
+         setIsBookmarked(Boolean(data));
+      };
+
+      fetchBookmarkStatus();
+   }, [CURRENT_USER_ID, id]);
 
    // Build a clean restaurant object from the raw API data
    const restaurant = useMemo(() => {
@@ -615,9 +681,27 @@ export default function Review() {
                   Back to Restaurants
                </button>
 
-               <h1 className="review__title">
-                  {restaurant.name}
-               </h1>
+               <div className="review__titleRow">
+                  <h1 className="review__title">
+                     {restaurant.name}
+                  </h1>
+
+                  <button
+                     className={`review__bookmarkBtn ${isBookmarked ? "is-bookmarked" : ""}`}
+                     onClick={handleBookmarkToggle}
+                     aria-label={
+                        isBookmarked
+                           ? `Remove bookmark for ${restaurant.name}`
+                           : `Bookmark ${restaurant.name}`
+                     }
+                     type="button"
+                  >
+                     <Bookmark
+                        weight={isBookmarked ? "fill" : "regular"}
+                        size={40}
+                     />
+                  </button>
+               </div>
 
                <StarRow
                   value={restaurant.rating}
