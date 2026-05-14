@@ -6,10 +6,6 @@
 
 🌐 [UMami](https://thankful-hill-0f3846d10.7.azurestaticapps.net)
 
-### Backend
-
-[UMami](umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net)
-
 ### CI/CD Status
 
 [![Frontend Deploy](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/azure-static-web-apps-thankful-hill-0f3846d10.yml?style=for-the-badge&label=Frontend+Deploy&logo=microsoft-azure)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/azure-static-web-apps-thankful-hill-0f3846d10.yml)
