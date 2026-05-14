@@ -13,10 +13,20 @@ import {
    render,
    screen,
    fireEvent,
+   waitFor,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { BrowserRouter } from "react-router-dom";
 import Header from "../components/Header.jsx";
+import { supabase } from "../lib/supabase";
+
+jest.mock("../lib/supabase", () => ({
+   supabase: {
+      auth: {
+         signOut: jest.fn(),
+      },
+   },
+}));
 
 describe("Global Header Component", () => {
    const mockNotifications = [
@@ -80,6 +90,9 @@ describe("Global Header Component", () => {
          "user",
          JSON.stringify(mockUser),
       );
+      supabase.auth.signOut.mockResolvedValue({
+         error: null,
+      });
       jest.clearAllMocks();
    });
 
@@ -155,6 +168,29 @@ describe("Global Header Component", () => {
          screen.getByText("Sign Out"),
       ).toBeInTheDocument();
       await screen.findByText("2");
+   });
+
+   test("signing out clears stored user and Supabase session", async () => {
+      render(
+         <BrowserRouter>
+            <Header />
+         </BrowserRouter>,
+      );
+
+      fireEvent.click(
+         document.querySelector(".profile-icon"),
+      );
+      fireEvent.click(await screen.findByText("Sign Out"));
+
+      await waitFor(() => {
+         expect(localStorage.getItem("user")).toBeNull();
+      });
+      expect(supabase.auth.signOut).toHaveBeenCalledTimes(
+         1,
+      );
+      expect(
+         screen.queryByText("Sign Out"),
+      ).not.toBeInTheDocument();
    });
 
    // --- Notification Tests ---
