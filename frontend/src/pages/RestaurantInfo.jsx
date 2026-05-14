@@ -727,7 +727,9 @@ export default function Review() {
                <button
                   className="review__photosBtn"
                   type="button"
-                  onClick={() => navigate("/gallery")}
+                  onClick={() =>
+                     navigate(`/restaurants/${id}/gallery`)
+                  }
                >
                   <Camera size={16} weight="bold" />
                   <span>view photos</span>
