@@ -531,6 +531,12 @@ function Header() {
                         cursor: "pointer",
                      }}
                      onClick={toggleDropdown}
+                     onError={() =>
+                        setUser((prev) => ({
+                           ...prev,
+                           avatar_url: "",
+                        }))
+                     }
                   />
                ) : (
                   <MdOutlineAccountCircle

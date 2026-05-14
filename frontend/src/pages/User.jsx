@@ -632,6 +632,12 @@ function User({
                         className="user-profile-picture"
                         src={user.avatar_url}
                         alt={`${user.name}'s profile picture`}
+                        onError={() =>
+                           setUser((prev) => ({
+                              ...prev,
+                              avatar_url: "",
+                           }))
+                        }
                      />
                   ) : (
                      <MdOutlineAccountCircle
