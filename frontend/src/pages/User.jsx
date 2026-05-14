@@ -11,7 +11,10 @@ import { useNavigate } from "react-router-dom";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
-import { uploadProfilePhoto } from "../lib/uploadPhoto";
+import {
+   uploadProfilePhoto,
+   removeProfilePhoto,
+} from "../lib/uploadPhoto";
 import "./User.css";
 
 // This is our user page layout
@@ -574,7 +577,10 @@ function User({
 
       setUploadingPhoto(true);
       try {
-         const url = await uploadProfilePhoto(file);
+         const url = await uploadProfilePhoto(
+            file,
+            user.id,
+         );
 
          await fetch(
             `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
@@ -588,6 +594,11 @@ function User({
          );
 
          setUser((prev) => ({ ...prev, avatar_url: url }));
+
+         // Update avatar in all reviews too
+         setReviews((prev) =>
+            prev.map((r) => ({ ...r, avatar_url: url })),
+         );
 
          const stored = localStorage.getItem("user");
          if (stored) {
@@ -616,6 +627,53 @@ function User({
          setUploadingPhoto(false);
          if (fileInputRef.current)
             fileInputRef.current.value = "";
+      }
+   };
+
+   // --- REMOVE PHOTO ---
+   // Removes the profile photo and reverts to default avatar
+   const handleRemovePhoto = async () => {
+      if (!user.id) return;
+      try {
+         const defaultAvatar = await removeProfilePhoto(
+            user.id,
+         );
+
+         setUser((prev) => ({
+            ...prev,
+            avatar_url: defaultAvatar,
+         }));
+
+         // Update avatar in all reviews too
+         setReviews((prev) =>
+            prev.map((r) => ({
+               ...r,
+               avatar_url: defaultAvatar,
+            })),
+         );
+
+         const stored = localStorage.getItem("user");
+         if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem(
+               "user",
+               JSON.stringify({
+                  ...parsed,
+                  avatar_url: defaultAvatar,
+               }),
+            );
+         }
+
+         window.dispatchEvent(
+            new CustomEvent("avatar-updated", {
+               detail: { avatar_url: defaultAvatar },
+            }),
+         );
+      } catch (err) {
+         console.error(
+            "Failed to remove profile photo:",
+            err,
+         );
       }
    };
 
@@ -681,6 +739,26 @@ function User({
                         </span>
                      </div>
                      <div className="edit-icon-wrapper">
+                        {" "}
+                        {/* Show Remove Photo only if user has a real uploaded photo */}
+                        {user.avatar_url &&
+                           !user.avatar_url.includes(
+                              "ui-avatars.com",
+                           ) && (
+                              <div
+                                 className="edit-icon-wrapper"
+                                 onClick={handleRemovePhoto}
+                                 style={{
+                                    cursor: "pointer",
+                                 }}
+                              >
+                                 <img
+                                    src={addPhotoIcon}
+                                    alt="Remove Photo"
+                                 />
+                                 <span>Remove Photo</span>
+                              </div>
+                           )}
                         <img src={editIcon} alt="Edit" />
                         <span>Edit Profile</span>
                      </div>
