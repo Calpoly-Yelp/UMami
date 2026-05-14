@@ -112,12 +112,45 @@
    color: #fff;
 }
 
+.review__titleRow {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+}
+
 .review__title {
    margin: 0;
    font-size: 46px;
    font-weight: 900;
    letter-spacing: -0.5px;
    text-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.review__bookmarkBtn {
+   background: none;
+   border: none;
+   color: #ffffff;
+   cursor: pointer;
+   display: inline-flex;
+   align-items: center;
+   padding: 4px;
+   opacity: 0.85;
+   transition:
+      transform 0.15s ease,
+      opacity 0.15s ease,
+      color 0.15s ease,
+      filter 0.15s ease;
+}
+
+.review__bookmarkBtn:hover {
+   transform: scale(1.1);
+   opacity: 1;
+}
+
+.review__bookmarkBtn.is-bookmarked {
+   color: #f2c75c;
+   opacity: 1;
+   filter: drop-shadow(0 0 6px rgba(242, 199, 92, 0.6));
 }
 
 .review__metaRow {

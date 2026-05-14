@@ -24,7 +24,7 @@ export default function RestaurantMenu() {
       const fetchRestaurant = async () => {
          try {
             const response = await fetch(
-               `http://localhost:4000/api/restaurants/${id}`,
+               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -53,7 +53,7 @@ export default function RestaurantMenu() {
             setIsMenuLoading(true);
             setMenuError("");
             const response = await fetch(
-               `http://localhost:4000/api/restaurants/${id}/menu`,
+               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}/menu`,
             );
 
             if (!response.ok) {

@@ -5,8 +5,8 @@
    "main": "index.js",
    "scripts": {
       "test": "npm run frontend:test && npm run backend:test",
-      "frontend:test": "npm --prefix frontend run test",
-      "backend:test": "npm --prefix backend run test",
+      "frontend:test": "npm --prefix frontend run test -- --watchAll=false",
+      "backend:test": "npm --prefix backend run test -- --watchAll=false",
       "test:coverage": "npm run frontend:test:coverage && npm run backend:test:coverage && node update-coverage.js",
       "frontend:test:coverage": "npm --prefix frontend run test -- --coverage --watchAll=false --coverageReporters=\"json-summary\" --coverageReporters=\"text\"",
       "backend:test:coverage": "npm --prefix backend run test -- --coverage --watchAll=false --coverageReporters=\"json-summary\" --coverageReporters=\"text\"",
@@ -44,5 +44,8 @@
       "husky": "^9.1.7",
       "lint-staged": "^16.2.7",
       "prettier": "^3.8.1"
+   },
+   "dependencies": {
+      "node-cron": "^4.2.1"
    }
 }

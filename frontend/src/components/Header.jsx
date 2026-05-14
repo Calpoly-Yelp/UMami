@@ -78,7 +78,7 @@ function Header() {
       // sync with database
       try {
          await fetch(
-            `http://localhost:4000/api/notifications/${notification.id}/read`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${notification.id}/read`,
             { method: "PATCH" },
          );
       } catch (error) {
@@ -99,7 +99,7 @@ function Header() {
       const userId = "b677be85-81db-4245-91ca-acb713bd5564";
       try {
          await fetch(
-            `http://localhost:4000/api/notifications/${userId}/read-all`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}/read-all`,
             {
                method: "PATCH",
             },
@@ -118,7 +118,7 @@ function Header() {
       const userId = "b677be85-81db-4245-91ca-acb713bd5564";
       try {
          await fetch(
-            `http://localhost:4000/api/notifications/${userId}/delete-all`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}/delete-all`,
             { method: "DELETE" },
          );
       } catch (error) {
@@ -144,7 +144,7 @@ function Header() {
       // sync request with data base
       try {
          await fetch(
-            `http://localhost:4000/api/notifications/${notificationId}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${notificationId}`,
             {
                method: "DELETE",
             },
@@ -182,7 +182,7 @@ function Header() {
 
          try {
             const response = await fetch(
-               `http://localhost:4000/api/notifications/${userId}`,
+               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -197,6 +197,26 @@ function Header() {
       };
 
       loadUserAndNotifications();
+   }, []);
+
+   // Listen for profile photo updates from other components
+   // so the header avatar updates instantly without a page refresh
+   useEffect(() => {
+      const handleAvatarUpdate = (e) => {
+         setUser((prev) => ({
+            ...prev,
+            avatar_url: e.detail.avatar_url,
+         }));
+      };
+      window.addEventListener(
+         "avatar-updated",
+         handleAvatarUpdate,
+      );
+      return () =>
+         window.removeEventListener(
+            "avatar-updated",
+            handleAvatarUpdate,
+         );
    }, []);
 
    const unreadCount = notifications.filter(
@@ -237,7 +257,7 @@ function Header() {
       const fetchUsers = async () => {
          try {
             const response = await fetch(
-               "http://localhost:4000/api/users",
+               "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
             );
             if (response.ok) {
                const data = await response.json();
@@ -256,7 +276,7 @@ function Header() {
          const fetchFollows = async () => {
             try {
                const response = await fetch(
-                  `http://localhost:4000/api/users/${user.id}/follows`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}/follows`,
                );
                if (response.ok) {
                   const data = await response.json();
@@ -292,7 +312,7 @@ function Header() {
 
       try {
          const response = await fetch(
-            "http://localhost:4000/api/users/follows/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
             {
                method: "POST",
                headers: {
@@ -340,7 +360,7 @@ function Header() {
 
       try {
          const response = await fetch(
-            "http://localhost:4000/api/users/follows/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
             {
                method: "POST",
                headers: {
@@ -373,7 +393,7 @@ function Header() {
          ? []
          : allUsers.filter(
               (p) =>
-                 p.id !== user?.id && // filter out the logged in user
+                 p.id !== user?.id &&
                  p.name &&
                  p.name
                     .toLowerCase()
@@ -511,6 +531,12 @@ function Header() {
                         cursor: "pointer",
                      }}
                      onClick={toggleDropdown}
+                     onError={() =>
+                        setUser((prev) => ({
+                           ...prev,
+                           avatar_url: "",
+                        }))
+                     }
                   />
                ) : (
                   <MdOutlineAccountCircle

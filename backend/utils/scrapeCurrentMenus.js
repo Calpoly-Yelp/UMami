@@ -189,15 +189,13 @@ function resolveSubwayNutritionUrl(sourceUrl) {
 }
 
 function getRestaurantMenuSourceUrl(restaurant) {
-   if (isSubwayRestaurant(restaurant)) {
-      return SUBWAY_NUTRITION_PDF_URL;
-   }
-
    if (restaurant?.menu_source_url) {
       return restaurant.menu_source_url;
    }
 
-   return null;
+   return isSubwayRestaurant(restaurant)
+      ? SUBWAY_NUTRITION_PDF_URL
+      : null;
 }
 
 function normalizeText(value) {
