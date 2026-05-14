@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import "./AccountSettings.css";
 import addProfilePicture from "../assets/addProfilePicture.png";
+import { EnvelopeSimple, Lock, User } from "@phosphor-icons/react";
 
 const sections = [
    { id: "profile", label: "My Profile" },
@@ -22,8 +23,9 @@ export default function AccountSettings() {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-      role: "", // student | faculty | visitor
-      budget: "", // under10 | 10to20 | 20to25 | 25plus
+      privacy: localStorage.getItem("profilePrivacy") || "public",
+      role: "",
+      budget: "",
       dietary: {
          vegetarian: false,
          vegan: false,
@@ -48,15 +50,18 @@ export default function AccountSettings() {
 
    const sectionEls = useRef({});
 
+   const setPrivacy = (value) => {
+      setForm((p) => ({ ...p, privacy: value }));
+      localStorage.setItem("profilePrivacy", value);
+      window.dispatchEvent(new Event("profilePrivacyChanged"));
+   };
+
    const handleScrollTo = (id) => {
       const el = sectionEls.current[id];
       if (!el) return;
 
-      const container = document.querySelector(
-         ".content-container",
-      );
+      const container = document.querySelector(".content-container");
 
-      // if content-container isn't there, just do normal scroll
       if (!container) {
          el.scrollIntoView({
             behavior: "smooth",
@@ -65,21 +70,16 @@ export default function AccountSettings() {
          return;
       }
 
-      // header height so the title doesn't get hidden
       const header = document.querySelector("header");
       const headerOffset = header
          ? header.getBoundingClientRect().height
          : 0;
 
-      // extra space under the header
-      const extraOffset = 16;
-      const offset = headerOffset + extraOffset;
+      const offset = headerOffset + 16;
 
-      const containerRect =
-         container.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
       const elRect = el.getBoundingClientRect();
 
-      // element position inside the scroll container
       const targetTop =
          elRect.top -
          containerRect.top +
@@ -92,11 +92,8 @@ export default function AccountSettings() {
       });
    };
 
-   // keeps sidebar highlight in sync while you scroll
    useEffect(() => {
-      const container = document.querySelector(
-         ".content-container",
-      );
+      const container = document.querySelector(".content-container");
       if (!container) return;
 
       const header = document.querySelector("header");
@@ -122,13 +119,10 @@ export default function AccountSettings() {
       };
 
       container.addEventListener("scroll", handleScroll);
-      handleScroll(); // run once when it loads
+      handleScroll();
 
       return () =>
-         container.removeEventListener(
-            "scroll",
-            handleScroll,
-         );
+         container.removeEventListener("scroll", handleScroll);
    }, []);
 
    const onInput = (key) => (e) =>
@@ -155,7 +149,6 @@ export default function AccountSettings() {
             [key]: !p.dietary[key],
          };
 
-         // if "none" is checked, turn off the others
          if (key === "none" && next.none) {
             next.vegetarian = false;
             next.vegan = false;
@@ -163,7 +156,6 @@ export default function AccountSettings() {
             next.dairyFree = false;
          }
 
-         // if any option is checked, turn off "none"
          if (key !== "none" && next[key]) {
             next.none = false;
          }
@@ -179,14 +171,12 @@ export default function AccountSettings() {
             [key]: !p.updates[key],
          };
 
-         // if "none" is checked, turn off the others
          if (key === "none" && next.none) {
             next.menu = false;
             next.bestTimes = false;
             next.friendActivity = false;
          }
 
-         // if any option is checked, turn off "none"
          if (key !== "none" && next[key]) {
             next.none = false;
          }
@@ -208,12 +198,9 @@ export default function AccountSettings() {
 
    const toggleMatters = (key) => {
       setForm((p) => {
-         const currentlySelected = Object.values(
-            p.matters,
-         ).filter(Boolean).length;
+         const currentlySelected = Object.values(p.matters).filter(Boolean).length;
          const isOn = p.matters[key];
 
-         // only allow up to 2
          if (!isOn && currentlySelected >= 2) return p;
 
          return {
@@ -225,7 +212,6 @@ export default function AccountSettings() {
 
    return (
       <div className="as-page">
-         {/* main layout */}
          <main className="as-main">
             <aside className="as-sidebar">
                <h2 className="as-sidebar-title">
@@ -240,9 +226,7 @@ export default function AccountSettings() {
                         className={`as-nav-item ${active === s.id ? "is-active" : ""}`}
                         onClick={() => handleScrollTo(s.id)}
                         aria-current={
-                           active === s.id
-                              ? "page"
-                              : undefined
+                           active === s.id ? "page" : undefined
                         }
                      >
                         {s.label}
@@ -252,12 +236,9 @@ export default function AccountSettings() {
             </aside>
 
             <section className="as-content">
-               {/* my profile */}
                <div
                   id="profile"
-                  ref={(el) =>
-                     (sectionEls.current.profile = el)
-                  }
+                  ref={(el) => (sectionEls.current.profile = el)}
                   className="as-section"
                >
                   <h1 className="as-h1">My Profile</h1>
@@ -277,25 +258,10 @@ export default function AccountSettings() {
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">
-                        Name
-                     </label>
+                     <label className="as-label">Name</label>
                      <div className="as-input-wrap">
-                        <span
-                           className="as-input-icon"
-                           aria-hidden="true"
-                        >
-                           {/* user icon */}
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2.25c-4.2 0-7.5 2.1-7.5 4.5V21h15v-2.25c0-2.4-3.3-4.5-7.5-4.5Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                        <span className="as-input-icon" aria-hidden="true">
+                           <User size={16} weight="fill" />
                         </span>
 
                         <input
@@ -308,25 +274,10 @@ export default function AccountSettings() {
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">
-                        Email
-                     </label>
+                     <label className="as-label">Email</label>
                      <div className="as-input-wrap">
-                        <span
-                           className="as-input-icon"
-                           aria-hidden="true"
-                        >
-                           {/* mail icon */}
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 4-8 5L4 9V7l8 5 8-5Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                        <span className="as-input-icon" aria-hidden="true">
+                           <EnvelopeSimple size={16} weight="fill" />
                         </span>
 
                         <input
@@ -338,6 +289,36 @@ export default function AccountSettings() {
                      </div>
                   </div>
 
+                  <div className="as-privacy-row">
+                     <div>
+                        <h2 className="as-privacy-title">Privacy</h2>
+                        <div className="as-privacy-label">
+                           Profile Visibility
+                        </div>
+                        <p className="as-privacy-text">
+                           Set your profile to private to limit access to followers only or make
+                           it public so anyone can view your account.
+                        </p>
+                     </div>
+
+                     <div className="as-privacy-toggle">
+                        <button
+                           type="button"
+                           className={form.privacy === "private" ? "is-active" : ""}
+                           onClick={() => setPrivacy("private")}
+                        >
+                           Private
+                        </button>
+                        <button
+                           type="button"
+                           className={form.privacy === "public" ? "is-active" : ""}
+                           onClick={() => setPrivacy("public")}
+                        >
+                           Public
+                        </button>
+                     </div>
+                  </div>
+
                   <button
                      className="btn btn-secondary as-btn-wide"
                      type="button"
@@ -346,36 +327,18 @@ export default function AccountSettings() {
                   </button>
                </div>
 
-               {/* my password */}
                <div
                   id="password"
-                  ref={(el) =>
-                     (sectionEls.current.password = el)
-                  }
+                  ref={(el) => (sectionEls.current.password = el)}
                   className="as-section"
                >
                   <h2 className="as-h2">My Password</h2>
 
                   <div className="as-field">
-                     <label className="as-label">
-                        Current Password
-                     </label>
+                     <label className="as-label">Current Password</label>
                      <div className="as-input-wrap">
-                        <span
-                           className="as-input-icon"
-                           aria-hidden="true"
-                        >
-                           {/* lock icon */}
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 0 1 4 0v2h-4Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                        <span className="as-input-icon" aria-hidden="true">
+                           <Lock size={16} weight="fill" />
                         </span>
 
                         <input
@@ -383,32 +346,16 @@ export default function AccountSettings() {
                            type="password"
                            placeholder="Enter your current password"
                            value={form.currentPassword}
-                           onChange={onInput(
-                              "currentPassword",
-                           )}
+                           onChange={onInput("currentPassword")}
                         />
                      </div>
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">
-                        New Password
-                     </label>
+                     <label className="as-label">New Password</label>
                      <div className="as-input-wrap">
-                        <span
-                           className="as-input-icon"
-                           aria-hidden="true"
-                        >
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 0 1 4 0v2h-4Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                        <span className="as-input-icon" aria-hidden="true">
+                           <Lock size={16} weight="fill" />
                         </span>
 
                         <input
@@ -422,24 +369,10 @@ export default function AccountSettings() {
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">
-                        Confirm New Password
-                     </label>
+                     <label className="as-label">Confirm New Password</label>
                      <div className="as-input-wrap">
-                        <span
-                           className="as-input-icon"
-                           aria-hidden="true"
-                        >
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 0 1 4 0v2h-4Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                        <span className="as-input-icon" aria-hidden="true">
+                           <Lock size={16} weight="fill" />
                         </span>
 
                         <input
@@ -447,9 +380,7 @@ export default function AccountSettings() {
                            type="password"
                            placeholder="Reenter your new password to verify"
                            value={form.confirmPassword}
-                           onChange={onInput(
-                              "confirmPassword",
-                           )}
+                           onChange={onInput("confirmPassword")}
                         />
                      </div>
                   </div>
@@ -462,12 +393,9 @@ export default function AccountSettings() {
                   </button>
                </div>
 
-               {/* my preferences */}
                <div
                   id="preferences"
-                  ref={(el) =>
-                     (sectionEls.current.preferences = el)
-                  }
+                  ref={(el) => (sectionEls.current.preferences = el)}
                   className="as-section"
                >
                   <h2 className="as-h2">My Preferences</h2>
@@ -481,12 +409,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.role === "student"
-                              }
-                              onChange={() =>
-                                 setRole("student")
-                              }
+                              checked={form.role === "student"}
+                              onChange={() => setRole("student")}
                            />
                            <span>Cal Poly student</span>
                         </label>
@@ -494,12 +418,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.role === "faculty"
-                              }
-                              onChange={() =>
-                                 setRole("faculty")
-                              }
+                              checked={form.role === "faculty"}
+                              onChange={() => setRole("faculty")}
                            />
                            <span>Faculty/Staff</span>
                         </label>
@@ -507,12 +427,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.role === "visitor"
-                              }
-                              onChange={() =>
-                                 setRole("visitor")
-                              }
+                              checked={form.role === "visitor"}
+                              onChange={() => setRole("visitor")}
                            />
                            <span>Visitor/Local</span>
                         </label>
@@ -521,20 +437,15 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        What is your typical budget per
-                        meal?
+                        What is your typical budget per meal?
                      </h3>
 
                      <div className="as-checks">
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.budget === "under10"
-                              }
-                              onChange={() =>
-                                 setBudget("under10")
-                              }
+                              checked={form.budget === "under10"}
+                              onChange={() => setBudget("under10")}
                            />
                            <span>Under $10</span>
                         </label>
@@ -542,12 +453,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.budget === "10to20"
-                              }
-                              onChange={() =>
-                                 setBudget("10to20")
-                              }
+                              checked={form.budget === "10to20"}
+                              onChange={() => setBudget("10to20")}
                            />
                            <span>$10–$20</span>
                         </label>
@@ -555,12 +462,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.budget === "20to25"
-                              }
-                              onChange={() =>
-                                 setBudget("20to25")
-                              }
+                              checked={form.budget === "20to25"}
+                              onChange={() => setBudget("20to25")}
                            />
                            <span>$20–$25</span>
                         </label>
@@ -568,12 +471,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.budget === "25plus"
-                              }
-                              onChange={() =>
-                                 setBudget("25plus")
-                              }
+                              checked={form.budget === "25plus"}
+                              onChange={() => setBudget("25plus")}
                            />
                            <span>$25+</span>
                         </label>
@@ -582,8 +481,7 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        Do you have any dietary preferences
-                        or restrictions?
+                        Do you have any dietary preferences or restrictions?
                      </h3>
                      <div className="as-hint">
                         Select all that apply:
@@ -593,12 +491,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.dietary.vegetarian
-                              }
-                              onChange={() =>
-                                 toggleDietary("vegetarian")
-                              }
+                              checked={form.dietary.vegetarian}
+                              onChange={() => toggleDietary("vegetarian")}
                            />
                            <span>Vegetarian</span>
                         </label>
@@ -607,9 +501,7 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.dietary.vegan}
-                              onChange={() =>
-                                 toggleDietary("vegan")
-                              }
+                              onChange={() => toggleDietary("vegan")}
                            />
                            <span>Vegan</span>
                         </label>
@@ -617,12 +509,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.dietary.glutenFree
-                              }
-                              onChange={() =>
-                                 toggleDietary("glutenFree")
-                              }
+                              checked={form.dietary.glutenFree}
+                              onChange={() => toggleDietary("glutenFree")}
                            />
                            <span>Gluten-free</span>
                         </label>
@@ -630,12 +518,8 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.dietary.dairyFree
-                              }
-                              onChange={() =>
-                                 toggleDietary("dairyFree")
-                              }
+                              checked={form.dietary.dairyFree}
+                              onChange={() => toggleDietary("dairyFree")}
                            />
                            <span>Dairy-free</span>
                         </label>
@@ -644,9 +528,7 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.dietary.none}
-                              onChange={() =>
-                                 toggleDietary("none")
-                              }
+                              onChange={() => toggleDietary("none")}
                            />
                            <span>No restrictions</span>
                         </label>
@@ -655,27 +537,17 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        What matters to you most when
-                        choosing restaurants?
+                        What matters to you most when choosing restaurants?
                      </h3>
-                     <div className="as-hint">
-                        Choose up to 2
-                     </div>
+                     <div className="as-hint">Choose up to 2</div>
 
                      <div className="as-checks">
                         {mattersKeys.map((m) => (
-                           <label
-                              key={m.key}
-                              className="as-check"
-                           >
+                           <label key={m.key} className="as-check">
                               <input
                                  type="checkbox"
-                                 checked={
-                                    form.matters[m.key]
-                                 }
-                                 onChange={() =>
-                                    toggleMatters(m.key)
-                                 }
+                                 checked={form.matters[m.key]}
+                                 onChange={() => toggleMatters(m.key)}
                               />
                               <span>{m.label}</span>
                            </label>
@@ -685,8 +557,7 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        What updates would you like to
-                        receive?
+                        What updates would you like to receive?
                      </h3>
                      <div className="as-hint">
                         Select all that apply:
@@ -697,46 +568,28 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.updates.menu}
-                              onChange={() =>
-                                 toggleUpdates("menu")
-                              }
+                              onChange={() => toggleUpdates("menu")}
                            />
-                           <span>
-                              Restaurant menu updates
-                           </span>
+                           <span>Restaurant menu updates</span>
                         </label>
 
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.updates.bestTimes
-                              }
-                              onChange={() =>
-                                 toggleUpdates("bestTimes")
-                              }
+                              checked={form.updates.bestTimes}
+                              onChange={() => toggleUpdates("bestTimes")}
                            />
-                           <span>
-                              Best times to order (avoid
-                              long waits)
-                           </span>
+                           <span>Best times to order (avoid long waits)</span>
                         </label>
 
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={
-                                 form.updates.friendActivity
-                              }
-                              onChange={() =>
-                                 toggleUpdates(
-                                    "friendActivity",
-                                 )
-                              }
+                              checked={form.updates.friendActivity}
+                              onChange={() => toggleUpdates("friendActivity")}
                            />
                            <span>
-                              Friend activity (reviews, new
-                              friend requests)
+                              Friend activity (reviews, new friend requests)
                            </span>
                         </label>
 
@@ -744,9 +597,7 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.updates.none}
-                              onChange={() =>
-                                 toggleUpdates("none")
-                              }
+                              onChange={() => toggleUpdates("none")}
                            />
                            <span>No notifications</span>
                         </label>

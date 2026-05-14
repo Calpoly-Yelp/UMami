@@ -251,4 +251,13 @@
    .restaurant-card-click {
       cursor: pointer;
    }
+   .user-privacy {
+   margin: -10px 0 8px;
+   font-size: 0.9rem;
+   font-weight: 700;
+   color: #3a8f34;
+   background: rgba(122, 176, 104, 0.18);
+   padding: 4px 12px;
+   border-radius: 999px;
+}
 }
