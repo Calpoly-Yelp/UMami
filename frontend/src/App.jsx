@@ -106,15 +106,6 @@ function AppLayout() {
                />
 
                <Route
-                  path="/gallery"
-                  element={
-                     <ProtectedRoute session={session}>
-                        <PhotoGallery />
-                     </ProtectedRoute>
-                  }
-               />
-
-               <Route
                   path="/user"
                   element={
                      <ProtectedRoute session={session}>
@@ -152,6 +143,15 @@ function AppLayout() {
                />
 
                <Route
+                  path="/restaurants/:id/gallery"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <PhotoGallery />
+                     </ProtectedRoute>
+                  }
+               />
+
+               <Route
                   path="/settings"
                   element={
                      <ProtectedRoute session={session}>
@@ -164,7 +164,6 @@ function AppLayout() {
       </div>
    );
 }
-
 export default function App() {
    return (
       <BrowserRouter>

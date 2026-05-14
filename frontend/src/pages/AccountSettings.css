@@ -2,7 +2,9 @@
    min-height: 100vh;
    background: var(--color-bg-page);
 }
-
+.as-input-icon svg {
+   display: block;
+}
 /* Main layout */
 .as-main {
    width: min(1100px, calc(100% - 48px));
@@ -214,4 +216,56 @@
    .as-nav-item.is-active {
       background: var(--color-primary-soft);
    }
+}
+.as-privacy-row {
+   margin: 24px 0 36px;
+   max-width: 520px;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: 20px;
+}
+
+.as-privacy-title {
+   margin: 0 0 18px;
+   font-size: 30px;
+   font-weight: 800;
+}
+
+.as-privacy-label {
+   font-size: 16px;
+   font-weight: 800;
+   margin-bottom: 4px;
+}
+
+.as-privacy-text {
+   margin: 0;
+   max-width: 300px;
+   font-size: 9px;
+   font-weight: 600;
+   color: var(--color-text-soft);
+   line-height: 1.3;
+}
+
+.as-privacy-toggle {
+   display: flex;
+   border: 1px solid #7fb66a;
+   border-radius: 3px;
+   overflow: hidden;
+   height: 25px;
+}
+
+.as-privacy-toggle button {
+   border: 0;
+   padding: 0 13px;
+   font-size: 10px;
+   font-weight: 700;
+   background: #d9efd3;
+   color: #4b8d3f;
+   cursor: pointer;
+}
+
+.as-privacy-toggle button.is-active {
+   background: #ffffff;
+   color: #3a8f34;
 }

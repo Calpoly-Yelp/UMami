@@ -12,6 +12,10 @@ import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
 import { useBookmarks } from "../hooks/useBookmarks";
+import {
+   uploadProfilePhoto,
+   removeProfilePhoto,
+} from "../lib/uploadPhoto";
 import "./User.css";
 
 // This is our user page layout
@@ -44,6 +48,9 @@ function User({
          avatar_url: "",
          is_verified: false,
       },
+   );
+   const [privacy, setPrivacy] = useState(
+      localStorage.getItem("profilePrivacy") || "public",
    );
    const [reviews, setReviews] = useState(
       initialReviews
@@ -93,6 +100,7 @@ function User({
    });
 
    // Checks the DOM properties of the carousel to see if there is scrollable space
+   // Used only for onScroll events on the carousel containers
    const checkScroll = (id) => {
       const el = document.getElementById(`${id}-list`);
       if (!el) return;
@@ -107,16 +115,68 @@ function User({
       }));
    };
 
+   /*
    // Re-evaluate scroll capabilities whenever the data changes or window resizes
+   // Uses an inline checkScrollInner to avoid calling setState directly from effect
    useEffect(() => {
-      checkScroll("reviews");
-      checkScroll("restaurants");
-      checkScroll("following");
+      const checkScrollInner = (id) => {
+         const el = document.getElementById(`${id}-list`);
+         if (!el) return;
+         setCanScroll((prev) => ({
+            ...prev,
+            [id]: {
+               left: el.scrollLeft > 0,
+               right:
+                  Math.ceil(
+                     el.scrollLeft + el.clientWidth,
+                  ) < el.scrollWidth,
+            },
+         }));
+      };
+
+      checkScrollInner("reviews");
+      checkScrollInner("restaurants");
+      checkScrollInner("following");
 
       const handleResize = () => {
-         checkScroll("reviews");
-         checkScroll("restaurants");
-         checkScroll("following");
+         checkScrollInner("reviews");
+         checkScrollInner("restaurants");
+         checkScrollInner("following");
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () =>
+         window.removeEventListener("resize", handleResize);
+   }, [reviews, restaurants, following]);
+   */
+
+   // -- UPDATED --
+   // Re-evaluate scroll capabilities whenever the data changes or window resizes
+
+   useEffect(() => {
+      const checkScrollInner = (id) => {
+         const el = document.getElementById(`${id}-list`);
+         if (!el) return;
+         setCanScroll((prev) => ({
+            ...prev,
+            [id]: {
+               left: el.scrollLeft > 0,
+               right:
+                  Math.ceil(
+                     el.scrollLeft + el.clientWidth,
+                  ) < el.scrollWidth,
+            },
+         }));
+      };
+
+      checkScrollInner("reviews");
+      checkScrollInner("restaurants");
+      checkScrollInner("following");
+
+      const handleResize = () => {
+         checkScrollInner("reviews");
+         checkScrollInner("restaurants");
+         checkScrollInner("following");
       };
 
       window.addEventListener("resize", handleResize);
@@ -141,7 +201,30 @@ function User({
          });
       }
    };
+   useEffect(() => {
+      const syncPrivacy = () => {
+         setPrivacy(
+            localStorage.getItem("profilePrivacy") ||
+               "public",
+         );
+      };
 
+      window.addEventListener(
+         "profilePrivacyChanged",
+         syncPrivacy,
+      );
+      window.addEventListener("storage", syncPrivacy);
+
+      syncPrivacy();
+
+      return () => {
+         window.removeEventListener(
+            "profilePrivacyChanged",
+            syncPrivacy,
+         );
+         window.removeEventListener("storage", syncPrivacy);
+      };
+   }, []);
    useEffect(() => {
       bookmarkedIdsRef.current = bookmarkedIds;
    }, [bookmarkedIds]);
@@ -225,13 +308,13 @@ function User({
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `http://localhost:4000/api/reviews?user_id=${userData.id}`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?user_id=${userData.id}`,
                ),
                fetch(
-                  `http://localhost:4000/api/restaurants/bookmarks/${userData.id}`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/${userData.id}`,
                ),
                fetch(
-                  `http://localhost:4000/api/users/${userData.id}/follows`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userData.id}/follows`,
                ),
             ]);
 
@@ -385,7 +468,7 @@ function User({
 
          // sync the bookmarked restaurants
          fetch(
-            "http://localhost:4000/api/restaurants/bookmarks/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/sync",
             {
                method: "POST",
                headers: {
@@ -435,7 +518,7 @@ function User({
             return;
 
          fetch(
-            "http://localhost:4000/api/users/follows/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
             {
                method: "POST",
                headers: {
@@ -483,7 +566,7 @@ function User({
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `http://localhost:4000/api/reviews/${reviewId}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
@@ -504,6 +587,117 @@ function User({
       }
    };
 
+   // --- ADD PHOTO ---
+   const fileInputRef = useRef(null);
+   const [uploadingPhoto, setUploadingPhoto] =
+      useState(false);
+
+   const handleAddPhoto = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file || !user.id) return;
+
+      setUploadingPhoto(true);
+      try {
+         const url = await uploadProfilePhoto(
+            file,
+            user.id,
+         );
+
+         await fetch(
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
+            {
+               method: "PATCH",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ avatar_url: url }),
+            },
+         );
+
+         setUser((prev) => ({ ...prev, avatar_url: url }));
+
+         // Update avatar in all reviews too
+         setReviews((prev) =>
+            prev.map((r) => ({ ...r, avatar_url: url })),
+         );
+
+         const stored = localStorage.getItem("user");
+         if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem(
+               "user",
+               JSON.stringify({
+                  ...parsed,
+                  avatar_url: url,
+               }),
+            );
+         }
+
+         // Notify the Header to update the avatar instantly without a page refresh
+         window.dispatchEvent(
+            new CustomEvent("avatar-updated", {
+               detail: { avatar_url: url },
+            }),
+         );
+      } catch (err) {
+         console.error(
+            "Failed to upload profile photo:",
+            err,
+         );
+      } finally {
+         setUploadingPhoto(false);
+         if (fileInputRef.current)
+            fileInputRef.current.value = "";
+      }
+   };
+
+   // --- REMOVE PHOTO ---
+   // Removes the profile photo and reverts to default avatar
+   const handleRemovePhoto = async () => {
+      if (!user.id) return;
+      try {
+         const defaultAvatar = await removeProfilePhoto(
+            user.id,
+         );
+
+         setUser((prev) => ({
+            ...prev,
+            avatar_url: defaultAvatar,
+         }));
+
+         // Update avatar in all reviews too
+         setReviews((prev) =>
+            prev.map((r) => ({
+               ...r,
+               avatar_url: defaultAvatar,
+            })),
+         );
+
+         const stored = localStorage.getItem("user");
+         if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem(
+               "user",
+               JSON.stringify({
+                  ...parsed,
+                  avatar_url: defaultAvatar,
+               }),
+            );
+         }
+
+         window.dispatchEvent(
+            new CustomEvent("avatar-updated", {
+               detail: { avatar_url: defaultAvatar },
+            }),
+         );
+      } catch (err) {
+         console.error(
+            "Failed to remove profile photo:",
+            err,
+         );
+      }
+   };
+
    return (
       <div className="user-page">
          {/* Content Section */}
@@ -517,6 +711,12 @@ function User({
                         className="user-profile-picture"
                         src={user.avatar_url}
                         alt={`${user.name}'s profile picture`}
+                        onError={() =>
+                           setUser((prev) => ({
+                              ...prev,
+                              avatar_url: "",
+                           }))
+                        }
                      />
                   ) : (
                      <MdOutlineAccountCircle
@@ -529,15 +729,64 @@ function User({
                      name={user.name}
                      is_verified={user.is_verified}
                   />
+
+                  <p className="user-privacy">
+                     {privacy === "private"
+                        ? "Private"
+                        : "Public"}
+                  </p>
+
                   <div className="edit-icons">
-                     <div className="edit-icon-wrapper">
+                     <div
+                        className="edit-icon-wrapper"
+                        onClick={() =>
+                           !uploadingPhoto &&
+                           fileInputRef.current?.click()
+                        }
+                        style={{
+                           cursor: uploadingPhoto
+                              ? "wait"
+                              : "pointer",
+                        }}
+                     >
+                        <input
+                           ref={fileInputRef}
+                           type="file"
+                           accept="image/*"
+                           style={{ display: "none" }}
+                           onChange={handleAddPhoto}
+                        />
                         <img
                            src={addPhotoIcon}
                            alt="Add Photo"
                         />
-                        <span>Add Photo</span>
+                        <span>
+                           {uploadingPhoto
+                              ? "Uploading..."
+                              : "Add Photo"}
+                        </span>
                      </div>
                      <div className="edit-icon-wrapper">
+                        {" "}
+                        {/* Show Remove Photo only if user has a real uploaded photo */}
+                        {user.avatar_url &&
+                           !user.avatar_url.includes(
+                              "ui-avatars.com",
+                           ) && (
+                              <div
+                                 className="edit-icon-wrapper"
+                                 onClick={handleRemovePhoto}
+                                 style={{
+                                    cursor: "pointer",
+                                 }}
+                              >
+                                 <img
+                                    src={addPhotoIcon}
+                                    alt="Remove Photo"
+                                 />
+                                 <span>Remove Photo</span>
+                              </div>
+                           )}
                         <img src={editIcon} alt="Edit" />
                         <span>Edit Profile</span>
                      </div>

@@ -230,3 +230,65 @@
    color: var(--primary-gray);
    font-style: italic;
 }
+
+@media (max-width: 900px) {
+   .user-page {
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+   }
+
+   .user-content {
+      flex-direction: column;
+      height: auto;
+      overflow-y: visible;
+   }
+
+   .user-info {
+      width: 100%;
+      padding: 24px 20px;
+   }
+
+   .user-card {
+      border-radius: 20px;
+      padding: 24px;
+      min-height: auto;
+      gap: 18px;
+   }
+
+   .user-profile-picture {
+      width: 96px;
+      height: 96px;
+   }
+
+   .edit-icons img {
+      width: 56px;
+   }
+
+   .user-activity {
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+      padding-bottom: 24px;
+   }
+
+   .activity-header,
+   .reviews,
+   .restaurants,
+   .following {
+      padding-right: 20px;
+      padding-left: 20px;
+   }
+   .restaurant-card-click {
+      cursor: pointer;
+   }
+   .user-privacy {
+      margin: -10px 0 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #3a8f34;
+      background: rgba(122, 176, 104, 0.18);
+      padding: 4px 12px;
+      border-radius: 999px;
+   }
+}
