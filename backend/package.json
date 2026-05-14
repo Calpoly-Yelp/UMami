@@ -7,6 +7,7 @@
       "start": "node index.js",
       "dev": "nodemon index.js",
       "scrape:menus": "node utils/scrapeCurrentMenus.js",
+      "seed:reviews": "node utils/seedReviews.js",
       "test": "jest",
       "lint": "eslint .",
       "lint:fix": "eslint . --fix"

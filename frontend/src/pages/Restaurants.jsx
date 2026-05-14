@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { supabase } from "../lib/supabase";
+import { useBookmarks } from "../hooks/useBookmarks";
 import Modal from "../components/Modal.jsx";
 import { uploadProfilePhoto } from "../lib/uploadPhoto";
 import "./Restaurants.css";
@@ -26,13 +27,11 @@ function Restaurants({ restaurants: initialRestaurants }) {
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
    );
-
-   // Set of restaurant IDs that the current user has bookmarked
-   const [bookmarkedIds, setBookmarkedIds] = useState(
-      new Set(),
-   );
-
-   // The current logged-in user's ID (from Supabase auth)
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks();
    const [userId, setUserId] = useState(null);
 
    // Loading state while fetching data
@@ -200,7 +199,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
       };
 
       loadData();
-   }, [initialRestaurants]);
+   }, [initialRestaurants, setBookmarkedIds]);
 
    // Handles uploading a profile photo from the modal prompt
    const handleProfilePhotoUpload = async (e) => {
@@ -265,57 +264,13 @@ function Restaurants({ restaurants: initialRestaurants }) {
          setError("You must be signed in to bookmark.");
          return;
       }
-
-      const wasBookmarked = bookmarkedIds.has(restaurantId);
-
-      // Optimistically update the UI before the API call completes
-      setBookmarkedIds((prev) => {
-         const next = new Set(prev);
-         if (next.has(restaurantId)) {
-            next.delete(restaurantId);
-         } else {
-            next.add(restaurantId);
-         }
-         return next;
-      });
-
-      try {
-         if (wasBookmarked) {
-            // Remove the bookmark from Supabase
-            const { error } = await supabase
-               .from("bookmarks")
-               .delete()
-               .eq("user_id", userId)
-               .eq("restaurant_id", restaurantId);
-
-            if (error) throw error;
-         } else {
-            // Add a new bookmark to Supabase
-            const { error } = await supabase
-               .from("bookmarks")
-               .insert({
-                  user_id: userId,
-                  restaurant_id: restaurantId,
-               });
-
-            if (error) throw error;
-         }
-      } catch (err) {
-         console.error("Error updating bookmark:", err);
-
-         // Revert the optimistic update if the API call failed
-         setBookmarkedIds((prev) => {
-            const next = new Set(prev);
-            if (wasBookmarked) {
-               next.add(restaurantId);
-            } else {
-               next.delete(restaurantId);
-            }
-            return next;
-         });
-
+      const { error } = await toggleBookmark(
+         userId,
+         restaurantId,
+      );
+      if (error) {
          setError(
-            err.message || "Failed to update bookmark.",
+            error.message || "Failed to update bookmark.",
          );
       }
    };
