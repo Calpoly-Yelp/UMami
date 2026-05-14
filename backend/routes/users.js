@@ -129,6 +129,13 @@ router.get("/:id", async (req, res) => {
       // Validate route param first so bad ids fail fast.
       const { id } = userIdParamsSchema.parse(req.params);
 
+      // 🔴 Debug
+      console.log("GET /api/users/:id id =", id);
+      console.log(
+         "SUPABASE_URL =",
+         process.env.SUPABASE_URL,
+      );
+
       const { data, error } = await supabase
          .from("users")
          .select("*")
@@ -171,6 +178,64 @@ router.get("/:id", async (req, res) => {
       return handleServerError(
          res,
          "Error fetching user by id",
+         error,
+      );
+   }
+});
+
+// ===============================
+// PATCH /api/users/:id
+// Update a user's avatar_url or name
+// ===============================
+router.patch("/:id", async (req, res) => {
+   try {
+      const { id } = userIdParamsSchema.parse(req.params);
+
+      const allowedFields = ["avatar_url", "name"];
+      const updates = {};
+      for (const field of allowedFields) {
+         if (req.body[field] !== undefined) {
+            updates[field] = req.body[field];
+         }
+      }
+
+      if (Object.keys(updates).length === 0) {
+         return res
+            .status(400)
+            .json({ error: "No valid fields to update" });
+      }
+
+      const { data, error } = await supabase
+         .from("users")
+         .update(updates)
+         .eq("id", id)
+         .select()
+         .single();
+
+      if (error) {
+         if (error.code === "PGRST116") {
+            return res
+               .status(404)
+               .json({ error: "User not found" });
+         }
+         throw error;
+      }
+
+      const normalizedUser = normalizeUser(data);
+      const validatedData = User.parse(normalizedUser);
+
+      return res.status(200).json(validatedData);
+   } catch (error) {
+      if (error instanceof z.ZodError) {
+         return res.status(400).json({
+            error:
+               error.errors?.[0]?.message ||
+               "Invalid request",
+         });
+      }
+      return handleServerError(
+         res,
+         "Error updating user",
          error,
       );
    }

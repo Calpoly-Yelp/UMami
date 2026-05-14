@@ -308,7 +308,7 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           <EnvelopeSimple
+                           <Envelope
                               size={16}
                               weight="fill"
                            />
@@ -395,7 +395,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           <Lock size={16} weight="fill" />
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -419,7 +422,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           <Lock size={16} weight="fill" />
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -441,7 +447,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           <Lock size={16} weight="fill" />
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input

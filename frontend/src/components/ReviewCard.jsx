@@ -147,24 +147,23 @@ function ReviewCard({
            const d = new Date(date);
            const month = d.toLocaleString("en-US", {
               month: "short",
+              timeZone: "UTC",
            });
-           const day = d.getDate();
+           const day = d.getUTCDate();
            const year = d.getFullYear();
            return `${month}. ${day} ${year}`;
         })()
       : null;
 
    //------------------- Helpful Button Logic -------------------
+   // helpfulVotes: current count of helpful votes (optimistically updated)
+   // hasVotedHelpful: whether the current user has voted helpful
+   // Initialized directly from props — no useEffect needed for syncing
    const [helpfulVotes, setHelpfulVotes] =
       useState(helpfulCount);
    const [hasVotedHelpful, setHasVotedHelpful] = useState(
       initialHasVotedHelpful,
    );
-
-   // Sync state if initial value changes (useful if data is refreshed)
-   useEffect(() => {
-      setHasVotedHelpful(initialHasVotedHelpful);
-   }, [initialHasVotedHelpful]);
 
    const handleHelpfulClick = async (e) => {
       e.stopPropagation();
@@ -181,7 +180,7 @@ function ReviewCard({
          const CURRENT_USER_ID =
             "b677be85-81db-4245-91ca-acb713bd5564";
          const response = await fetch(
-            `http://localhost:4000/api/reviews/${review.id}/helpful`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${review.id}/helpful`,
             {
                method: "POST",
                headers: {

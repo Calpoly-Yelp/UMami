@@ -36,22 +36,13 @@ function Map({
    lat = 35.2828, // default to San Luis Obispo
    lng = -120.6596,
    name = "Restaurant Location",
-   street_address = "",
+   markers = [],
 }) {
-   // construct our Google Maps directions URL
-   // prefer street_address for directions, but fallback to coordinates if needed
-   const destination = street_address
-      ? encodeURIComponent(street_address)
-      : `${lat},${lng}`;
-   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-
-   const handleRedirect = () => {
-      window.open(
-         googleMapsUrl,
-         "_blank",
-         "noopener,noreferrer",
-      );
-   };
+   // Fallback to a single marker if the array is empty (for backward compatibility)
+   const displayMarkers =
+      markers && markers.length > 0
+         ? markers
+         : [{ lat, lng, name }];
 
    return (
       <div className="map-wrapper">
@@ -67,22 +58,35 @@ function Map({
                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
             <MapUpdater lat={lat} lng={lng} />
-            <Marker
-               position={[lat, lng]}
-               eventHandlers={{
-                  click: handleRedirect,
-               }}
-            >
-               <Tooltip direction="top">
-                  <div
-                     className="map-popup-content"
-                     onClick={handleRedirect}
+            {displayMarkers.map((marker, idx) => {
+               const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${marker.lat},${marker.lng}`;
+               const handleRedirect = () => {
+                  window.open(
+                     googleMapsUrl,
+                     "_blank",
+                     "noopener,noreferrer",
+                  );
+               };
+               return (
+                  <Marker
+                     key={idx}
+                     position={[marker.lat, marker.lng]}
+                     eventHandlers={{
+                        click: handleRedirect,
+                     }}
                   >
-                     <strong>{name}</strong>
-                     <span>Click for directions</span>
-                  </div>
-               </Tooltip>
-            </Marker>
+                     <Tooltip direction="top">
+                        <div
+                           className="map-popup-content"
+                           onClick={handleRedirect}
+                        >
+                           <strong>{marker.name}</strong>
+                           <span>Click for directions</span>
+                        </div>
+                     </Tooltip>
+                  </Marker>
+               );
+            })}
          </MapContainer>
       </div>
    );

@@ -112,7 +112,7 @@ describe("Notification Endpoints", () => {
       supabase.from.mockReturnValue({ update: mockUpdate });
 
       const res = await request(app).patch(
-         "/api/notifications/user123/read-all",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564/read-all",
       );
 
       expect(res.statusCode).toBe(200);
@@ -149,7 +149,7 @@ describe("Notification Endpoints", () => {
       supabase.from.mockReturnValue({ delete: mockDelete });
 
       const res = await request(app).delete(
-         "/api/notifications/user123/delete-all",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564/delete-all",
       );
 
       expect(res.statusCode).toBe(200);
@@ -168,7 +168,7 @@ describe("Notification Endpoints", () => {
       });
 
       const res = await request(app).get(
-         "/api/notifications/user1",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564",
       );
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({ error: "DB Error" });
@@ -183,7 +183,7 @@ describe("Notification Endpoints", () => {
       });
 
       const res = await request(app).patch(
-         "/api/notifications/user1/read-all",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564/read-all",
       );
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({ error: "Update Error" });
@@ -198,7 +198,7 @@ describe("Notification Endpoints", () => {
       });
 
       const res = await request(app).delete(
-         "/api/notifications/user1/delete-all",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564/delete-all",
       );
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({ error: "Delete Error" });
@@ -215,7 +215,7 @@ describe("Notification Endpoints", () => {
       });
 
       const res = await request(app).patch(
-         "/api/notifications/notif1/read",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564/read",
       );
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({ error: "Read Error" });
@@ -230,7 +230,7 @@ describe("Notification Endpoints", () => {
       });
 
       const res = await request(app).delete(
-         "/api/notifications/notif1",
+         "/api/notifications/b677be85-81db-4245-91ca-acb713bd5564",
       );
       expect(res.statusCode).toBe(500);
       expect(res.body).toEqual({

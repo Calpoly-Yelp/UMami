@@ -32,7 +32,7 @@ describe("ReviewCard component", () => {
       avatar_url: "https://example.com/avatar.jpg",
       is_verified: true,
       rating: 4,
-      date: "2026-03-01",
+      date: "2026-03-15",
       comments: "Really good food and quick service.",
       tags: [
          "Fast",
@@ -103,7 +103,7 @@ describe("ReviewCard component", () => {
    test("formats and displays the date", () => {
       render(<ReviewCard review={mockReview} />);
       expect(
-         screen.getByText("Feb. 28 2026"),
+         screen.getByText("Mar. 15 2026"),
       ).toBeInTheDocument();
    });
 
