@@ -46,7 +46,7 @@ describe("menu schedule helpers", () => {
 });
 
 describe("menu source URL building", () => {
-   it("adds date and Dine on Campus period query params for API sources", () => {
+   it("adds date query params for Dine on Campus API sources", () => {
       const url = buildMenuUrl(
          "https://apiv4.dineoncampus.com/locations/abc/menu",
          {
@@ -56,7 +56,7 @@ describe("menu source URL building", () => {
       );
 
       expect(url).toBe(
-         "https://apiv4.dineoncampus.com/locations/abc/menu?date=2026-05-13&period=2",
+         "https://apiv4.dineoncampus.com/locations/abc/menu?date=2026-05-13",
       );
    });
 
@@ -175,6 +175,41 @@ describe("generic menu payload parsing", () => {
             meal_period: "breakfast",
          }),
       );
+   });
+
+   it("uses plural categories as item context", () => {
+      const payload = {
+         period: {
+            categories: [
+               {
+                  name: "Sides",
+                  items: [
+                     {
+                        name: "Pork Egg Rolls",
+                        desc: "Shredded pork and vegetables, in a crispy wrapper.",
+                        portion: "2 each",
+                        calories: 460,
+                     },
+                  ],
+               },
+            ],
+         },
+      };
+
+      expect(
+         parseMenuPayload(payload, {
+            sourceUrl: "https://example.com/menu",
+            mealPeriod: "dinner",
+         }),
+      ).toEqual([
+         expect.objectContaining({
+            category: "Sides",
+            name: "Pork Egg Rolls",
+            portion: "2 each",
+            calories: 460,
+            meal_period: "dinner",
+         }),
+      ]);
    });
 });
 

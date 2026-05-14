@@ -8,6 +8,7 @@ import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
 import uploadsRouter from "./routes/uploads.js";
 import "./utils/restaurantScraper.js";
+import { scheduleCurrentMenuScraper } from "./utils/scrapeCurrentMenus.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -55,6 +56,8 @@ app.get("/", (req, res) => {
 
 // Only start the server if we're not in a test environment
 if (process.env.NODE_ENV !== "test") {
+   scheduleCurrentMenuScraper();
+
    app.listen(PORT, () => {
       console.log(
          `Server is alive on http://localhost:${PORT}`,

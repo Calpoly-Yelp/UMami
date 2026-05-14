@@ -1,4 +1,5 @@
 import "dotenv/config";
+import cron from "node-cron";
 import { PDFParse } from "pdf-parse";
 import { chromium } from "playwright";
 import { supabase } from "../config/supabaseClient.js";
@@ -11,14 +12,15 @@ const DEFAULT_MEAL_PERIODS = [
    "late_night",
    "every-day",
 ];
-const DINE_ON_CAMPUS_PERIOD_IDS = {
-   breakfast: "0",
-   brunch: "0",
-   lunch: "1",
-   dinner: "2",
-   late_night: "3",
-   "every-day": "1",
-};
+const MENU_SCRAPE_SCHEDULES = [
+   { cronExpression: "5 6 * * *", mealPeriod: "breakfast" },
+   { cronExpression: "35 10 * * *", mealPeriod: "lunch" },
+   { cronExpression: "5 16 * * *", mealPeriod: "dinner" },
+   {
+      cronExpression: "5 22 * * *",
+      mealPeriod: "late_night",
+   },
+];
 const SUBWAY_NUTRITION_PDF_URL =
    "https://www.subway.com/en-us/-/media/northamerica/usa/nutrition/nutritiondocuments/2026/us_nutrition_en_1-2026.pdf";
 const SUBWAY_SOURCE_ALIASES = new Set([
@@ -124,15 +126,6 @@ export function buildMenuUrl(
 
    if (url.hostname === "apiv4.dineoncampus.com") {
       url.searchParams.set("date", date);
-      if (
-         !url.searchParams.has("period") &&
-         DINE_ON_CAMPUS_PERIOD_IDS[mealPeriod]
-      ) {
-         url.searchParams.set(
-            "period",
-            DINE_ON_CAMPUS_PERIOD_IDS[mealPeriod],
-         );
-      }
       return url.toString();
    }
 
@@ -196,6 +189,106 @@ function getRestaurantMenuSourceUrl(restaurant) {
    return isSubwayRestaurant(restaurant)
       ? SUBWAY_NUTRITION_PDF_URL
       : null;
+}
+
+function isDineOnCampusApiMenuUrl(sourceUrl) {
+   try {
+      const url = new URL(sourceUrl);
+      return (
+         url.hostname === "apiv4.dineoncampus.com" &&
+         /\/locations\/[^/]+\/menu$/.test(url.pathname)
+      );
+   } catch {
+      return false;
+   }
+}
+
+function getDineOnCampusPeriodsUrl(sourceUrl) {
+   const url = new URL(sourceUrl);
+   const parts = url.pathname.split("/").filter(Boolean);
+   const locationIndex = parts.indexOf("locations");
+   const locationId = parts[locationIndex + 1];
+
+   if (!locationId) {
+      return null;
+   }
+
+   const periodsUrl = new URL(
+      `/locations/${locationId}/periods`,
+      url.origin,
+   );
+   const date = url.searchParams.get("date");
+   if (date) {
+      periodsUrl.searchParams.set("date", date);
+   }
+
+   return periodsUrl.toString();
+}
+
+function normalizeMealPeriodName(value) {
+   return String(value || "")
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .trim();
+}
+
+function selectDineOnCampusPeriod(periods, mealPeriod) {
+   const normalizedMealPeriod =
+      normalizeMealPeriodName(mealPeriod);
+
+   return (
+      periods.find(
+         (period) =>
+            normalizeMealPeriodName(period.name) ===
+               normalizedMealPeriod ||
+            normalizeMealPeriodName(period.slug) ===
+               normalizedMealPeriod,
+      ) ||
+      periods.find((period) =>
+         ["everyday", "every day", "all day"].includes(
+            normalizeMealPeriodName(
+               period.name || period.slug,
+            ),
+         ),
+      ) ||
+      periods[0]
+   );
+}
+
+async function resolveDineOnCampusMenuUrl(
+   sourceUrl,
+   mealPeriod,
+) {
+   if (
+      !isDineOnCampusApiMenuUrl(sourceUrl) ||
+      new URL(sourceUrl).searchParams.has("period")
+   ) {
+      return sourceUrl;
+   }
+
+   const periodsUrl = getDineOnCampusPeriodsUrl(sourceUrl);
+   if (!periodsUrl) {
+      return sourceUrl;
+   }
+
+   const payload = JSON.parse(
+      await fetchMenuSource(periodsUrl),
+   );
+   const periods = Array.isArray(payload?.periods)
+      ? payload.periods
+      : [];
+   const selectedPeriod = selectDineOnCampusPeriod(
+      periods,
+      mealPeriod,
+   );
+
+   if (!selectedPeriod?.id) {
+      return sourceUrl;
+   }
+
+   const url = new URL(sourceUrl);
+   url.searchParams.set("period", selectedPeriod.id);
+   return url.toString();
 }
 
 function normalizeText(value) {
@@ -380,7 +473,9 @@ function getContextName(value, key = "") {
       return explicitName;
    }
 
-   if (/category|station|course|section/i.test(key)) {
+   if (
+      /categor(?:y|ies)|station|course|section/i.test(key)
+   ) {
       return normalizeText(value.name || value.title);
    }
 
@@ -573,7 +668,9 @@ function walkForItems(
    for (const [key, child] of Object.entries(value)) {
       const keyContext = { ...nextContext };
       if (
-         /category|station|course|section/i.test(key) &&
+         /categor(?:y|ies)|station|course|section/i.test(
+            key,
+         ) &&
          typeof child === "object"
       ) {
          keyContext.category =
@@ -962,7 +1059,7 @@ export async function scrapeRestaurantMenu(
 ) {
    const rawSourceUrl =
       getRestaurantMenuSourceUrl(restaurant);
-   const sourceUrl = buildMenuUrl(rawSourceUrl, {
+   let sourceUrl = buildMenuUrl(rawSourceUrl, {
       date,
       mealPeriod,
    });
@@ -976,6 +1073,11 @@ export async function scrapeRestaurantMenu(
          error: "Missing menu_source_url",
       };
    }
+
+   sourceUrl = await resolveDineOnCampusMenuUrl(
+      sourceUrl,
+      mealPeriod,
+   );
 
    const isSubwaySource =
       isSubwayNutritionSource(sourceUrl);
@@ -1030,14 +1132,21 @@ export async function scrapeRestaurantMenu(
    };
 }
 
-async function scrapeCurrentMenus() {
-   const restaurantIdArg = getArgValue("restaurant-id");
-   const sourceUrlArg = getArgValue("source-url");
-   const date = getArgValue("date") || getTodayDate();
-   const mealPeriod =
-      getArgValue("meal-period") || getCurrentMealPeriod();
-   const dryRun = hasArg("dry-run");
-   const delayMs = Number(getArgValue("delay-ms") || 1000);
+export async function scrapeCurrentMenus({
+   restaurantId,
+   sourceUrl,
+   date = getArgValue("date") || getTodayDate(),
+   mealPeriod: requestedMealPeriod = getArgValue(
+      "meal-period",
+   ) || getCurrentMealPeriod(),
+   dryRun = hasArg("dry-run"),
+   delayMs = Number(getArgValue("delay-ms") || 1000),
+} = {}) {
+   const restaurantIdArg =
+      restaurantId ?? getArgValue("restaurant-id");
+   const sourceUrlArg =
+      sourceUrl ?? getArgValue("source-url");
+   const mealPeriod = requestedMealPeriod;
 
    if (!DEFAULT_MEAL_PERIODS.includes(mealPeriod)) {
       throw new Error(
@@ -1110,6 +1219,32 @@ async function scrapeCurrentMenus() {
 
       await delay(delayMs);
    }
+}
+
+export function scheduleCurrentMenuScraper() {
+   if (process.env.NODE_ENV === "test") {
+      return [];
+   }
+
+   return MENU_SCRAPE_SCHEDULES.map(
+      ({ cronExpression, mealPeriod }) =>
+         cron.schedule(
+            cronExpression,
+            () => {
+               scrapeCurrentMenus({ mealPeriod }).catch(
+                  (error) => {
+                     console.error(
+                        `Scheduled ${mealPeriod} menu scrape failed:`,
+                        error,
+                     );
+                  },
+               );
+            },
+            {
+               timezone: "America/Los_Angeles",
+            },
+         ),
+   );
 }
 
 if (process.argv[1]?.endsWith("scrapeCurrentMenus.js")) {
