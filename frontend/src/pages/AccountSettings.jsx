@@ -7,8 +7,8 @@ import React, {
 import "./AccountSettings.css";
 import addProfilePicture from "../assets/addProfilePicture.png";
 import {
-   EnvelopeSimple,
-   Lock,
+   Envelope,
+   LockSimple,
    User,
 } from "@phosphor-icons/react";
 
