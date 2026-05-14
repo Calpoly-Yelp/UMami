@@ -6,6 +6,11 @@ import React, {
 } from "react";
 import "./AccountSettings.css";
 import addProfilePicture from "../assets/addProfilePicture.png";
+import {
+   Envelope,
+   LockSimple,
+   User,
+} from "@phosphor-icons/react";
 
 const sections = [
    { id: "profile", label: "My Profile" },
@@ -285,17 +290,7 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           {/* user icon */}
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2.25c-4.2 0-7.5 2.1-7.5 4.5V21h15v-2.25c0-2.4-3.3-4.5-7.5-4.5Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                           <User size={16} weight="fill" />
                         </span>
 
                         <input
@@ -316,17 +311,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           {/* mail icon */}
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 4-8 5L4 9V7l8 5 8-5Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                           <Envelope
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -365,17 +353,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           {/* lock icon */}
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 0 1 4 0v2h-4Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -399,16 +380,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 0 1 4 0v2h-4Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -430,16 +405,10 @@ export default function AccountSettings() {
                            className="as-input-icon"
                            aria-hidden="true"
                         >
-                           <svg
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                           >
-                              <path
-                                 d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V7a2 2 0 0 1 4 0v2h-4Z"
-                                 fill="currentColor"
-                              />
-                           </svg>
+                           <LockSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
