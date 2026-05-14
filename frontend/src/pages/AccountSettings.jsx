@@ -6,7 +6,11 @@ import React, {
 } from "react";
 import "./AccountSettings.css";
 import addProfilePicture from "../assets/addProfilePicture.png";
-import { EnvelopeSimple, Lock, User } from "@phosphor-icons/react";
+import {
+   EnvelopeSimple,
+   Lock,
+   User,
+} from "@phosphor-icons/react";
 
 const sections = [
    { id: "profile", label: "My Profile" },
@@ -23,7 +27,8 @@ export default function AccountSettings() {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-      privacy: localStorage.getItem("profilePrivacy") || "public",
+      privacy:
+         localStorage.getItem("profilePrivacy") || "public",
       role: "",
       budget: "",
       dietary: {
@@ -53,14 +58,18 @@ export default function AccountSettings() {
    const setPrivacy = (value) => {
       setForm((p) => ({ ...p, privacy: value }));
       localStorage.setItem("profilePrivacy", value);
-      window.dispatchEvent(new Event("profilePrivacyChanged"));
+      window.dispatchEvent(
+         new Event("profilePrivacyChanged"),
+      );
    };
 
    const handleScrollTo = (id) => {
       const el = sectionEls.current[id];
       if (!el) return;
 
-      const container = document.querySelector(".content-container");
+      const container = document.querySelector(
+         ".content-container",
+      );
 
       if (!container) {
          el.scrollIntoView({
@@ -77,7 +86,8 @@ export default function AccountSettings() {
 
       const offset = headerOffset + 16;
 
-      const containerRect = container.getBoundingClientRect();
+      const containerRect =
+         container.getBoundingClientRect();
       const elRect = el.getBoundingClientRect();
 
       const targetTop =
@@ -93,7 +103,9 @@ export default function AccountSettings() {
    };
 
    useEffect(() => {
-      const container = document.querySelector(".content-container");
+      const container = document.querySelector(
+         ".content-container",
+      );
       if (!container) return;
 
       const header = document.querySelector("header");
@@ -122,7 +134,10 @@ export default function AccountSettings() {
       handleScroll();
 
       return () =>
-         container.removeEventListener("scroll", handleScroll);
+         container.removeEventListener(
+            "scroll",
+            handleScroll,
+         );
    }, []);
 
    const onInput = (key) => (e) =>
@@ -198,7 +213,9 @@ export default function AccountSettings() {
 
    const toggleMatters = (key) => {
       setForm((p) => {
-         const currentlySelected = Object.values(p.matters).filter(Boolean).length;
+         const currentlySelected = Object.values(
+            p.matters,
+         ).filter(Boolean).length;
          const isOn = p.matters[key];
 
          if (!isOn && currentlySelected >= 2) return p;
@@ -226,7 +243,9 @@ export default function AccountSettings() {
                         className={`as-nav-item ${active === s.id ? "is-active" : ""}`}
                         onClick={() => handleScrollTo(s.id)}
                         aria-current={
-                           active === s.id ? "page" : undefined
+                           active === s.id
+                              ? "page"
+                              : undefined
                         }
                      >
                         {s.label}
@@ -238,7 +257,9 @@ export default function AccountSettings() {
             <section className="as-content">
                <div
                   id="profile"
-                  ref={(el) => (sectionEls.current.profile = el)}
+                  ref={(el) =>
+                     (sectionEls.current.profile = el)
+                  }
                   className="as-section"
                >
                   <h1 className="as-h1">My Profile</h1>
@@ -258,9 +279,14 @@ export default function AccountSettings() {
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">Name</label>
+                     <label className="as-label">
+                        Name
+                     </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
                            <User size={16} weight="fill" />
                         </span>
 
@@ -274,10 +300,18 @@ export default function AccountSettings() {
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">Email</label>
+                     <label className="as-label">
+                        Email
+                     </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
-                           <EnvelopeSimple size={16} weight="fill" />
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
+                           <EnvelopeSimple
+                              size={16}
+                              weight="fill"
+                           />
                         </span>
 
                         <input
@@ -291,28 +325,44 @@ export default function AccountSettings() {
 
                   <div className="as-privacy-row">
                      <div>
-                        <h2 className="as-privacy-title">Privacy</h2>
+                        <h2 className="as-privacy-title">
+                           Privacy
+                        </h2>
                         <div className="as-privacy-label">
                            Profile Visibility
                         </div>
                         <p className="as-privacy-text">
-                           Set your profile to private to limit access to followers only or make
-                           it public so anyone can view your account.
+                           Set your profile to private to
+                           limit access to followers only or
+                           make it public so anyone can view
+                           your account.
                         </p>
                      </div>
 
                      <div className="as-privacy-toggle">
                         <button
                            type="button"
-                           className={form.privacy === "private" ? "is-active" : ""}
-                           onClick={() => setPrivacy("private")}
+                           className={
+                              form.privacy === "private"
+                                 ? "is-active"
+                                 : ""
+                           }
+                           onClick={() =>
+                              setPrivacy("private")
+                           }
                         >
                            Private
                         </button>
                         <button
                            type="button"
-                           className={form.privacy === "public" ? "is-active" : ""}
-                           onClick={() => setPrivacy("public")}
+                           className={
+                              form.privacy === "public"
+                                 ? "is-active"
+                                 : ""
+                           }
+                           onClick={() =>
+                              setPrivacy("public")
+                           }
                         >
                            Public
                         </button>
@@ -329,15 +379,22 @@ export default function AccountSettings() {
 
                <div
                   id="password"
-                  ref={(el) => (sectionEls.current.password = el)}
+                  ref={(el) =>
+                     (sectionEls.current.password = el)
+                  }
                   className="as-section"
                >
                   <h2 className="as-h2">My Password</h2>
 
                   <div className="as-field">
-                     <label className="as-label">Current Password</label>
+                     <label className="as-label">
+                        Current Password
+                     </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
                            <Lock size={16} weight="fill" />
                         </span>
 
@@ -346,15 +403,22 @@ export default function AccountSettings() {
                            type="password"
                            placeholder="Enter your current password"
                            value={form.currentPassword}
-                           onChange={onInput("currentPassword")}
+                           onChange={onInput(
+                              "currentPassword",
+                           )}
                         />
                      </div>
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">New Password</label>
+                     <label className="as-label">
+                        New Password
+                     </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
                            <Lock size={16} weight="fill" />
                         </span>
 
@@ -369,9 +433,14 @@ export default function AccountSettings() {
                   </div>
 
                   <div className="as-field">
-                     <label className="as-label">Confirm New Password</label>
+                     <label className="as-label">
+                        Confirm New Password
+                     </label>
                      <div className="as-input-wrap">
-                        <span className="as-input-icon" aria-hidden="true">
+                        <span
+                           className="as-input-icon"
+                           aria-hidden="true"
+                        >
                            <Lock size={16} weight="fill" />
                         </span>
 
@@ -380,7 +449,9 @@ export default function AccountSettings() {
                            type="password"
                            placeholder="Reenter your new password to verify"
                            value={form.confirmPassword}
-                           onChange={onInput("confirmPassword")}
+                           onChange={onInput(
+                              "confirmPassword",
+                           )}
                         />
                      </div>
                   </div>
@@ -395,7 +466,9 @@ export default function AccountSettings() {
 
                <div
                   id="preferences"
-                  ref={(el) => (sectionEls.current.preferences = el)}
+                  ref={(el) =>
+                     (sectionEls.current.preferences = el)
+                  }
                   className="as-section"
                >
                   <h2 className="as-h2">My Preferences</h2>
@@ -409,8 +482,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.role === "student"}
-                              onChange={() => setRole("student")}
+                              checked={
+                                 form.role === "student"
+                              }
+                              onChange={() =>
+                                 setRole("student")
+                              }
                            />
                            <span>Cal Poly student</span>
                         </label>
@@ -418,8 +495,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.role === "faculty"}
-                              onChange={() => setRole("faculty")}
+                              checked={
+                                 form.role === "faculty"
+                              }
+                              onChange={() =>
+                                 setRole("faculty")
+                              }
                            />
                            <span>Faculty/Staff</span>
                         </label>
@@ -427,8 +508,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.role === "visitor"}
-                              onChange={() => setRole("visitor")}
+                              checked={
+                                 form.role === "visitor"
+                              }
+                              onChange={() =>
+                                 setRole("visitor")
+                              }
                            />
                            <span>Visitor/Local</span>
                         </label>
@@ -437,15 +522,20 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        What is your typical budget per meal?
+                        What is your typical budget per
+                        meal?
                      </h3>
 
                      <div className="as-checks">
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.budget === "under10"}
-                              onChange={() => setBudget("under10")}
+                              checked={
+                                 form.budget === "under10"
+                              }
+                              onChange={() =>
+                                 setBudget("under10")
+                              }
                            />
                            <span>Under $10</span>
                         </label>
@@ -453,8 +543,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.budget === "10to20"}
-                              onChange={() => setBudget("10to20")}
+                              checked={
+                                 form.budget === "10to20"
+                              }
+                              onChange={() =>
+                                 setBudget("10to20")
+                              }
                            />
                            <span>$10–$20</span>
                         </label>
@@ -462,8 +556,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.budget === "20to25"}
-                              onChange={() => setBudget("20to25")}
+                              checked={
+                                 form.budget === "20to25"
+                              }
+                              onChange={() =>
+                                 setBudget("20to25")
+                              }
                            />
                            <span>$20–$25</span>
                         </label>
@@ -471,8 +569,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.budget === "25plus"}
-                              onChange={() => setBudget("25plus")}
+                              checked={
+                                 form.budget === "25plus"
+                              }
+                              onChange={() =>
+                                 setBudget("25plus")
+                              }
                            />
                            <span>$25+</span>
                         </label>
@@ -481,7 +583,8 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        Do you have any dietary preferences or restrictions?
+                        Do you have any dietary preferences
+                        or restrictions?
                      </h3>
                      <div className="as-hint">
                         Select all that apply:
@@ -491,8 +594,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.dietary.vegetarian}
-                              onChange={() => toggleDietary("vegetarian")}
+                              checked={
+                                 form.dietary.vegetarian
+                              }
+                              onChange={() =>
+                                 toggleDietary("vegetarian")
+                              }
                            />
                            <span>Vegetarian</span>
                         </label>
@@ -501,7 +608,9 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.dietary.vegan}
-                              onChange={() => toggleDietary("vegan")}
+                              onChange={() =>
+                                 toggleDietary("vegan")
+                              }
                            />
                            <span>Vegan</span>
                         </label>
@@ -509,8 +618,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.dietary.glutenFree}
-                              onChange={() => toggleDietary("glutenFree")}
+                              checked={
+                                 form.dietary.glutenFree
+                              }
+                              onChange={() =>
+                                 toggleDietary("glutenFree")
+                              }
                            />
                            <span>Gluten-free</span>
                         </label>
@@ -518,8 +631,12 @@ export default function AccountSettings() {
                         <label className="as-check">
                            <input
                               type="checkbox"
-                              checked={form.dietary.dairyFree}
-                              onChange={() => toggleDietary("dairyFree")}
+                              checked={
+                                 form.dietary.dairyFree
+                              }
+                              onChange={() =>
+                                 toggleDietary("dairyFree")
+                              }
                            />
                            <span>Dairy-free</span>
                         </label>
@@ -528,7 +645,9 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.dietary.none}
-                              onChange={() => toggleDietary("none")}
+                              onChange={() =>
+                                 toggleDietary("none")
+                              }
                            />
                            <span>No restrictions</span>
                         </label>
@@ -537,17 +656,27 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        What matters to you most when choosing restaurants?
+                        What matters to you most when
+                        choosing restaurants?
                      </h3>
-                     <div className="as-hint">Choose up to 2</div>
+                     <div className="as-hint">
+                        Choose up to 2
+                     </div>
 
                      <div className="as-checks">
                         {mattersKeys.map((m) => (
-                           <label key={m.key} className="as-check">
+                           <label
+                              key={m.key}
+                              className="as-check"
+                           >
                               <input
                                  type="checkbox"
-                                 checked={form.matters[m.key]}
-                                 onChange={() => toggleMatters(m.key)}
+                                 checked={
+                                    form.matters[m.key]
+                                 }
+                                 onChange={() =>
+                                    toggleMatters(m.key)
+                                 }
                               />
                               <span>{m.label}</span>
                            </label>
@@ -557,7 +686,8 @@ export default function AccountSettings() {
 
                   <div className="as-block">
                      <h3 className="as-h3">
-                        What updates would you like to receive?
+                        What updates would you like to
+                        receive?
                      </h3>
                      <div className="as-hint">
                         Select all that apply:
@@ -568,28 +698,46 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.updates.menu}
-                              onChange={() => toggleUpdates("menu")}
-                           />
-                           <span>Restaurant menu updates</span>
-                        </label>
-
-                        <label className="as-check">
-                           <input
-                              type="checkbox"
-                              checked={form.updates.bestTimes}
-                              onChange={() => toggleUpdates("bestTimes")}
-                           />
-                           <span>Best times to order (avoid long waits)</span>
-                        </label>
-
-                        <label className="as-check">
-                           <input
-                              type="checkbox"
-                              checked={form.updates.friendActivity}
-                              onChange={() => toggleUpdates("friendActivity")}
+                              onChange={() =>
+                                 toggleUpdates("menu")
+                              }
                            />
                            <span>
-                              Friend activity (reviews, new friend requests)
+                              Restaurant menu updates
+                           </span>
+                        </label>
+
+                        <label className="as-check">
+                           <input
+                              type="checkbox"
+                              checked={
+                                 form.updates.bestTimes
+                              }
+                              onChange={() =>
+                                 toggleUpdates("bestTimes")
+                              }
+                           />
+                           <span>
+                              Best times to order (avoid
+                              long waits)
+                           </span>
+                        </label>
+
+                        <label className="as-check">
+                           <input
+                              type="checkbox"
+                              checked={
+                                 form.updates.friendActivity
+                              }
+                              onChange={() =>
+                                 toggleUpdates(
+                                    "friendActivity",
+                                 )
+                              }
+                           />
+                           <span>
+                              Friend activity (reviews, new
+                              friend requests)
                            </span>
                         </label>
 
@@ -597,7 +745,9 @@ export default function AccountSettings() {
                            <input
                               type="checkbox"
                               checked={form.updates.none}
-                              onChange={() => toggleUpdates("none")}
+                              onChange={() =>
+                                 toggleUpdates("none")
+                              }
                            />
                            <span>No notifications</span>
                         </label>

@@ -43,11 +43,10 @@ function User({
          avatar_url: "",
          is_verified: false,
       },
-
    );
    const [privacy, setPrivacy] = useState(
-   localStorage.getItem("profilePrivacy") || "public",
-);
+      localStorage.getItem("profilePrivacy") || "public",
+   );
    const [reviews, setReviews] = useState(
       initialReviews
          ? [...initialReviews].sort(
@@ -143,21 +142,30 @@ function User({
          });
       }
    };
-useEffect(() => {
-   const syncPrivacy = () => {
-      setPrivacy(localStorage.getItem("profilePrivacy") || "public");
-   };
+   useEffect(() => {
+      const syncPrivacy = () => {
+         setPrivacy(
+            localStorage.getItem("profilePrivacy") ||
+               "public",
+         );
+      };
 
-   window.addEventListener("profilePrivacyChanged", syncPrivacy);
-   window.addEventListener("storage", syncPrivacy);
+      window.addEventListener(
+         "profilePrivacyChanged",
+         syncPrivacy,
+      );
+      window.addEventListener("storage", syncPrivacy);
 
-   syncPrivacy();
+      syncPrivacy();
 
-   return () => {
-      window.removeEventListener("profilePrivacyChanged", syncPrivacy);
-      window.removeEventListener("storage", syncPrivacy);
-   };
-}, []);
+      return () => {
+         window.removeEventListener(
+            "profilePrivacyChanged",
+            syncPrivacy,
+         );
+         window.removeEventListener("storage", syncPrivacy);
+      };
+   }, []);
    useEffect(() => {
       bookmarkedIdsRef.current = bookmarkedIds;
    }, [bookmarkedIds]);
@@ -549,13 +557,15 @@ useEffect(() => {
                   )}
                   {/* Display users name and optionally a verified badge */}
                   <UserName
-   name={user.name}
-   is_verified={user.is_verified}
-/>
+                     name={user.name}
+                     is_verified={user.is_verified}
+                  />
 
-<p className="user-privacy">
-   {privacy === "private" ? "Private" : "Public"}
-</p>
+                  <p className="user-privacy">
+                     {privacy === "private"
+                        ? "Private"
+                        : "Public"}
+                  </p>
 
                   <div className="edit-icons">
                      <div className="edit-icon-wrapper">
