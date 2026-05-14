@@ -199,6 +199,26 @@ function Header() {
       loadUserAndNotifications();
    }, []);
 
+   // Listen for profile photo updates from other components
+   // so the header avatar updates instantly without a page refresh
+   useEffect(() => {
+      const handleAvatarUpdate = (e) => {
+         setUser((prev) => ({
+            ...prev,
+            avatar_url: e.detail.avatar_url,
+         }));
+      };
+      window.addEventListener(
+         "avatar-updated",
+         handleAvatarUpdate,
+      );
+      return () =>
+         window.removeEventListener(
+            "avatar-updated",
+            handleAvatarUpdate,
+         );
+   }, []);
+
    const unreadCount = notifications.filter(
       (n) => !n.is_read,
    ).length;
@@ -373,7 +393,7 @@ function Header() {
          ? []
          : allUsers.filter(
               (p) =>
-                 p.id !== user?.id && // filter out the logged in user
+                 p.id !== user?.id &&
                  p.name &&
                  p.name
                     .toLowerCase()
