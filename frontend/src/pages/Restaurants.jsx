@@ -122,7 +122,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
             // Only fetch from backend if no restaurants were passed in as props
             if (!initialRestaurants) {
                const restaurantsResponse = await fetch(
-                  "http://localhost:4000/api/restaurants",
+                  "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants",
                );
 
                if (!restaurantsResponse.ok) {

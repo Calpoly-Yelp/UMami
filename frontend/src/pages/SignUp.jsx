@@ -44,7 +44,7 @@ export default function SignUp() {
          }
 
          const response = await fetch(
-            "http://localhost:4000/api/users",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
             {
                method: "POST",
                headers: {

@@ -107,8 +107,44 @@ function User({
       }));
    };
 
+   /*
    // Re-evaluate scroll capabilities whenever the data changes or window resizes
    // Uses an inline checkScrollInner to avoid calling setState directly from effect
+   useEffect(() => {
+      const checkScrollInner = (id) => {
+         const el = document.getElementById(`${id}-list`);
+         if (!el) return;
+         setCanScroll((prev) => ({
+            ...prev,
+            [id]: {
+               left: el.scrollLeft > 0,
+               right:
+                  Math.ceil(
+                     el.scrollLeft + el.clientWidth,
+                  ) < el.scrollWidth,
+            },
+         }));
+      };
+
+      checkScrollInner("reviews");
+      checkScrollInner("restaurants");
+      checkScrollInner("following");
+
+      const handleResize = () => {
+         checkScrollInner("reviews");
+         checkScrollInner("restaurants");
+         checkScrollInner("following");
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () =>
+         window.removeEventListener("resize", handleResize);
+   }, [reviews, restaurants, following]);
+   */
+
+   // -- UPDATED --
+   // Re-evaluate scroll capabilities whenever the data changes or window resizes
+
    useEffect(() => {
       const checkScrollInner = (id) => {
          const el = document.getElementById(`${id}-list`);
@@ -241,13 +277,13 @@ function User({
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `http://localhost:4000/api/reviews?user_id=${userData.id}`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?user_id=${userData.id}`,
                ),
                fetch(
-                  `http://localhost:4000/api/restaurants/bookmarks/${userData.id}`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/${userData.id}`,
                ),
                fetch(
-                  `http://localhost:4000/api/users/${userData.id}/follows`,
+                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userData.id}/follows`,
                ),
             ]);
 
@@ -400,7 +436,7 @@ function User({
 
          // sync the bookmarked restaurants
          fetch(
-            "http://localhost:4000/api/restaurants/bookmarks/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/sync",
             {
                method: "POST",
                headers: {
@@ -450,7 +486,7 @@ function User({
             return;
 
          fetch(
-            "http://localhost:4000/api/users/follows/sync",
+            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
             {
                method: "POST",
                headers: {
@@ -506,7 +542,7 @@ function User({
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `http://localhost:4000/api/reviews/${reviewId}`,
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
