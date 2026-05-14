@@ -5,7 +5,9 @@ import { supabase } from "../lib/supabase";
 
 // Extract photo URLs from a review row
 const getPhotoUrls = (review) =>
-   Array.isArray(review.photo_urls) ? review.photo_urls : [];
+   Array.isArray(review.photo_urls)
+      ? review.photo_urls
+      : [];
 
 export default function PhotoGallery() {
    const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function PhotoGallery() {
       {
          label: "Ambiance",
          key: "ambiance",
-         photos: [], 
+         photos: [],
       },
       {
          label: "Other",
@@ -49,8 +51,7 @@ export default function PhotoGallery() {
       galleryTabs.find((tab) => tab.key === activeTab) ||
       galleryTabs[0];
 
-   
-   // Fetch restaurant name and banner image for hero 
+   // Fetch restaurant name and banner image for hero
    useEffect(() => {
       const fetchRestaurant = async () => {
          try {
@@ -78,8 +79,8 @@ export default function PhotoGallery() {
 
       fetchRestaurant();
    }, [id]);
-   
-   // Fetch reviews that contain photos from Supabase 
+
+   // Fetch reviews that contain photos from Supabase
    useEffect(() => {
       const fetchPhotos = async () => {
          try {
@@ -100,7 +101,10 @@ export default function PhotoGallery() {
 
             setReviews(Array.isArray(data) ? data : []);
          } catch (error) {
-            console.error("Failed to fetch review photos:", error);
+            console.error(
+               "Failed to fetch review photos:",
+               error,
+            );
             setPhotoError("Photos unavailable.");
             setReviews([]);
          } finally {
@@ -146,14 +150,19 @@ export default function PhotoGallery() {
             </div>
          </section>
 
-         <nav className="photo-tabs" aria-label="Photo categories">
+         <nav
+            className="photo-tabs"
+            aria-label="Photo categories"
+         >
             <div className="photo-tabsInner">
                {galleryTabs.map((tab) => (
                   <button
                      key={tab.key}
                      type="button"
                      className={`photo-tab ${
-                        activeTab === tab.key ? "is-active" : ""
+                        activeTab === tab.key
+                           ? "is-active"
+                           : ""
                      }`}
                      onClick={() => setActiveTab(tab.key)}
                   >
@@ -173,7 +182,9 @@ export default function PhotoGallery() {
             </p>
 
             {isLoadingPhotos && (
-               <p className="photo-empty">Loading photos...</p>
+               <p className="photo-empty">
+                  Loading photos...
+               </p>
             )}
 
             {!isLoadingPhotos && photoError && (
@@ -192,19 +203,26 @@ export default function PhotoGallery() {
                !photoError &&
                selectedGallery.photos.length > 0 && (
                   <div className="photo-grid">
-                     {selectedGallery.photos.map((url, index) => (
-                        <button
-                           type="button"
-                           className="photo-card"
-                           key={`${url}-${index}`}
-                        >
-                           <img
-                              src={url}
-                              alt={`${restaurantName} review ${index + 1}`}
-                              onError={() => console.error("Image failed:", url)}
-                           />
-                        </button>
-                     ))}
+                     {selectedGallery.photos.map(
+                        (url, index) => (
+                           <button
+                              type="button"
+                              className="photo-card"
+                              key={`${url}-${index}`}
+                           >
+                              <img
+                                 src={url}
+                                 alt={`${restaurantName} review ${index + 1}`}
+                                 onError={() =>
+                                    console.error(
+                                       "Image failed:",
+                                       url,
+                                    )
+                                 }
+                              />
+                           </button>
+                        ),
+                     )}
                   </div>
                )}
          </main>
