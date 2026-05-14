@@ -155,16 +155,14 @@ function ReviewCard({
       : null;
 
    //------------------- Helpful Button Logic -------------------
+   // helpfulVotes: current count of helpful votes (optimistically updated)
+   // hasVotedHelpful: whether the current user has voted helpful
+   // Initialized directly from props — no useEffect needed for syncing
    const [helpfulVotes, setHelpfulVotes] =
       useState(helpfulCount);
    const [hasVotedHelpful, setHasVotedHelpful] = useState(
       initialHasVotedHelpful,
    );
-
-   // Sync state if initial value changes (useful if data is refreshed)
-   useEffect(() => {
-      setHasVotedHelpful(initialHasVotedHelpful);
-   }, [initialHasVotedHelpful]);
 
    const handleHelpfulClick = async (e) => {
       e.stopPropagation();

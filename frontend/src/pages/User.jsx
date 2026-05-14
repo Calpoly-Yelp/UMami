@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
+import { uploadProfilePhoto } from "../lib/uploadPhoto";
 import "./User.css";
 
 // This is our user page layout
@@ -91,6 +92,7 @@ function User({
    });
 
    // Checks the DOM properties of the carousel to see if there is scrollable space
+   // Used only for onScroll events on the carousel containers
    const checkScroll = (id) => {
       const el = document.getElementById(`${id}-list`);
       if (!el) return;
@@ -106,15 +108,31 @@ function User({
    };
 
    // Re-evaluate scroll capabilities whenever the data changes or window resizes
+   // Uses an inline checkScrollInner to avoid calling setState directly from effect
    useEffect(() => {
-      checkScroll("reviews");
-      checkScroll("restaurants");
-      checkScroll("following");
+      const checkScrollInner = (id) => {
+         const el = document.getElementById(`${id}-list`);
+         if (!el) return;
+         setCanScroll((prev) => ({
+            ...prev,
+            [id]: {
+               left: el.scrollLeft > 0,
+               right:
+                  Math.ceil(
+                     el.scrollLeft + el.clientWidth,
+                  ) < el.scrollWidth,
+            },
+         }));
+      };
+
+      checkScrollInner("reviews");
+      checkScrollInner("restaurants");
+      checkScrollInner("following");
 
       const handleResize = () => {
-         checkScroll("reviews");
-         checkScroll("restaurants");
-         checkScroll("following");
+         checkScrollInner("reviews");
+         checkScrollInner("restaurants");
+         checkScrollInner("following");
       };
 
       window.addEventListener("resize", handleResize);
@@ -509,6 +527,55 @@ function User({
       }
    };
 
+   // --- ADD PHOTO ---
+   const fileInputRef = useRef(null);
+   const [uploadingPhoto, setUploadingPhoto] =
+      useState(false);
+
+   const handleAddPhoto = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file || !user.id) return;
+
+      setUploadingPhoto(true);
+      try {
+         const url = await uploadProfilePhoto(file);
+
+         await fetch(
+            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
+            {
+               method: "PATCH",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ avatar_url: url }),
+            },
+         );
+
+         setUser((prev) => ({ ...prev, avatar_url: url }));
+
+         const stored = localStorage.getItem("user");
+         if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem(
+               "user",
+               JSON.stringify({
+                  ...parsed,
+                  avatar_url: url,
+               }),
+            );
+         }
+      } catch (err) {
+         console.error(
+            "Failed to upload profile photo:",
+            err,
+         );
+      } finally {
+         setUploadingPhoto(false);
+         if (fileInputRef.current)
+            fileInputRef.current.value = "";
+      }
+   };
+
    return (
       <div className="user-page">
          {/* Content Section */}
@@ -535,12 +602,34 @@ function User({
                      is_verified={user.is_verified}
                   />
                   <div className="edit-icons">
-                     <div className="edit-icon-wrapper">
+                     <div
+                        className="edit-icon-wrapper"
+                        onClick={() =>
+                           !uploadingPhoto &&
+                           fileInputRef.current?.click()
+                        }
+                        style={{
+                           cursor: uploadingPhoto
+                              ? "wait"
+                              : "pointer",
+                        }}
+                     >
+                        <input
+                           ref={fileInputRef}
+                           type="file"
+                           accept="image/*"
+                           style={{ display: "none" }}
+                           onChange={handleAddPhoto}
+                        />
                         <img
                            src={addPhotoIcon}
                            alt="Add Photo"
                         />
-                        <span>Add Photo</span>
+                        <span>
+                           {uploadingPhoto
+                              ? "Uploading..."
+                              : "Add Photo"}
+                        </span>
                      </div>
                      <div className="edit-icon-wrapper">
                         <img src={editIcon} alt="Edit" />
