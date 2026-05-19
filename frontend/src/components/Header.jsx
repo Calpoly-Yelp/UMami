@@ -9,6 +9,7 @@ import {
    MdCheck,
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 import "./Header.css";
 
 // Header component that contains the logo, search, notifications, and profile dropdown
@@ -54,11 +55,19 @@ function Header() {
       navigate("/user");
       setIsDropdownOpen(false);
    };
-   const handleSignOut = () => {
-      localStorage.removeItem("user");
-      setUser(null);
-      navigate("/");
-      setIsDropdownOpen(false);
+   const handleSignOut = async () => {
+      try {
+         await supabase.auth.signOut();
+      } catch (error) {
+         console.error("Error signing out:", error);
+      } finally {
+         localStorage.removeItem("user");
+         setUser(null);
+         setNotifications([]);
+         setFollowedSet(new Set());
+         navigate("/");
+         setIsDropdownOpen(false);
+      }
    };
 
    // logic for handling user clicking a notification to mark it as read
@@ -175,13 +184,19 @@ function Header() {
             storedUser = localStorage.getItem("user");
          }
 
-         let userId =
-            "b677be85-81db-4245-91ca-acb713bd5564";
+         if (!storedUser) {
+            setUser(null);
+            setNotifications([]);
+            return;
+         }
 
-         if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            if (parsedUser.id) userId = parsedUser.id;
+         const parsedUser = JSON.parse(storedUser);
+         setUser(parsedUser);
+         const userId = parsedUser.id;
+
+         if (!userId) {
+            setNotifications([]);
+            return;
          }
 
          try {

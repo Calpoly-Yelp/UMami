@@ -270,4 +270,33 @@ describe("Restaurant Menu Page Edge Cases", () => {
 
       consoleSpy.mockRestore();
    });
+
+   test("displays a friendly message when Campus Dining has not posted a menu", async () => {
+      global.fetch.mockImplementation((url) => {
+         if (url.endsWith("/menu")) {
+            return Promise.resolve({
+               ok: true,
+               json: () => Promise.resolve([]),
+               status: 200,
+            });
+         }
+
+         return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockRestaurant),
+            status: 200,
+         });
+      });
+
+      render(<RestaurantMenu />);
+
+      expect(
+         await screen.findByText(
+            "Campus Dining has not posted a menu for this restaurant yet.",
+         ),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByText("No categories"),
+      ).toBeInTheDocument();
+   });
 });

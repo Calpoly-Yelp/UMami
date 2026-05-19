@@ -176,7 +176,8 @@ export default function RestaurantMenu() {
                   !menuError &&
                   menuData.length === 0 && (
                      <p className="menu-empty">
-                        No menu items available.
+                        Campus Dining has not posted a menu
+                        for this restaurant yet.
                      </p>
                   )}
 
