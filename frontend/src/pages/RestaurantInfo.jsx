@@ -877,10 +877,6 @@ export default function Review() {
                         />
                         <span>write review</span>
                      </button>
-                     <button className="pillBtn">
-                        <Camera size={16} weight="bold" />
-                        <span>add photos</span>
-                     </button>
                   </div>
                </div>
 
