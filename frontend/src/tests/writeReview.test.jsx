@@ -258,7 +258,7 @@ describe("WriteReview component", () => {
 
       await waitFor(() => {
          expect(global.fetch).toHaveBeenCalledWith(
-            "/api/reviews",
+            "http://localhost:4000/api/reviews",
             expect.objectContaining({
                method: "POST",
                headers: {

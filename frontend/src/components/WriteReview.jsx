@@ -4,6 +4,7 @@ import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 import PRESET_TAGS from "../assets/tags.json";
 import { uploadReviewPhoto } from "../lib/uploadPhoto";
+import { apiUrl } from "../lib/api";
 
 function WriteReview({
    onClose,
@@ -62,20 +63,23 @@ function WriteReview({
             }
          }
 
-         const response = await fetch("/api/reviews", {
-            method: "POST",
-            headers: {
-               "Content-Type": "application/json",
+         const response = await fetch(
+            apiUrl("/api/reviews"),
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  restaurant_id: restaurantId,
+                  user_id: userId,
+                  rating: rating,
+                  comment: text,
+                  photo_urls: finalPhotoUrls,
+                  tags: selectedTags,
+               }),
             },
-            body: JSON.stringify({
-               restaurant_id: restaurantId,
-               user_id: userId,
-               rating: rating,
-               comment: text,
-               photo_urls: finalPhotoUrls,
-               tags: selectedTags,
-            }),
-         });
+         );
 
          if (response.ok) {
             const newReviewData = await response.json();
