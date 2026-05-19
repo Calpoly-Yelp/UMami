@@ -79,39 +79,48 @@ function Restaurants({ restaurants: initialRestaurants }) {
             // profile photo. ui-avatars.com is the auto-generated
             // placeholder assigned at sign up — treat it as no photo.
             if (user?.id) {
-               try {
-                  const userRes = await fetch(
-                     `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
-                  );
-                  const userData = await userRes.json();
+               // Check skip flag using user.id directly (not state)
+               // to avoid async timing bug where userId state is still null
+               const hasSkipped = localStorage.getItem(
+                  `photo_prompt_skipped_${user.id}`,
+               );
 
-                  const isDefaultAvatar =
-                     !userData.avatar_url ||
-                     userData.avatar_url.trim() === "" ||
-                     userData.avatar_url.includes(
-                        "ui-avatars.com",
+               if (!hasSkipped) {
+                  try {
+                     const userRes = await fetch(
+                        `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
                      );
+                     const userData = await userRes.json();
 
-                  if (isDefaultAvatar) {
-                     setShowPhotoPrompt(true);
-                  }
-               } catch {
-                  // If the backend fetch fails, fall back to localStorage
-                  const stored =
-                     localStorage.getItem("user");
-                  const storedUser = stored
-                     ? JSON.parse(stored)
-                     : null;
+                     const isDefaultAvatar =
+                        !userData.avatar_url ||
+                        userData.avatar_url.trim() === "" ||
+                        userData.avatar_url.includes(
+                           "ui-avatars.com",
+                        );
 
-                  const isDefaultAvatar =
-                     !storedUser?.avatar_url ||
-                     storedUser.avatar_url.trim() === "" ||
-                     storedUser.avatar_url.includes(
-                        "ui-avatars.com",
-                     );
+                     if (isDefaultAvatar) {
+                        setShowPhotoPrompt(true);
+                     }
+                  } catch {
+                     // If the backend fetch fails, fall back to localStorage
+                     const stored =
+                        localStorage.getItem("user");
+                     const storedUser = stored
+                        ? JSON.parse(stored)
+                        : null;
 
-                  if (isDefaultAvatar) {
-                     setShowPhotoPrompt(true);
+                     const isDefaultAvatar =
+                        !storedUser?.avatar_url ||
+                        storedUser.avatar_url.trim() ===
+                           "" ||
+                        storedUser.avatar_url.includes(
+                           "ui-avatars.com",
+                        );
+
+                     if (isDefaultAvatar) {
+                        setShowPhotoPrompt(true);
+                     }
                   }
                }
             }
@@ -259,6 +268,62 @@ function Restaurants({ restaurants: initialRestaurants }) {
       }
    };
 
+   // Handles skipping the photo prompt — sets a localStorage flag so the
+   // modal never appears again, then sends a notification as a reminder
+   const handleSkipPhotoPrompt = async () => {
+      // Close the modal immediately
+      setShowPhotoPrompt(false);
+
+      if (userId) {
+         // Mark as skipped so the modal never shows again on any page visit
+         localStorage.setItem(
+            `photo_prompt_skipped_${userId}`,
+            "true",
+         );
+
+         // Use localhost in dev, Azure in production
+         const baseUrl =
+            window.location.hostname === "localhost"
+               ? "http://localhost:4000"
+               : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
+
+         // Send a persistent notification reminding them to add a photo
+         try {
+            const res = await fetch(
+               `${baseUrl}/api/notifications`,
+               {
+                  method: "POST",
+                  headers: {
+                     "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                     user_id: userId,
+                     type: "profile_photo",
+                     message:
+                        "Don't forget to add a profile photo so others can recognize you!",
+                     related_id: null,
+                  }),
+               },
+            );
+
+            // Instantly update the Header bell without a page refresh
+            if (res.ok) {
+               const newNotification = await res.json();
+               window.dispatchEvent(
+                  new CustomEvent("notification-added", {
+                     detail: newNotification,
+                  }),
+               );
+            }
+         } catch (err) {
+            console.error(
+               "Failed to create photo reminder notification:",
+               err,
+            );
+         }
+      }
+   };
+
    // Toggles a restaurant bookmark on or off for the current user
    const handleBookmarkToggle = async (restaurantId) => {
       if (!userId) {
@@ -287,7 +352,6 @@ function Restaurants({ restaurants: initialRestaurants }) {
                .delete()
                .eq("user_id", userId)
                .eq("restaurant_id", restaurantId);
-
             if (error) throw error;
          } else {
             // Add a new bookmark to Supabase
@@ -297,12 +361,10 @@ function Restaurants({ restaurants: initialRestaurants }) {
                   user_id: userId,
                   restaurant_id: restaurantId,
                });
-
             if (error) throw error;
          }
       } catch (err) {
          console.error("Error updating bookmark:", err);
-
          // Revert the optimistic update if the API call failed
          setBookmarkedIds((prev) => {
             const next = new Set(prev);
@@ -313,7 +375,6 @@ function Restaurants({ restaurants: initialRestaurants }) {
             }
             return next;
          });
-
          setError(
             err.message || "Failed to update bookmark.",
          );
@@ -388,10 +449,10 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
    return (
       <div className="restaurants-page">
-         {/* Profile photo prompt modal — shown on login if user has no real avatar */}
+         {/* Profile photo prompt modal — shown once on login if user has no real avatar */}
          <Modal
             open={showPhotoPrompt}
-            onClose={() => setShowPhotoPrompt(false)}
+            onClose={handleSkipPhotoPrompt}
             title="Add a Profile Photo"
          >
             <div
@@ -439,9 +500,9 @@ function Restaurants({ restaurants: initialRestaurants }) {
                      ? "Uploading..."
                      : "Choose Photo"}
                </button>
-               {/* Allows the user to dismiss the modal without uploading */}
+               {/* Dismisses the modal, saves skip flag, and sends a notification reminder */}
                <button
-                  onClick={() => setShowPhotoPrompt(false)}
+                  onClick={handleSkipPhotoPrompt}
                   style={{
                      backgroundColor: "transparent",
                      border: "none",

@@ -5,8 +5,11 @@
 name: CI Testing
 
 # Triggers: run this workflow on every push to main branch
+# and on pull requests so Copilot can review them
 on:
    push:
+      branches: [main]
+   pull_request:
       branches: [main]
 
 jobs:
@@ -41,3 +44,22 @@ jobs:
 
          # Step 7: Run all frontend and backend Jest tests
          - run: npm test
+
+   # Additional job to request Copilot review on pull requests
+   copilot-review:
+      runs-on: ubuntu-latest
+      if: github.event_name == 'pull_request'
+      permissions:
+         pull-requests: write
+      steps:
+         # Request Copilot to review the pull request
+         - name: Request Copilot Review
+           uses: actions/github-script@v7
+           with:
+              script: |
+                 await github.rest.pulls.requestReviewers({
+                   owner: context.repo.owner,
+                   repo: context.repo.repo,
+                   pull_number: context.payload.pull_request.number,
+                   reviewers: ["copilot-pull-request-reviewer"]
+                 });

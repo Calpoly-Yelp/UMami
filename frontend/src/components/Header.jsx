@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
 
+// Header component that contains the logo, search, notifications, and profile dropdown
 function Header() {
    const navigate = useNavigate();
    const [isDropdownOpen, setIsDropdownOpen] =
@@ -60,6 +61,7 @@ function Header() {
       setIsDropdownOpen(false);
    };
 
+   // logic for handling user clicking a notification to mark it as read
    const handleNotificationClick = async (notification) => {
       setIsNotificationsOpen(false);
 
@@ -89,6 +91,7 @@ function Header() {
       }
    };
 
+   // logic for handling user clicking delete notification button
    const handleMarkAllRead = async () => {
       // Optimistic UI Update
       setNotifications((prev) =>
@@ -109,6 +112,7 @@ function Header() {
       }
    };
 
+   // logic for handling user clicking delete notification button
    const handleDeleteAllNotifications = async () => {
       // Optimistic UI Update
       setNotifications([]);
@@ -199,26 +203,24 @@ function Header() {
       loadUserAndNotifications();
    }, []);
 
-   // Listen for profile photo updates from other components
-   // so the header avatar updates instantly without a page refresh
+   // Listen for new notifications added by other components
+   // so the bell updates instantly without a page refresh
    useEffect(() => {
-      const handleAvatarUpdate = (e) => {
-         setUser((prev) => ({
-            ...prev,
-            avatar_url: e.detail.avatar_url,
-         }));
+      const handleNewNotification = (e) => {
+         setNotifications((prev) => [e.detail, ...prev]);
       };
       window.addEventListener(
-         "avatar-updated",
-         handleAvatarUpdate,
+         "notification-added",
+         handleNewNotification,
       );
       return () =>
          window.removeEventListener(
-            "avatar-updated",
-            handleAvatarUpdate,
+            "notification-added",
+            handleNewNotification,
          );
    }, []);
 
+   // calculate unread count for badge display
    const unreadCount = notifications.filter(
       (n) => !n.is_read,
    ).length;
@@ -358,6 +360,7 @@ function Header() {
          return newSet;
       });
 
+      // Sync with backend
       try {
          const response = await fetch(
             "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
@@ -388,12 +391,13 @@ function Header() {
       }
    };
 
+   // filter users based on search query, excluding the current user and ensuring they have a name
    const filteredPeople =
       searchQuery.trim() === ""
          ? []
          : allUsers.filter(
               (p) =>
-                 p.id !== user?.id &&
+                 p.id !== user?.id && // filter out the logged in user
                  p.name &&
                  p.name
                     .toLowerCase()
@@ -531,12 +535,6 @@ function Header() {
                         cursor: "pointer",
                      }}
                      onClick={toggleDropdown}
-                     onError={() =>
-                        setUser((prev) => ({
-                           ...prev,
-                           avatar_url: "",
-                        }))
-                     }
                   />
                ) : (
                   <MdOutlineAccountCircle
