@@ -248,13 +248,6 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
          // Close the modal on success
          setShowPhotoPrompt(false);
-
-         // Notify the Header to update the avatar instantly without a page refresh
-         window.dispatchEvent(
-            new CustomEvent("avatar-updated", {
-               detail: { avatar_url: url },
-            }),
-         );
       } catch (err) {
          console.error(
             "Failed to upload profile photo:",
