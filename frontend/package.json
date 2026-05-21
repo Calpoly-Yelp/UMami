@@ -24,7 +24,7 @@
       "moduleNameMapper": {
          "\\.(css|less|scss|sass)$": "jest-transform-stub",
          "\\.(gif|ttf|eot|svg|png)$": "jest-transform-stub",
-         "^.*/lib/api$": "<rootDir>/src/tests/__mocks__/api.js"
+         "^(.*/lib/api|\\./api)$": "<rootDir>/src/tests/__mocks__/api.js"
       },
       "testEnvironment": "jsdom"
    },

@@ -1,11 +1,11 @@
-import { apiUrl } from "./api";
+import { API_BASE_URL } from "./api";
 
 export async function uploadReviewPhoto(file) {
    const formData = new FormData();
    formData.append("file", file);
 
    const res = await fetch(
-      apiUrl("/api/uploads/review-photo"),
+      `${API_BASE_URL}/api/uploads/review-photo`,
       {
          method: "POST",
          body: formData,
@@ -28,7 +28,7 @@ export async function uploadProfilePhoto(file, userId) {
    if (userId) formData.append("user_id", userId);
 
    const res = await fetch(
-      apiUrl("/api/uploads/profile-photo"),
+      `${API_BASE_URL}/api/uploads/profile-photo`,
       {
          method: "POST",
          body: formData,
@@ -47,7 +47,7 @@ export async function uploadProfilePhoto(file, userId) {
 // Removes a profile photo from storage and reverts to default avatar
 export async function removeProfilePhoto(userId) {
    const res = await fetch(
-      apiUrl(`/api/uploads/profile-photo/${userId}`),
+      `${API_BASE_URL}/api/uploads/profile-photo/${userId}`,
       {
          method: "DELETE",
       },
