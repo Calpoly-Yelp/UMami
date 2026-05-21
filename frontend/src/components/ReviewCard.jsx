@@ -384,19 +384,39 @@ function ReviewCard({
                         typeof photo === "string"
                            ? photo
                            : photo?.url;
+
+                     const typeLabel =
+                        typeof photo === "object" &&
+                        photo !== null
+                           ? photo.type === "Menu Item" &&
+                             photo.item
+                              ? photo.item
+                              : photo.type
+                           : null;
+
                      const alt =
-                        typeof photo === "string"
-                           ? `Review photo ${index + 1}`
-                           : photo?.alt ||
-                             `Review photo ${index + 1}`;
+                        typeLabel ||
+                        (typeof photo === "object"
+                           ? photo?.alt
+                           : null) ||
+                        `Review photo ${index + 1}`;
 
                      return (
-                        <img
+                        <div
                            key={src || index}
-                           className="review-photo"
-                           src={src}
-                           alt={alt}
-                        />
+                           className="review-photo-wrapper"
+                        >
+                           <img
+                              className="review-photo"
+                              src={src}
+                              alt={alt}
+                           />
+                           {typeLabel && (
+                              <div className="review-photo-caption">
+                                 {typeLabel}
+                              </div>
+                           )}
+                        </div>
                      );
                   })}
                </div>

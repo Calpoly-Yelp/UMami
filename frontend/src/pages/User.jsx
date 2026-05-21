@@ -18,6 +18,15 @@ import {
 } from "../lib/uploadPhoto";
 import "./User.css";
 
+/* global process */
+const API_BASE_URL =
+   typeof process !== "undefined" &&
+   process.env &&
+   (process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test")
+      ? "http://localhost:4000"
+      : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
+
 // This is our user page layout
 function User({
    session,
@@ -308,13 +317,13 @@ function User({
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?user_id=${userData.id}`,
+                  `${API_BASE_URL}/api/reviews?user_id=${userData.id}`,
                ),
                fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/${userData.id}`,
+                  `${API_BASE_URL}/api/restaurants/bookmarks/${userData.id}`,
                ),
                fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userData.id}/follows`,
+                  `${API_BASE_URL}/api/users/${userData.id}/follows`,
                ),
             ]);
 
@@ -468,7 +477,7 @@ function User({
 
          // sync the bookmarked restaurants
          fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/sync",
+            `${API_BASE_URL}/api/restaurants/bookmarks/sync`,
             {
                method: "POST",
                headers: {
@@ -517,21 +526,18 @@ function User({
          if (added.length === 0 && removed.length === 0)
             return;
 
-         fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
-            {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  follower_id: userId,
-                  added,
-                  removed,
-               }),
-               keepalive: true,
+         fetch(`${API_BASE_URL}/api/users/follows/sync`, {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
             },
-         );
+            body: JSON.stringify({
+               follower_id: userId,
+               added,
+               removed,
+            }),
+            keepalive: true,
+         });
       };
       window.addEventListener(
          "beforeunload",
@@ -566,7 +572,7 @@ function User({
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
+            `${API_BASE_URL}/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
@@ -604,7 +610,7 @@ function User({
          );
 
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
+            `${API_BASE_URL}/api/users/${user.id}`,
             {
                method: "PATCH",
                headers: {

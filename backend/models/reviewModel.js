@@ -8,7 +8,7 @@ export const Review = z.object({
    created_at: z.string(),
    rating: z.number().nullable(),
    comment: z.string().nullable(),
-   photo_urls: z.array(z.string()).nullable(),
+   photo_urls: z.array(z.any()).nullable(),
    tags: z.array(z.string()).nullable(),
    helpful_count: z.number().nullable().optional(),
    has_voted_helpful: z.boolean().optional(),

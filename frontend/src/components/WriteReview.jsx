@@ -1,9 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./WriteReview.css";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 import PRESET_TAGS from "../assets/tags.json";
 import { uploadReviewPhoto } from "../lib/uploadPhoto";
+
+/* global process */
+const API_BASE_URL =
+   typeof process !== "undefined" &&
+   process.env &&
+   (process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test")
+      ? "http://localhost:4000"
+      : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
 
 function WriteReview({
    onClose,
@@ -25,6 +34,38 @@ function WriteReview({
    const [showTagDropdown, setShowTagDropdown] =
       useState(false);
    const [submitError, setSubmitError] = useState(null);
+   const [menuItems, setMenuItems] = useState([]);
+
+   useEffect(() => {
+      if (!restaurantId) return;
+
+      const fetchMenuItems = async () => {
+         try {
+            const response = await fetch(
+               `${API_BASE_URL}/api/restaurants/${restaurantId}/menu`,
+            );
+            if (response.ok) {
+               const data = await response.json();
+               const items = Array.isArray(data)
+                  ? data.reduce(
+                       (acc, section) => [
+                          ...acc,
+                          ...(section.items || []),
+                       ],
+                       [],
+                    )
+                  : [];
+               setMenuItems(items);
+            }
+         } catch (error) {
+            console.error(
+               "Failed to fetch menu items:",
+               error,
+            );
+         }
+      };
+      fetchMenuItems();
+   }, [restaurantId]);
 
    const filteredTags = PRESET_TAGS.filter(
       (t) =>
@@ -52,30 +93,36 @@ function WriteReview({
          // 1. Upload any pending photos to the bucket first
          const finalPhotoUrls = [];
          for (const photo of photos) {
+            let publicUrl = photo.url;
             if (photo.file) {
-               const publicUrl = await uploadReviewPhoto(
+               publicUrl = await uploadReviewPhoto(
                   photo.file,
                );
-               finalPhotoUrls.push(publicUrl);
-            } else {
-               finalPhotoUrls.push(photo.url);
             }
+            finalPhotoUrls.push({
+               url: publicUrl,
+               type: photo.type,
+               item: photo.item || null,
+            });
          }
 
-         const response = await fetch("/api/reviews", {
-            method: "POST",
-            headers: {
-               "Content-Type": "application/json",
+         const response = await fetch(
+            `${API_BASE_URL}/api/reviews`,
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  restaurant_id: restaurantId,
+                  user_id: userId,
+                  rating: rating,
+                  comment: text,
+                  photo_urls: finalPhotoUrls,
+                  tags: selectedTags,
+               }),
             },
-            body: JSON.stringify({
-               restaurant_id: restaurantId,
-               user_id: userId,
-               rating: rating,
-               comment: text,
-               photo_urls: finalPhotoUrls,
-               tags: selectedTags,
-            }),
-         });
+         );
 
          if (response.ok) {
             const newReviewData = await response.json();
@@ -387,14 +434,17 @@ function WriteReview({
                                  >
                                     ×
                                  </button>
-                                 <div className="wr-photoDetailsH">
-                                    <span className="wr-photoCaptionH">
-                                       {photo.type ===
-                                       "Menu Item"
-                                          ? photo.item
-                                          : photo.type}
-                                    </span>
-                                 </div>
+                                 {photo.type && (
+                                    <div className="wr-photoDetailsH">
+                                       <span className="wr-photoCaptionH">
+                                          {photo.type ===
+                                             "Menu Item" &&
+                                          photo.item
+                                             ? photo.item
+                                             : photo.type}
+                                       </span>
+                                    </div>
+                                 )}
                               </div>
                            ))
                         )}
@@ -449,6 +499,7 @@ function WriteReview({
                   onMouseDown={(e) => e.stopPropagation()}
                >
                   <PhotoUpload
+                     menuItems={menuItems}
                      onPhotoSelected={(photoData) => {
                         setPhotos([...photos, photoData]);
                         setOpenPhotoModal(false);
