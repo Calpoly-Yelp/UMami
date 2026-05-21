@@ -18,9 +18,9 @@ function PhotoUpload({
    const [error, setError] = useState(null);
 
    const filteredMenuItems = menuItems.filter((item) =>
-      item.name
+      (item.name || "")
          .toLowerCase()
-         .includes(menuItemSearch.toLowerCase()),
+         .includes((menuItemSearch || "").toLowerCase()),
    );
 
    const handlePick = () => {
