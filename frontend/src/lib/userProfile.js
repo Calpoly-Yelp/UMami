@@ -73,6 +73,27 @@ export async function ensureUserProfile(user) {
       .catch(() => ({}));
 
    if (!createResponse.ok) {
+      const errorMessage = createdProfile.error || "";
+      if (errorMessage.includes("duplicate key value")) {
+         const retryResponse = await fetch(
+            apiUrl(`/api/users/${user.id}`),
+         );
+
+         if (retryResponse.ok) {
+            return retryResponse.json();
+         }
+
+         if (errorMessage.includes("users_email_key")) {
+            throw new Error(
+               "An account with this email already exists. Please sign in.",
+            );
+         }
+
+         throw new Error(
+            "Your account is already set up. Please sign in.",
+         );
+      }
+
       throw new Error(
          createdProfile.error || "Failed to save user.",
       );
