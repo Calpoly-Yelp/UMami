@@ -5,6 +5,42 @@ import { z } from "zod";
 
 const router = express.Router();
 
+// Create a new notification
+router.post("/", async (req, res) => {
+   const { user_id, type, message, related_id } = req.body;
+   if (!user_id || !type || !message) {
+      return res.status(400).json({
+         error: "user_id, type, and message are required",
+      });
+   }
+   try {
+      const { data, error } = await supabase
+         .from("notifications")
+         .insert([
+            {
+               user_id,
+               type,
+               message,
+               related_id: related_id ?? null,
+               is_read: false,
+            },
+         ])
+         .select();
+
+      if (error) {
+         throw error;
+      }
+
+      const validatedData = z
+         .array(Notification)
+         .parse(data);
+
+      res.status(201).json(validatedData[0]);
+   } catch (error) {
+      res.status(500).json({ error: error.message });
+   }
+});
+
 // Get all notifications for a user
 router.get("/:userId", async (req, res) => {
    const { userId } = req.params;

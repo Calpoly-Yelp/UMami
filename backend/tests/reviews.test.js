@@ -704,17 +704,19 @@ describe("Review Endpoints", () => {
    it("DELETE /api/reviews/:id should handle DB errors on delete without a message", async () => {
       const mockQuery = {
          select: jest.fn().mockReturnThis(),
-         eq: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockImplementation(function () {
+            // First chain is the fetch (maybeSingle), second is the delete
+            return this;
+         }),
          maybeSingle: jest.fn().mockResolvedValue({
             data: { user_id: "user123" },
             error: null,
          }),
-         delete: jest.fn().mockReturnThis(),
-         then: jest.fn().mockImplementation((resolve) =>
-            resolve({
+         delete: jest.fn().mockReturnValue({
+            eq: jest.fn().mockResolvedValue({
                error: {}, // No message property
             }),
-         ),
+         }),
       };
 
       supabase.from.mockReturnValue(mockQuery);
