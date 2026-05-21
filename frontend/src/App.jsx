@@ -18,6 +18,8 @@ import RestaurantInfo from "./pages/RestaurantInfo";
 import RestaurantMenu from "./pages/RestaurantMenu";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
+import AuthCallback from "./pages/AuthCallback";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function ProtectedRoute({ session, children }) {
    if (!session) {
@@ -37,6 +39,8 @@ function AppLayout() {
       "/signup",
       "/signup-form",
       "/onboarding",
+      "/auth/callback",
+      "/verify-email",
    ];
 
    const showHeader = !hideHeaderPaths.includes(
@@ -95,6 +99,14 @@ function AppLayout() {
 
                <Route path="/signin" element={<SignIn />} />
                <Route path="/signup" element={<SignUp />} />
+               <Route
+                  path="/auth/callback"
+                  element={<AuthCallback />}
+               />
+               <Route
+                  path="/verify-email"
+                  element={<VerifyEmail />}
+               />
 
                <Route
                   path="/onboarding"

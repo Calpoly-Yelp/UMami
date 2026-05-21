@@ -30,6 +30,7 @@ export default function SignUp() {
                password,
                options: {
                   data: { name },
+                  emailRedirectTo: `${window.location.origin}/auth/callback`,
                },
             });
 
@@ -43,42 +44,10 @@ export default function SignUp() {
             );
          }
 
-         const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
-            {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  id: user.id,
-                  name,
-                  email,
-                  avatar_url: `https://ui-avatars.com/api/?name=${name.trim().replace(/\s+/g, "+")}`,
-                  is_verified: false,
-               }),
-            },
-         );
-
-         const result = await response.json();
-
-         if (!response.ok) {
-            throw new Error(
-               result.error || "Failed to save user.",
-            );
-         }
-
-         // grab our user from database
-         localStorage.setItem(
-            "user",
-            JSON.stringify(result),
-         );
-         console.log("local storage updated", result);
-
          if (data.session) {
-            navigate("/onboarding");
+            navigate("/auth/callback");
          } else {
-            navigate("/signin");
+            navigate("/verify-email");
          }
       } catch (err) {
          console.error("Sign up failed:", err);
