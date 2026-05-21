@@ -17,15 +17,7 @@ import {
    removeProfilePhoto,
 } from "../lib/uploadPhoto";
 import "./User.css";
-
-/* global process */
-const API_BASE_URL =
-   typeof process !== "undefined" &&
-   process.env &&
-   (process.env.NODE_ENV === "development" ||
-      process.env.NODE_ENV === "test")
-      ? "http://localhost:4000"
-      : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
+import { API_BASE_URL } from "../lib/api";
 
 // This is our user page layout
 function User({

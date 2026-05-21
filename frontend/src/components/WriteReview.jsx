@@ -4,15 +4,7 @@ import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 import PRESET_TAGS from "../assets/tags.json";
 import { uploadReviewPhoto } from "../lib/uploadPhoto";
-
-/* global process */
-const API_BASE_URL =
-   typeof process !== "undefined" &&
-   process.env &&
-   (process.env.NODE_ENV === "development" ||
-      process.env.NODE_ENV === "test")
-      ? "http://localhost:4000"
-      : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
+import { API_BASE_URL } from "../lib/api";
 
 function WriteReview({
    onClose,

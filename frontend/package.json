@@ -16,7 +16,6 @@
          "<rootDir>/src"
       ],
       "testMatch": [
-         "**/tests/**/*.+(js|jsx|ts|tsx)",
          "**/?(*.)+(spec|test).+(js|jsx|ts|tsx)"
       ],
       "transform": {
@@ -24,7 +23,8 @@
       },
       "moduleNameMapper": {
          "\\.(css|less|scss|sass)$": "jest-transform-stub",
-         "\\.(gif|ttf|eot|svg|png)$": "jest-transform-stub"
+         "\\.(gif|ttf|eot|svg|png)$": "jest-transform-stub",
+         "^.*/lib/api$": "<rootDir>/src/tests/__mocks__/api.js"
       },
       "testEnvironment": "jsdom"
    },
