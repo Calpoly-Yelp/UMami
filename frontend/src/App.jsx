@@ -113,7 +113,14 @@ function AppLayout() {
                      </ProtectedRoute>
                   }
                />
-
+             <Route
+   path="/user/:userId"
+   element={
+      <ProtectedRoute session={session}>
+         <UserPage session={session} />
+      </ProtectedRoute>
+   }
+/>
                <Route
                   path="/restaurants"
                   element={
