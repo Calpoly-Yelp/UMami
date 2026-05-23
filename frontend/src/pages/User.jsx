@@ -767,7 +767,7 @@ function User({
                         <div
                            className="edit-icon-wrapper"
                            onClick={() =>
-                              navigate("/account-settings")
+                              navigate("/settings")
                            }
                            style={{ cursor: "pointer" }}
                         >
@@ -1031,21 +1031,28 @@ function User({
                            following.map(
                               (followedUser, index) => (
                                  <div
-   key={
-      followedUser.id ??
-      `${followedUser.name ?? "user"}-${index}`
-   }
->
-   <FollowedUserCard
-      followedUser={followedUser}
-      isFollowing={followingIds.has(followedUser.id)}
-      onToggleFollow={
-         isOwnProfile
-            ? () => handleFollowToggle(followedUser.id)
-            : undefined
-      }
-   />
-</div>
+                                    key={
+                                       followedUser.id ??
+                                       `${followedUser.name ?? "user"}-${index}`
+                                    }
+                                 >
+                                    <FollowedUserCard
+                                       followedUser={
+                                          followedUser
+                                       }
+                                       isFollowing={followingIds.has(
+                                          followedUser.id,
+                                       )}
+                                       onToggleFollow={
+                                          isOwnProfile
+                                             ? () =>
+                                                  handleFollowToggle(
+                                                     followedUser.id,
+                                                  )
+                                             : undefined
+                                       }
+                                    />
+                                 </div>
                               ),
                            )
                         )}
