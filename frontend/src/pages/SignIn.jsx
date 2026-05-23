@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
 import logo from "../assets/logo.png";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 
 export default function SignIn() {
    const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function SignIn() {
          console.log("Supabase user:", data.user);
 
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${data.user.id}`,
+            `${API_BASE_URL}/api/users/${data.user.id}`,
          );
 
          const body = await response

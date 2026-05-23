@@ -5,6 +5,7 @@ import {
    ThumbsUp,
    Trash,
 } from "@phosphor-icons/react";
+import { API_BASE_URL } from "../lib/api";
 import "./ReviewCard.css";
 
 function ReviewCard({
@@ -180,7 +181,7 @@ function ReviewCard({
          const CURRENT_USER_ID =
             "b677be85-81db-4245-91ca-acb713bd5564";
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${review.id}/helpful`,
+            `${API_BASE_URL}/api/reviews/${review.id}/helpful`,
             {
                method: "POST",
                headers: {

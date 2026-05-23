@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./PhotoGallery.css";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 
 // Extract photo URLs from a review row
 const getPhotoUrls = (review) =>
@@ -56,7 +57,7 @@ export default function PhotoGallery() {
       const fetchRestaurant = async () => {
          try {
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+               `${API_BASE_URL}/api/restaurants/${id}`,
             );
 
             if (response.ok) {
