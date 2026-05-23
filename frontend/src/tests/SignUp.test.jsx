@@ -41,7 +41,7 @@ describe("SignUp component", () => {
    beforeEach(() => {
       mockNavigate.mockClear();
       supabase.auth.signUp.mockReset();
-      global.fetch.mockReset();
+      global.fetch.mockClear();
 
       // Polyfill crypto.randomUUID for environments that don't support it
       if (!global.crypto) global.crypto = {};
