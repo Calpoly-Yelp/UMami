@@ -117,8 +117,11 @@
    line-height: 1;
 }
 
-.signup__pw-toggle:hover {
+.signup__pw-toggle:hover,
+.signup__pw-toggle:focus-visible {
    color: var(--color-text);
+   outline: 2px solid var(--color-text);
+   outline-offset: 2px;
 }
 
 /* ─── Error message ────────────────────────────────────── */

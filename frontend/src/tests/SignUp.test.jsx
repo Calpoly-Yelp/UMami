@@ -40,8 +40,8 @@ describe("SignUp component", () => {
    // Reset all mocks before each test to prevent state leaking between tests
    beforeEach(() => {
       mockNavigate.mockClear();
-      supabase.auth.signUp.mockClear();
-      global.fetch.mockClear();
+      supabase.auth.signUp.mockReset();
+      global.fetch.mockReset();
 
       // Polyfill crypto.randomUUID for environments that don't support it
       if (!global.crypto) global.crypto = {};
