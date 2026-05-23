@@ -4,6 +4,15 @@ import "./SignIn.css";
 import logo from "../assets/logo.png";
 import { supabase } from "../lib/supabase";
 
+/**
+ * Renders the sign-in page and handles user authentication, profile retrieval, and post-login navigation.
+ *
+ * Displays email and password inputs (with a visibility toggle), shows inline errors and loading state,
+ * authenticates with Supabase, fetches the user's profile from the backend, persists it to localStorage,
+ * and navigates to "/restaurants" on success.
+ *
+ * @returns {JSX.Element} The sign-in React element.
+ */
 export default function SignIn() {
    const navigate = useNavigate();
 

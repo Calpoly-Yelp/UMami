@@ -5,6 +5,15 @@ import heroImg from "../assets/signup2.jpg";
 import logo from "../assets/logo.png";
 import { supabase } from "../lib/supabase";
 
+/**
+ * Render the sign-up page and handle new user registration.
+ *
+ * Manages form state (error, loading, password visibility), performs authentication with Supabase,
+ * persists the user profile to the backend and localStorage, and navigates to onboarding or sign-in after completion.
+ * Also provides a password visibility toggle and inline error display.
+ *
+ * @returns {JSX.Element} The SignUp component UI containing the registration form and hero image.
+ */
 export default function SignUp() {
    const navigate = useNavigate();
    const [error, setError] = useState("");
