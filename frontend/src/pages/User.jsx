@@ -248,23 +248,20 @@ function User({
 
             let profileUser = {
                id: profileUserId,
-               name:
-                  isOwnProfile
-                     ? storedUser?.name ||
-                       session?.user?.user_metadata?.name ||
-                       "Anonymous"
-                     : "Anonymous",
-               avatar_url:
-                  isOwnProfile
-                     ? storedUser?.avatar_url ||
-                       session?.user?.user_metadata
-                          ?.avatar_url ||
-                       ""
-                     : "",
-               is_verified:
-                  isOwnProfile
-                     ? storedUser?.is_verified || false
-                     : false,
+               name: isOwnProfile
+                  ? storedUser?.name ||
+                    session?.user?.user_metadata?.name ||
+                    "Anonymous"
+                  : "Anonymous",
+               avatar_url: isOwnProfile
+                  ? storedUser?.avatar_url ||
+                    session?.user?.user_metadata
+                       ?.avatar_url ||
+                    ""
+                  : "",
+               is_verified: isOwnProfile
+                  ? storedUser?.is_verified || false
+                  : false,
             };
 
             try {
@@ -273,7 +270,8 @@ function User({
                );
 
                if (userResponse.ok) {
-                  const userData = await userResponse.json();
+                  const userData =
+                     await userResponse.json();
 
                   profileUser = {
                      id: userData.id || profileUserId,
@@ -434,18 +432,21 @@ function User({
          if (added.length === 0 && removed.length === 0)
             return;
 
-         fetch(`${API_BASE}/api/restaurants/bookmarks/sync`, {
-            method: "POST",
-            headers: {
-               "Content-Type": "application/json",
+         fetch(
+            `${API_BASE}/api/restaurants/bookmarks/sync`,
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  user_id: userIdToSync,
+                  added,
+                  removed,
+               }),
+               keepalive: true,
             },
-            body: JSON.stringify({
-               user_id: userIdToSync,
-               added,
-               removed,
-            }),
-            keepalive: true,
-         });
+         );
       };
 
       window.addEventListener(
@@ -776,16 +777,11 @@ function User({
                         <div
                            className="edit-icon-wrapper"
                            onClick={() =>
-                              navigate(
-                                 "/account-settings",
-                              )
+                              navigate("/account-settings")
                            }
                            style={{ cursor: "pointer" }}
                         >
-                           <img
-                              src={editIcon}
-                              alt="Edit"
-                           />
+                           <img src={editIcon} alt="Edit" />
                            <span>Edit Profile</span>
                         </div>
                      </div>
@@ -1045,36 +1041,21 @@ function User({
                            following.map(
                               (followedUser, index) => (
                                  <div
-                                    key={
-                                       followedUser.id ??
-                                       `${followedUser.name ?? "user"}-${index}`
-                                    }
-                                    onClick={() =>
-                                       navigate(
-                                          `/user/${followedUser.id}`,
-                                       )
-                                    }
-                                    style={{
-                                       cursor: "pointer",
-                                    }}
-                                 >
-                                    <FollowedUserCard
-                                       followedUser={
-                                          followedUser
-                                       }
-                                       isFollowing={followingIds.has(
-                                          followedUser.id,
-                                       )}
-                                       onToggleFollow={
-                                          isOwnProfile
-                                             ? () =>
-                                                  handleFollowToggle(
-                                                     followedUser.id,
-                                                  )
-                                             : undefined
-                                       }
-                                    />
-                                 </div>
+   key={
+      followedUser.id ??
+      `${followedUser.name ?? "user"}-${index}`
+   }
+>
+   <FollowedUserCard
+      followedUser={followedUser}
+      isFollowing={followingIds.has(followedUser.id)}
+      onToggleFollow={
+         isOwnProfile
+            ? () => handleFollowToggle(followedUser.id)
+            : undefined
+      }
+   />
+</div>
                               ),
                            )
                         )}

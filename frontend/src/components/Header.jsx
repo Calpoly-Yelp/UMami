@@ -619,18 +619,27 @@ function Header() {
                            {filteredPeople.length > 0 ? (
                               <>
                                  <div className="search-result-spacer" />
-                                {filteredPeople.map(
-   (person) => (
-      <div
-         key={person.id}
-         className="search-result-item"
-         onClick={() => {
-            navigate(`/user/${person.id}`);
-            setIsSearchOpen(false);
-            setSearchQuery("");
-         }}
-         style={{ cursor: "pointer" }}
-      >
+                                 {filteredPeople.map(
+                                    (person) => (
+                                       <div
+                                          key={person.id}
+                                          className="search-result-item"
+                                          onClick={() => {
+                                             navigate(
+                                                `/user/${person.id}`,
+                                             );
+                                             setIsSearchOpen(
+                                                false,
+                                             );
+                                             setSearchQuery(
+                                                "",
+                                             );
+                                          }}
+                                          style={{
+                                             cursor:
+                                                "pointer",
+                                          }}
+                                       >
                                           {person.avatar_url ? (
                                              <img
                                                 src={
