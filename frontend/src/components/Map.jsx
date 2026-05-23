@@ -29,6 +29,18 @@ function MapUpdater({ lat, lng }) {
       // Dynamically re-center the map when lat/lng change
       map.setView([lat, lng], 15);
    }, [lat, lng, map]);
+
+   useEffect(() => {
+      // Observe the map container for resize events (e.g. flexbox stretching)
+      // and force Leaflet to recalculate its dimensions and re-center.
+      const resizeObserver = new ResizeObserver(() => {
+         map.invalidateSize();
+         map.setView([lat, lng], 15);
+      });
+      resizeObserver.observe(map.getContainer());
+      return () => resizeObserver.disconnect();
+   }, [map, lat, lng]);
+
    return null;
 }
 
@@ -45,13 +57,21 @@ function Map({
          : [{ lat, lng, name }];
 
    return (
-      <div className="map-wrapper">
+      <div
+         className="map-wrapper"
+         style={{ height: "100%", width: "100%" }}
+      >
          <MapContainer
             center={[lat, lng]}
             zoom={15}
             scrollWheelZoom={true}
             className="leaflet-container"
             attributionControl={false}
+            style={{
+               height: "100%",
+               width: "100%",
+               zIndex: 1,
+            }}
          >
             <TileLayer
                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'

@@ -5,8 +5,11 @@
 name: CI Testing
 
 # Triggers: run this workflow on every push to main branch
+# and on pull requests so Copilot can review them
 on:
    push:
+      branches: [main]
+   pull_request:
       branches: [main]
 
 jobs:

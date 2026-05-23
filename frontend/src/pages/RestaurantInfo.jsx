@@ -20,6 +20,7 @@ import {
    CaretLeft,
    CaretRight,
 } from "@phosphor-icons/react";
+import { useBookmarks } from "../hooks/useBookmarks";
 
 export default function Review() {
    const navigate = useNavigate();
@@ -42,47 +43,12 @@ export default function Review() {
       left: false,
       right: false,
    });
-
-   // Tracks whether the current restaurant is bookmarked by the logged-in user
-   const [isBookmarked, setIsBookmarked] = useState(false);
-
-   const handleBookmarkToggle = async (e) => {
-      e.stopPropagation();
-
-      if (!CURRENT_USER_ID) {
-         alert("Please log in to bookmark restaurants!");
-         return;
-      }
-
-      const restaurantId = parseInt(id, 10);
-      const wasBookmarked = isBookmarked;
-
-      setIsBookmarked(!wasBookmarked);
-
-      try {
-         if (wasBookmarked) {
-            const { error } = await supabase
-               .from("bookmarks")
-               .delete()
-               .eq("user_id", CURRENT_USER_ID)
-               .eq("restaurant_id", restaurantId);
-
-            if (error) throw error;
-         } else {
-            const { error } = await supabase
-               .from("bookmarks")
-               .insert({
-                  user_id: CURRENT_USER_ID,
-                  restaurant_id: restaurantId,
-               });
-
-            if (error) throw error;
-         }
-      } catch (error) {
-         console.error("Failed to update bookmark:", error);
-         setIsBookmarked(wasBookmarked);
-      }
-   };
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks();
+   const isBookmarked = bookmarkedIds.has(parseInt(id, 10));
 
    // Retrieve the actual logged-in user from localStorage
    const [currentUser] = useState(() => {
@@ -98,33 +64,6 @@ export default function Review() {
       }
    });
    const CURRENT_USER_ID = currentUser?.id;
-
-   // Fetch whether this restaurant is bookmarked by the current user
-   // Runs when the user or restaurant ID changes
-   useEffect(() => {
-      const fetchBookmarkStatus = async () => {
-         if (!CURRENT_USER_ID || !id) return;
-
-         const { data, error } = await supabase
-            .from("bookmarks")
-            .select("restaurant_id")
-            .eq("user_id", CURRENT_USER_ID)
-            .eq("restaurant_id", parseInt(id, 10))
-            .maybeSingle();
-
-         if (error) {
-            console.error(
-               "Failed to fetch bookmark:",
-               error,
-            );
-            return;
-         }
-
-         setIsBookmarked(Boolean(data));
-      };
-
-      fetchBookmarkStatus();
-   }, [CURRENT_USER_ID, id]);
 
    // Build a clean restaurant object from the raw API data
    const restaurant = useMemo(() => {
@@ -152,13 +91,19 @@ export default function Review() {
       const currentDayIdx = (new Date().getDay() + 6) % 7; // JS getDay() returns 0 for Sunday, map it to 6
 
       const formattedHours = daysOfWeek.map((day, idx) => {
-         let timeString = "Loading...";
-         let isOpenNow = false;
-         let isClosedNow = false;
-
          let intervals = [];
 
-         if (restaurantInfo?.hours?.length === 42) {
+         if (restaurantInfo?.location_mapping?.schedule) {
+            const daySchedule =
+               restaurantInfo.location_mapping.schedule[
+                  idx
+               ] || [];
+            intervals = daySchedule.map((s) => ({
+               open: s.start,
+               close: s.end,
+               subName: s.subName,
+            }));
+         } else if (restaurantInfo?.hours?.length === 42) {
             for (let i = 0; i < 3; i++) {
                const openTime =
                   restaurantInfo.hours[idx * 6 + i * 2];
@@ -193,68 +138,168 @@ export default function Review() {
             }
          }
 
+         // Defensively merge any overlapping intervals (e.g. from BBQ joining Market)
+         intervals.sort((a, b) =>
+            a.open.localeCompare(b.open),
+         );
+         const mergedIntervals = [];
+         for (const interval of intervals) {
+            if (mergedIntervals.length === 0) {
+               mergedIntervals.push({
+                  ...interval,
+                  subNames: new Set([
+                     interval.subName || "Default",
+                  ]),
+               });
+            } else {
+               const last =
+                  mergedIntervals[
+                     mergedIntervals.length - 1
+                  ];
+               const lastCrossesMidnight =
+                  last.close < last.open;
+               const intCrossesMidnight =
+                  interval.close < interval.open;
+
+               if (
+                  lastCrossesMidnight ||
+                  interval.open <= last.close
+               ) {
+                  if (
+                     intCrossesMidnight &&
+                     !lastCrossesMidnight
+                  ) {
+                     last.close = interval.close;
+                  } else if (
+                     !lastCrossesMidnight &&
+                     !intCrossesMidnight &&
+                     interval.close > last.close
+                  ) {
+                     last.close = interval.close;
+                  } else if (
+                     lastCrossesMidnight &&
+                     intCrossesMidnight &&
+                     interval.close > last.close
+                  ) {
+                     last.close = interval.close;
+                  }
+                  if (interval.subName) {
+                     last.subNames.add(interval.subName);
+                  }
+               } else {
+                  mergedIntervals.push({
+                     ...interval,
+                     subNames: new Set([
+                        interval.subName || "Default",
+                     ]),
+                  });
+               }
+            }
+         }
+         intervals = mergedIntervals;
+
+         let formattedIntervals = [];
+
          if (
             restaurantInfo &&
             (!restaurantInfo.hours ||
                restaurantInfo.hours.length === 0)
          ) {
-            timeString = "Hours unavailable";
+            formattedIntervals = [
+               {
+                  time: "Hours unavailable",
+                  isOpen: false,
+                  isClosed: false,
+                  isCurrentDay: false,
+               },
+            ];
          } else if (intervals.length > 0) {
-            timeString = intervals
-               .map(
-                  (i) =>
-                     `${formatTime(i.open)} - ${formatTime(i.close)}`,
-               )
-               .join(", ");
-         } else if (restaurantInfo?.hours) {
-            timeString = "Closed";
-         }
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTimeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}:00`;
 
-         if (idx === currentDayIdx) {
-            if (timeString === "Closed") {
-               isClosedNow = true;
-            } else if (
-               timeString !== "Loading..." &&
-               timeString !== "Hours unavailable"
-            ) {
-               const now = new Date();
-               const currentHour = now.getHours();
-               const currentMinute = now.getMinutes();
-               const currentTimeStr = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}:00`;
+            let anyOpen = false;
+            let nextUpIdx = -1;
 
-               let anyOpen = false;
-               for (const { open, close } of intervals) {
-                  if (close < open) {
+            if (idx === currentDayIdx) {
+               intervals.forEach((i, j) => {
+                  let isOpen = false;
+                  if (i.close < i.open) {
                      if (
-                        currentTimeStr >= open ||
-                        currentTimeStr <= close
+                        currentTimeStr >= i.open ||
+                        currentTimeStr <= i.close
                      )
-                        anyOpen = true;
+                        isOpen = true;
                   } else {
                      if (
-                        currentTimeStr >= open &&
-                        currentTimeStr <= close
+                        currentTimeStr >= i.open &&
+                        currentTimeStr <= i.close
                      )
-                        anyOpen = true;
+                        isOpen = true;
                   }
-               }
+                  i.isOpenNow = isOpen;
+                  if (isOpen) anyOpen = true;
 
-               if (intervals.length > 0) {
-                  if (anyOpen) {
-                     isOpenNow = true;
-                  } else {
-                     isClosedNow = true;
+                  if (
+                     !isOpen &&
+                     nextUpIdx === -1 &&
+                     currentTimeStr < i.open
+                  ) {
+                     nextUpIdx = j;
                   }
+               });
+
+               if (
+                  !anyOpen &&
+                  nextUpIdx === -1 &&
+                  intervals.length > 0
+               ) {
+                  nextUpIdx = intervals.length - 1; // Fallback to the last interval if all have passed
                }
             }
+
+            formattedIntervals = intervals.map((i, j) => {
+               const subNamesList = Array.from(
+                  i.subNames || [],
+               ).filter((name) => name !== "Default");
+               const subNameStr =
+                  subNamesList.length > 0
+                     ? ` (${subNamesList.join(", ")})`
+                     : "";
+               return {
+                  time: `${formatTime(i.open)} - ${formatTime(i.close)}${subNameStr}`,
+                  isOpen: i.isOpenNow || false,
+                  isClosed:
+                     idx === currentDayIdx &&
+                     !anyOpen &&
+                     j === nextUpIdx,
+                  isCurrentDay: idx === currentDayIdx,
+               };
+            });
+         } else if (restaurantInfo?.hours) {
+            formattedIntervals = [
+               {
+                  time: "Closed",
+                  isOpen: false,
+                  isClosed: idx === currentDayIdx,
+                  isCurrentDay: idx === currentDayIdx,
+               },
+            ];
+         } else {
+            formattedIntervals = [
+               {
+                  time: "Loading...",
+                  isOpen: false,
+                  isClosed: false,
+                  isCurrentDay: false,
+               },
+            ];
          }
 
          return {
             day,
-            time: timeString,
-            open: isOpenNow,
-            closed: isClosedNow,
-            isCurrentDay: idx === currentDayIdx,
+            intervals: formattedIntervals,
          };
       });
 
@@ -436,15 +481,59 @@ export default function Review() {
       }
    }, [id]);
 
+   const fetchBookmarkStatus = useCallback(async () => {
+      if (!CURRENT_USER_ID) return;
+      try {
+         const { data, error } = await supabase
+            .from("bookmarks")
+            .select("restaurant_id")
+            .eq("user_id", CURRENT_USER_ID)
+            .eq("restaurant_id", id);
+
+         if (!error && data && data.length > 0) {
+            setBookmarkedIds((prev) =>
+               new Set(prev).add(parseInt(id, 10)),
+            );
+         } else {
+            setBookmarkedIds((prev) => {
+               const next = new Set(prev);
+               next.delete(parseInt(id, 10));
+               return next;
+            });
+         }
+      } catch (err) {
+         console.error(
+            "Failed to fetch bookmark status:",
+            err,
+         );
+      }
+   }, [id, CURRENT_USER_ID, setBookmarkedIds]);
+
+   const handleBookmarkToggle = async (e) => {
+      if (e) e.stopPropagation();
+      if (!CURRENT_USER_ID) {
+         alert("Please log in to bookmark a restaurant!");
+         return;
+      }
+      const { error } = await toggleBookmark(
+         CURRENT_USER_ID,
+         id,
+      );
+      if (error) {
+         console.error(error);
+      }
+   };
+
    useEffect(() => {
       const loadData = async () => {
          await Promise.all([
             fetchRestaurant(),
             fetchReviews(),
+            fetchBookmarkStatus(),
          ]);
       };
       loadData();
-   }, [fetchRestaurant, fetchReviews]);
+   }, [fetchRestaurant, fetchReviews, fetchBookmarkStatus]);
 
    // Deletes a review from the backend and updates local state
    const handleDeleteReview = async (reviewId) => {
@@ -688,7 +777,6 @@ export default function Review() {
                   <h1 className="review__title">
                      {restaurant.name}
                   </h1>
-
                   <button
                      className={`review__bookmarkBtn ${isBookmarked ? "is-bookmarked" : ""}`}
                      onClick={handleBookmarkToggle}
@@ -714,7 +802,7 @@ export default function Review() {
                />
 
                <div className="review__chips">
-                  {restaurant.tags.map((t) => (
+                  {restaurant.tags.slice(0, 3).map((t) => (
                      <span
                         key={t}
                         className="chip chip--light"
@@ -788,10 +876,6 @@ export default function Review() {
                            weight="bold"
                         />
                         <span>write review</span>
-                     </button>
-                     <button className="pillBtn">
-                        <Camera size={16} weight="bold" />
-                        <span>add photos</span>
                      </button>
                   </div>
                </div>
@@ -880,36 +964,57 @@ export default function Review() {
                      </div>
 
                      <div className="review__hoursList">
-                        {restaurant.hours.map((h) => (
-                           <div
-                              key={h.day}
-                              className="review__hoursRow"
-                           >
-                              <span className="review__day">
-                                 {h.day}
-                              </span>
-                              <span
-                                 className="review__open"
-                                 style={{
-                                    visibility:
-                                       h.isCurrentDay &&
-                                       (h.open || h.closed)
-                                          ? "visible"
-                                          : "hidden",
-                                    color: h.open
-                                       ? "var(--umami-green)"
-                                       : "var(--orange)",
-                                 }}
-                              >
-                                 {h.open
-                                    ? "open"
-                                    : "closed"}
-                              </span>
-                              <span className="review__time">
-                                 {h.time}
-                              </span>
-                           </div>
-                        ))}
+                        {restaurant.hours.flatMap(
+                           (h, dayIndex) =>
+                              h.intervals.map(
+                                 (interval, i) => (
+                                    <div
+                                       key={`${h.day}-${i}`}
+                                       className="review__hoursRow"
+                                       style={{
+                                          marginTop:
+                                             i === 0 &&
+                                             dayIndex > 0
+                                                ? "14px"
+                                                : undefined,
+                                       }}
+                                    >
+                                       <span
+                                          className="review__day"
+                                          style={{
+                                             visibility:
+                                                i > 0
+                                                   ? "hidden"
+                                                   : "visible",
+                                          }}
+                                       >
+                                          {h.day}
+                                       </span>
+                                       <span
+                                          className="review__open"
+                                          style={{
+                                             visibility:
+                                                interval.isCurrentDay &&
+                                                (interval.isOpen ||
+                                                   interval.isClosed)
+                                                   ? "visible"
+                                                   : "hidden",
+                                             color: interval.isOpen
+                                                ? "var(--umami-green)"
+                                                : "var(--orange)",
+                                          }}
+                                       >
+                                          {interval.isOpen
+                                             ? "open"
+                                             : "closed"}
+                                       </span>
+                                       <span className="review__time">
+                                          {interval.time}
+                                       </span>
+                                    </div>
+                                 ),
+                              ),
+                        )}
                      </div>
 
                      <div className="orderIndicator">
@@ -918,12 +1023,27 @@ export default function Review() {
                   </div>
 
                   {/* Map */}
-                  <div className="review__mapBlock">
-                     <Map
-                        lat={restaurant.lat}
-                        lng={restaurant.lng}
-                        name={restaurant.name}
-                     />
+                  <div
+                     className="review__mapBlock"
+                     style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                        minHeight: "250px",
+                     }}
+                  >
+                     <div
+                        style={{
+                           flex: 1,
+                           position: "relative",
+                        }}
+                     >
+                        <Map
+                           lat={restaurant.lat}
+                           lng={restaurant.lng}
+                           name={restaurant.name}
+                        />
+                     </div>
 
                      <div className="review__locationChipRow">
                         <span className="chip chip--outline">

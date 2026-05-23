@@ -166,7 +166,7 @@ describe("User Endpoints", () => {
 
       expect(res.statusCode).toBe(201);
       expect(res.body).toMatchObject(newUser);
-      expect(res.body.password_hash).toBeNull();
+      expect(res.body.password_hash).toBeUndefined();
    });
 
    it("POST /api/users should handle creation errors", async () => {

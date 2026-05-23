@@ -20,6 +20,7 @@ app.use(
       origin: [
          "https://thankful-hill-0f3846d10.7.azurestaticapps.net", // Azure production frontend
          "http://localhost:5173", // Local Vite dev server
+         "http://localhost:5174",
       ],
       credentials: true, // Allow cookies and auth headers to be sent
    }),

@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
+import { useBookmarks } from "../hooks/useBookmarks";
 import {
    uploadProfilePhoto,
    removeProfilePhoto,
@@ -60,12 +61,12 @@ function User({
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
    );
-
-   const [bookmarkedIds, setBookmarkedIds] = useState(
-      () =>
-         new Set(
-            initialRestaurants?.map((r) => r.id) || [],
-         ),
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks(
+      initialRestaurants?.map((r) => r.id) || [],
    );
 
    const originalBookmarkedIdsRef = useRef(
@@ -410,6 +411,7 @@ function User({
       initialReviews,
       initialRestaurants,
       initialFollowing,
+      setBookmarkedIds,
    ]);
 
    useEffect(() => {
@@ -512,19 +514,7 @@ function User({
    }, [user.id, isOwnProfile]);
 
    const handleBookmarkToggle = (restaurantId) => {
-      if (!isOwnProfile) return;
-
-      setBookmarkedIds((prev) => {
-         const next = new Set(prev);
-
-         if (next.has(restaurantId)) {
-            next.delete(restaurantId);
-         } else {
-            next.add(restaurantId);
-         }
-
-         return next;
-      });
+      toggleBookmark(user.id, restaurantId, true);
    };
 
    const handleFollowToggle = (followedUserId) => {
