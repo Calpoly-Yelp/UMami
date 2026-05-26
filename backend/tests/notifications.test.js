@@ -19,6 +19,43 @@ describe("Notification Endpoints", () => {
 
    // --- Success Tests ---
 
+   // test endpoint for creating a new notification
+   it("POST /api/notifications should create a new notification", async () => {
+      const mockNotification = {
+         id: "b677be85-81db-4245-91ca-acb713bd5564",
+         user_id: "c788cf96-92ec-5356-a2db-bdc824ce6675",
+         type: "like",
+         message: "Test message",
+         related_id: null,
+         is_read: false,
+         created_at: "2023-01-01T00:00:00Z",
+      };
+
+      const mockSelect = jest.fn().mockResolvedValue({
+         data: [mockNotification],
+         error: null,
+      });
+      const mockInsert = jest
+         .fn()
+         .mockReturnValue({ select: mockSelect });
+
+      supabase.from.mockReturnValue({ insert: mockInsert });
+
+      const res = await request(app)
+         .post("/api/notifications")
+         .send({
+            user_id: "c788cf96-92ec-5356-a2db-bdc824ce6675",
+            type: "like",
+            message: "Test message",
+         });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.id).toBe(mockNotification.id);
+      expect(supabase.from).toHaveBeenCalledWith(
+         "notifications",
+      );
+   });
+
    // test endpoint for returning notification based on userid
    it("GET /api/notifications/:userId should return notifications", async () => {
       const userId = "c788cf96-92ec-5356-a2db-bdc824ce6675";
@@ -156,6 +193,39 @@ describe("Notification Endpoints", () => {
    });
 
    // --- Error Handling Tests ---
+
+   it("POST /api/notifications should return 400 if missing required fields", async () => {
+      const res = await request(app)
+         .post("/api/notifications")
+         .send({
+            user_id: "c788cf96-92ec-5356-a2db-bdc824ce6675",
+            // missing type and message
+         });
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe(
+         "user_id, type, and message are required",
+      );
+   });
+
+   it("POST /api/notifications should handle errors", async () => {
+      supabase.from.mockReturnValue({
+         insert: jest.fn().mockReturnThis(),
+         select: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: "Insert Error" },
+         }),
+      });
+
+      const res = await request(app)
+         .post("/api/notifications")
+         .send({
+            user_id: "c788cf96-92ec-5356-a2db-bdc824ce6675",
+            type: "like",
+            message: "Test message",
+         });
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({ error: "Insert Error" });
+   });
 
    it("GET /api/notifications/:userId should handle errors", async () => {
       supabase.from.mockReturnValue({

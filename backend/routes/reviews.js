@@ -98,10 +98,14 @@ router.post("/", async (req, res) => {
          photo_urls,
       } = req.body;
 
-      // Basic validation — user and rating are required
-      if (!user_id || !rating) {
+      // Basic validation — user, restaurant, and rating are required
+      if (
+         !restaurant_id ||
+         !user_id ||
+         rating === undefined
+      ) {
          return res.status(400).json({
-            error: "user_id and rating are required",
+            error: "Missing required fields",
          });
       }
 
@@ -111,11 +115,11 @@ router.post("/", async (req, res) => {
          .insert([
             {
                user_id,
-               restaurant_id, // can be null if not wired up yet
+               restaurant_id,
                rating,
                comment,
-               tags,
-               photo_urls, // array of public Supabase Storage URLs
+               tags: tags || [],
+               photo_urls: photo_urls || [],
             },
          ])
          .select()
@@ -214,55 +218,6 @@ router.post("/:id/helpful", async (req, res) => {
          ...updatedReview,
          has_voted_helpful: hasVoted,
       });
-   } catch (error) {
-      res.status(500).json({
-         error: error?.message || "Internal Server Error",
-      });
-   }
-});
-
-// Create a new review
-router.post("/", async (req, res) => {
-   try {
-      const {
-         restaurant_id,
-         user_id,
-         rating,
-         comment,
-         photo_urls,
-         tags,
-      } = req.body;
-
-      if (
-         !restaurant_id ||
-         !user_id ||
-         rating === undefined
-      ) {
-         return res
-            .status(400)
-            .json({ error: "Missing required fields" });
-      }
-
-      const { data, error } = await supabase
-         .from("reviews")
-         .insert([
-            {
-               restaurant_id,
-               user_id,
-               rating,
-               comment,
-               photo_urls: photo_urls || [],
-               tags: tags || [],
-            },
-         ])
-         .select()
-         .single();
-
-      if (error) {
-         throw error;
-      }
-
-      res.status(201).json(data);
    } catch (error) {
       res.status(500).json({
          error: error?.message || "Internal Server Error",

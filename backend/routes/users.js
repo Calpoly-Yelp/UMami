@@ -43,14 +43,18 @@ function handleServerError(res, label, error) {
  * Supabase auth user ids are UUIDs.
  */
 const userIdParamsSchema = z.object({
-   id: z.string().uuid("Invalid user id format"),
+   id: z
+      .string()
+      .uuid({ message: "Invalid user id format" }),
 });
 
 /**
  * Validation schema for syncing follows.
  */
 const syncFollowsSchema = z.object({
-   follower_id: z.string().uuid("Invalid follower_id"),
+   follower_id: z
+      .string()
+      .uuid({ message: "Invalid follower_id" }),
    added: z.array(z.string().uuid()).optional().default([]),
    removed: z
       .array(z.string().uuid())
@@ -170,7 +174,7 @@ router.get("/:id", async (req, res) => {
          );
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
@@ -229,7 +233,7 @@ router.patch("/:id", async (req, res) => {
       if (error instanceof z.ZodError) {
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
@@ -323,7 +327,7 @@ router.get("/:id/follows", async (req, res) => {
          );
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
@@ -385,7 +389,7 @@ router.post("/follows/sync", async (req, res) => {
          );
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
