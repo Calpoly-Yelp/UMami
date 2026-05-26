@@ -172,10 +172,6 @@ export const scrapeRestaurants = async () => {
 
       // Attempt to extract tags from API fields or infer them from keywords
       const extractTags = (obj, baseName, tagSet) => {
-         if (!obj) {
-            return;
-         }
-
          // 1. Try to grab explicit tags/categories from the API
          const apiCategories =
             obj.categories ||
@@ -752,13 +748,8 @@ export const scrapeRestaurants = async () => {
          balanceCafe.lat = hearthRest.lat;
          balanceCafe.lng = hearthRest.lng;
          balanceCafe.location = hearthRest.location;
-         if (
-            balanceCafe.location_mapping &&
-            hearthRest.location_mapping
-         ) {
-            balanceCafe.location_mapping.locations =
-               hearthRest.location_mapping.locations;
-         }
+         balanceCafe.location_mapping.locations =
+            hearthRest.location_mapping.locations;
       }
 
       const EXCLUDED_LOCATIONS = [
@@ -828,12 +819,15 @@ export const scrapeRestaurants = async () => {
    } catch (error) {
       console.error("Error scraping restaurants:");
       console.error(error); // Logs the full error object, including stack traces and detailed Supabase objects
+      throw error; // Re-throw so manual execution scripts know it failed
    }
 };
 
 // Schedule to run every Monday at 8:00 AM (local server time)
 if (process.env.NODE_ENV !== "test") {
-   cron.schedule("0 8 * * 1", scrapeRestaurants);
+   cron.schedule("0 8 * * 1", () => {
+      scrapeRestaurants().catch(() => {});
+   });
 }
 
 // Allow running the scraper manually from the command line
