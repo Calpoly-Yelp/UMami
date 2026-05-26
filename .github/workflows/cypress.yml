@@ -28,12 +28,11 @@ jobs:
          - name: Cypress run
            uses: cypress-io/github-action@v6
            with:
-              # Start both servers simultaneously using npx concurrently
               start: npx concurrently "npm run dev --prefix backend" "npm run dev --prefix frontend"
-              # Wait for both the frontend and backend to be fully booted up before testing
               wait-on: "http://localhost:5173, http://localhost:4000/api/restaurants"
               wait-on-timeout: 120
            env:
-              # IMPORTANT: Pass any Supabase environment variables your app needs to run!
-              # VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-              # VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+              VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+              VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+              SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+              SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
