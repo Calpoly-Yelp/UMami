@@ -10,13 +10,19 @@ describe("Frontend UI Tests", () => {
       cy.intercept("GET", `${API_URL}/restaurants*`).as(
          "getRestaurants",
       );
+      const reviewMessage = `The tacos were amazing and the service was incredibly fast! - ${Date.now()}`;
+
+      const testEmail = Cypress.env("TEST_EMAIL");
+      const testPassword = Cypress.env("TEST_PASSWORD");
+      expect(testEmail, "Test Email must be defined").to.not
+         .be.undefined;
+      expect(testPassword, "Test Password must be defined")
+         .to.not.be.undefined;
 
       cy.visit(`${FRONTEND_URL}/signin`);
-      cy.get('.auth__input[type="email"]').type(
-         "schifflereli@gmail.com",
-      );
+      cy.get('.auth__input[type="email"]').type(testEmail);
       cy.get('.auth__input[type="password"]').type(
-         "Testing1!",
+         testPassword,
       );
       cy.get('button[type="submit"].auth__primary').click();
 
@@ -44,9 +50,7 @@ describe("Frontend UI Tests", () => {
          'button.wr-star[aria-label="5 stars"]',
       ).click();
 
-      cy.get("textarea.wr-textarea").type(
-         "The tacos were amazing and the service was incredibly fast!",
-      );
+      cy.get("textarea.wr-textarea").type(reviewMessage);
 
       cy.get(".wr-tag-input").type("Fast");
       cy.contains(".wr-tag-option", "Fast").click();
@@ -68,17 +72,13 @@ describe("Frontend UI Tests", () => {
          .its("response.statusCode")
          .should("eq", 201);
 
-      cy.contains(
-         "The tacos were amazing and the service was incredibly fast!",
-      ).should("exist");
+      cy.contains(reviewMessage).should("exist");
 
       cy.intercept("DELETE", `${API_URL}/reviews/*`).as(
          "deleteReview",
       );
 
-      cy.contains(
-         "The tacos were amazing and the service was incredibly fast!",
-      )
+      cy.contains(reviewMessage)
          .parents(".review-card")
          .find(".review-delete-btn")
          .click({ force: true })
@@ -89,5 +89,6 @@ describe("Frontend UI Tests", () => {
 
       cy.get(".profile-icon").click();
       cy.contains(".dropdown-item", "Sign Out").click();
+      cy.url().should("include", "/signin");
    });
 });

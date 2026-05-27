@@ -36,6 +36,8 @@ describe("Backend API Tests", () => {
       const supabaseKey = Cypress.env(
          "VITE_SUPABASE_ANON_KEY",
       );
+      const testEmail = Cypress.env("TEST_EMAIL");
+      const testPassword = Cypress.env("TEST_PASSWORD");
 
       expect(supabaseUrl, "Supabase URL must be defined").to
          .not.be.undefined;
@@ -43,6 +45,10 @@ describe("Backend API Tests", () => {
          supabaseKey,
          "Supabase Anon Key must be defined",
       ).to.not.be.undefined;
+      expect(testEmail, "Test Email must be defined").to.not
+         .be.undefined;
+      expect(testPassword, "Test Password must be defined")
+         .to.not.be.undefined;
 
       cy.request({
          method: "POST",
@@ -51,8 +57,8 @@ describe("Backend API Tests", () => {
             apikey: supabaseKey,
          },
          body: {
-            email: "schifflereli@gmail.com",
-            password: "Testing1!",
+            email: testEmail,
+            password: testPassword,
          },
       }).then((authResponse) => {
          expect(authResponse.status).to.eq(200);
@@ -81,6 +87,8 @@ describe("Backend API Tests", () => {
                method: "DELETE",
                url: `${API_URL}/reviews/${postResponse.body.id}`,
                body: { user_id: userId },
+            }).then((deleteResponse) => {
+               expect(deleteResponse.status).to.eq(200);
             });
          });
       });

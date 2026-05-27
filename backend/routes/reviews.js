@@ -102,7 +102,8 @@ router.post("/", async (req, res) => {
       if (
          !restaurant_id ||
          !user_id ||
-         rating === undefined
+         rating === undefined ||
+         rating === null
       ) {
          return res.status(400).json({
             error: "Missing required fields",
