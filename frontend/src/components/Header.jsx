@@ -623,6 +623,21 @@ function Header() {
                                        <div
                                           key={person.id}
                                           className="search-result-item"
+                                          onClick={() => {
+                                             navigate(
+                                                `/user/${person.id}`,
+                                             );
+                                             setIsSearchOpen(
+                                                false,
+                                             );
+                                             setSearchQuery(
+                                                "",
+                                             );
+                                          }}
+                                          style={{
+                                             cursor:
+                                                "pointer",
+                                          }}
                                        >
                                           {person.avatar_url ? (
                                              <img

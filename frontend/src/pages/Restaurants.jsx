@@ -12,12 +12,13 @@ import Modal from "../components/Modal.jsx";
 import { uploadProfilePhoto } from "../lib/uploadPhoto";
 import { API_BASE_URL } from "../lib/api";
 import "./Restaurants.css";
+import { getIsOpenNow } from "../utils/getIsOpenNow";
 
 function Restaurants({ restaurants: initialRestaurants }) {
    // Search query entered by the user
    const [query, setQuery] = useState("");
 
-   // Filter option: "all", "bookmarked", or "open_now"
+   // Filter option: "all", "bookmarked", "open_now", "closed_now"
    const [filter, setFilter] = useState("all");
 
    // Sort option: "default", "lowest_rating", or "highest_rating"
@@ -165,9 +166,10 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         : r.location || "",
                      tags: r.tags || [],
                      hours: r.hours || [],
+                     location_mapping: r.location_mapping || null,
                      rating_count: r.rating_count ?? 0,
                      rating_sum: r.rating_sum ?? 0,
-                     is_open_now: r.is_open_now ?? false,
+                     is_open_now: getIsOpenNow(r),
                   }),
                );
 
@@ -412,7 +414,15 @@ function Restaurants({ restaurants: initialRestaurants }) {
       // Filter to only currently open restaurants
       if (filter === "open_now") {
          filtered = filtered.filter(
-            (restaurant) => restaurant.is_open_now,
+            (restaurant) => restaurant.is_open_now === true,
+         );
+      }
+
+      // Filter to only currently closed restaurants
+
+      if (filter === "closed_now") {
+         filtered = filtered.filter(
+            (restaurant) => restaurant.is_open_now === false,
          );
       }
 
@@ -548,6 +558,9 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         </option>
                         <option value="open_now">
                            open now
+                        </option>
+                        <option value="closed_now">
+                           closed now
                         </option>
                      </select>
                   </div>
