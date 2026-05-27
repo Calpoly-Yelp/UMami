@@ -10,6 +10,7 @@ import {
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 import "./Header.css";
 
 // Header component that contains the logo, search, notifications, and profile dropdown
@@ -89,7 +90,7 @@ function Header() {
       // sync with database
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${notification.id}/read`,
+            `${API_BASE_URL}/api/notifications/${notification.id}/read`,
             { method: "PATCH" },
          );
       } catch (error) {
@@ -111,7 +112,7 @@ function Header() {
       const userId = "b677be85-81db-4245-91ca-acb713bd5564";
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}/read-all`,
+            `${API_BASE_URL}/api/notifications/${userId}/read-all`,
             {
                method: "PATCH",
             },
@@ -131,7 +132,7 @@ function Header() {
       const userId = "b677be85-81db-4245-91ca-acb713bd5564";
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}/delete-all`,
+            `${API_BASE_URL}/api/notifications/${userId}/delete-all`,
             { method: "DELETE" },
          );
       } catch (error) {
@@ -157,7 +158,7 @@ function Header() {
       // sync request with data base
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${notificationId}`,
+            `${API_BASE_URL}/api/notifications/${notificationId}`,
             {
                method: "DELETE",
             },
@@ -201,7 +202,7 @@ function Header() {
 
          try {
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}`,
+               `${API_BASE_URL}/api/notifications/${userId}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -274,7 +275,7 @@ function Header() {
       const fetchUsers = async () => {
          try {
             const response = await fetch(
-               "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
+               `${API_BASE_URL}/api/users`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -293,7 +294,7 @@ function Header() {
          const fetchFollows = async () => {
             try {
                const response = await fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}/follows`,
+                  `${API_BASE_URL}/api/users/${user.id}/follows`,
                );
                if (response.ok) {
                   const data = await response.json();
@@ -329,7 +330,7 @@ function Header() {
 
       try {
          const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
+            `${API_BASE_URL}/api/users/follows/sync`,
             {
                method: "POST",
                headers: {
@@ -378,7 +379,7 @@ function Header() {
       // Sync with backend
       try {
          const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
+            `${API_BASE_URL}/api/users/follows/sync`,
             {
                method: "POST",
                headers: {

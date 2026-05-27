@@ -17,9 +17,7 @@ import {
    removeProfilePhoto,
 } from "../lib/uploadPhoto";
 import "./User.css";
-
-const API_BASE =
-   "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
+import { API_BASE_URL } from "../lib/api";
 
 function User({
    session,
@@ -133,36 +131,24 @@ function User({
    };
 
    useEffect(() => {
-      const checkScrollInner = (id) => {
-         const el = document.getElementById(`${id}-list`);
-         if (!el) return;
-
-         setCanScroll((prev) => ({
-            ...prev,
-            [id]: {
-               left: el.scrollLeft > 0,
-               right:
-                  Math.ceil(
-                     el.scrollLeft + el.clientWidth,
-                  ) < el.scrollWidth,
-            },
-         }));
-      };
-
-      checkScrollInner("reviews");
-      checkScrollInner("restaurants");
-      checkScrollInner("following");
+      const frame = requestAnimationFrame(() => {
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
+      });
 
       const handleResize = () => {
-         checkScrollInner("reviews");
-         checkScrollInner("restaurants");
-         checkScrollInner("following");
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
       };
 
       window.addEventListener("resize", handleResize);
 
-      return () =>
+      return () => {
+         cancelAnimationFrame(frame);
          window.removeEventListener("resize", handleResize);
+      };
    }, [reviews, restaurants, following]);
 
    const scrollContainer = (containerId, direction) => {
@@ -267,7 +253,7 @@ function User({
 
             try {
                const userResponse = await fetch(
-                  `${API_BASE}/api/users/${profileUserId}`,
+                  `${API_BASE_URL}/api/users/${profileUserId}`,
                );
 
                if (userResponse.ok) {
@@ -300,13 +286,13 @@ function User({
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `${API_BASE}/api/reviews?user_id=${profileUserId}`,
+                  `${API_BASE_URL}/api/reviews?user_id=${profileUser.id}`,
                ),
                fetch(
-                  `${API_BASE}/api/restaurants/bookmarks/${profileUserId}`,
+                  `${API_BASE_URL}/api/restaurants/bookmarks/${profileUser.id}`,
                ),
                fetch(
-                  `${API_BASE}/api/users/${profileUserId}/follows`,
+                  `${API_BASE_URL}/api/users/${profileUser.id}/follows`,
                ),
             ]);
 
@@ -435,7 +421,7 @@ function User({
             return;
 
          fetch(
-            `${API_BASE}/api/restaurants/bookmarks/sync`,
+            `${API_BASE_URL}/api/restaurants/bookmarks/sync`,
             {
                method: "POST",
                headers: {
@@ -485,7 +471,7 @@ function User({
          if (added.length === 0 && removed.length === 0)
             return;
 
-         fetch(`${API_BASE}/api/users/follows/sync`, {
+         fetch(`${API_BASE_URL}/api/users/follows/sync`, {
             method: "POST",
             headers: {
                "Content-Type": "application/json",
@@ -538,7 +524,7 @@ function User({
 
       try {
          const response = await fetch(
-            `${API_BASE}/api/reviews/${reviewId}`,
+            `${API_BASE_URL}/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
@@ -574,13 +560,16 @@ function User({
             user.id,
          );
 
-         await fetch(`${API_BASE}/api/users/${user.id}`, {
-            method: "PATCH",
-            headers: {
-               "Content-Type": "application/json",
+         await fetch(
+            `${API_BASE_URL}/api/users/${user.id}`,
+            {
+               method: "PATCH",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ avatar_url: url }),
             },
-            body: JSON.stringify({ avatar_url: url }),
-         });
+         );
 
          setUser((prev) => ({ ...prev, avatar_url: url }));
 

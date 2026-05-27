@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import SignUp from "../pages/SignUp";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 
 jest.mock("../assets/signup2.jpg", () => "mock-image");
 jest.mock("../assets/logo.png", () => "mock-logo");
@@ -149,7 +150,7 @@ describe("SignUp component", () => {
 
       await waitFor(() => {
          expect(global.fetch).toHaveBeenCalledWith(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
+            `${API_BASE_URL}/api/users`,
             {
                method: "POST",
                headers: {

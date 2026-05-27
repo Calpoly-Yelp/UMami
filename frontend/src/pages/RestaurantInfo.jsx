@@ -21,6 +21,7 @@ import {
    CaretRight,
 } from "@phosphor-icons/react";
 import { useBookmarks } from "../hooks/useBookmarks";
+import { API_BASE_URL } from "../lib/api";
 
 export default function Review() {
    const navigate = useNavigate();
@@ -430,7 +431,7 @@ export default function Review() {
    // Fetches all the individual reviews associated with this restaurant
    const fetchReviews = useCallback(async () => {
       try {
-         let url = `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?restaurant_id=${id}`;
+         let url = `${API_BASE_URL}/api/reviews?restaurant_id=${id}`;
          if (CURRENT_USER_ID) {
             url += `&current_user_id=${CURRENT_USER_ID}`;
          }
@@ -467,7 +468,7 @@ export default function Review() {
    const fetchRestaurant = useCallback(async () => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+            `${API_BASE_URL}/api/restaurants/${id}`,
          );
          if (response.ok) {
             const data = await response.json();
@@ -539,7 +540,7 @@ export default function Review() {
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
+            `${API_BASE_URL}/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
