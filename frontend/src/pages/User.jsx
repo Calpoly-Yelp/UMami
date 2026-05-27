@@ -131,9 +131,11 @@ function User({
    };
 
    useEffect(() => {
-      checkScroll("reviews");
-      checkScroll("restaurants");
-      checkScroll("following");
+      const frame = requestAnimationFrame(() => {
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
+      });
 
       const handleResize = () => {
          checkScroll("reviews");
@@ -143,8 +145,10 @@ function User({
 
       window.addEventListener("resize", handleResize);
 
-      return () =>
+      return () => {
+         cancelAnimationFrame(frame);
          window.removeEventListener("resize", handleResize);
+      };
    }, [reviews, restaurants, following]);
 
    const scrollContainer = (containerId, direction) => {
