@@ -19,9 +19,6 @@ import {
 import "./User.css";
 import { API_BASE_URL } from "../lib/api";
 
-const API_BASE =
-   "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
-
 function User({
    session,
    user: initialUser,
@@ -134,30 +131,14 @@ function User({
    };
 
    useEffect(() => {
-      const checkScrollInner = (id) => {
-         const el = document.getElementById(`${id}-list`);
-         if (!el) return;
-
-         setCanScroll((prev) => ({
-            ...prev,
-            [id]: {
-               left: el.scrollLeft > 0,
-               right:
-                  Math.ceil(
-                     el.scrollLeft + el.clientWidth,
-                  ) < el.scrollWidth,
-            },
-         }));
-      };
-
-      checkScrollInner("reviews");
-      checkScrollInner("restaurants");
-      checkScrollInner("following");
+      checkScroll("reviews");
+      checkScroll("restaurants");
+      checkScroll("following");
 
       const handleResize = () => {
-         checkScrollInner("reviews");
-         checkScrollInner("restaurants");
-         checkScrollInner("following");
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
       };
 
       window.addEventListener("resize", handleResize);
@@ -268,7 +249,7 @@ function User({
 
             try {
                const userResponse = await fetch(
-                  `${API_BASE}/api/users/${profileUserId}`,
+                  `${API_BASE_URL}/api/users/${profileUserId}`,
                );
 
                if (userResponse.ok) {
@@ -301,13 +282,13 @@ function User({
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `${API_BASE_URL}/api/reviews?user_id=${userData.id}`,
+                  `${API_BASE_URL}/api/reviews?user_id=${profileUser.id}`,
                ),
                fetch(
-                  `${API_BASE_URL}/api/restaurants/bookmarks/${userData.id}`,
+                  `${API_BASE_URL}/api/restaurants/bookmarks/${profileUser.id}`,
                ),
                fetch(
-                  `${API_BASE_URL}/api/users/${userData.id}/follows`,
+                  `${API_BASE_URL}/api/users/${profileUser.id}/follows`,
                ),
             ]);
 
@@ -492,7 +473,7 @@ function User({
                "Content-Type": "application/json",
             },
             body: JSON.stringify({
-               follower_id: userId,
+               follower_id: userIdToSync,
                added,
                removed,
             }),
@@ -584,8 +565,7 @@ function User({
                },
                body: JSON.stringify({ avatar_url: url }),
             },
-            body: JSON.stringify({ avatar_url: url }),
-         });
+         );
 
          setUser((prev) => ({ ...prev, avatar_url: url }));
 
