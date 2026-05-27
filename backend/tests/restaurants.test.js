@@ -283,6 +283,64 @@ describe("Restaurant Endpoints", () => {
       );
    });
 
+   it("GET /api/restaurants/:id/menu should handle null data", async () => {
+      const query = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: null, error: null }),
+      };
+
+      supabase.from.mockReturnValue(query);
+
+      const res = await request(app).get(
+         "/api/restaurants/108/menu",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual([]);
+   });
+
+   it("GET /api/restaurants/:id/menu should group items without category under 'Uncategorized'", async () => {
+      const mockMenuItems = [
+         {
+            id: 1,
+            restaurant_id: 108,
+            category: null,
+            name: "Mystery Item",
+         },
+      ];
+      const query = {
+         select: jest.fn().mockReturnThis(),
+         eq: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         then: (resolve) =>
+            resolve({ data: mockMenuItems, error: null }),
+      };
+
+      supabase.from.mockReturnValue(query);
+
+      const res = await request(app).get(
+         "/api/restaurants/108/menu",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body[0].category).toBe("Uncategorized");
+      expect(res.body[0].items[0].name).toBe(
+         "Mystery Item",
+      );
+   });
+
+   it("GET /api/restaurants/:id/menu should reject invalid meal period", async () => {
+      const res = await request(app).get(
+         "/api/restaurants/108/menu?meal_period=lunch&meal_period=dinner",
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("Invalid meal period");
+   });
+
    it("GET /api/restaurants/:id/menu should reject invalid restaurant ids", async () => {
       const res = await request(app).get(
          "/api/restaurants/not-a-number/menu",

@@ -18,7 +18,7 @@ jobs:
 
       # Pass Supabase credentials from GitHub Secrets as environment variables
       env:
-         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+         SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
 
       steps:
