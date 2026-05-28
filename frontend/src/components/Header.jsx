@@ -22,6 +22,7 @@ function Header() {
       useState(false);
    const [isSearchOpen, setIsSearchOpen] = useState(false);
    const [searchQuery, setSearchQuery] = useState("");
+   const [isSearching, setIsSearching] = useState(false);
    const [allUsers, setAllUsers] = useState([]);
    const [followedSet, setFollowedSet] = useState(
       new Set(),
@@ -272,21 +273,34 @@ function Header() {
 
    // logic for fetching all users for search
    useEffect(() => {
-      const fetchUsers = async () => {
+      if (!isSearchOpen || searchQuery.trim() === "") {
+         setAllUsers([]);
+         setIsSearching(false);
+         return;
+      }
+
+      setIsSearching(true);
+
+      // Debounce: Wait 300ms after the user stops typing before making the request
+      const delayDebounceFn = setTimeout(async () => {
          try {
             const response = await fetch(
-               `${API_BASE_URL}/api/users`,
+               `${API_BASE_URL}/api/users?search=${encodeURIComponent(searchQuery.trim())}`,
             );
             if (response.ok) {
                const data = await response.json();
+               console.log("Fetched users:", data);
                setAllUsers(data);
             }
          } catch (error) {
             console.error("Error fetching users:", error);
+         } finally {
+            setIsSearching(false);
          }
-      };
-      fetchUsers();
-   }, []);
+      }, 300);
+
+      return () => clearTimeout(delayDebounceFn);
+   }, [isSearchOpen, searchQuery]);
 
    // logic for fetching users the current user follows
    useEffect(() => {
@@ -412,12 +426,7 @@ function Header() {
       searchQuery.trim() === ""
          ? []
          : allUsers.filter(
-              (p) =>
-                 p.id !== user?.id && // filter out the logged in user
-                 p.name &&
-                 p.name
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()),
+              (p) => p.id !== user?.id && p.name,
            );
 
    return (
@@ -615,7 +624,11 @@ function Header() {
                   {searchQuery.trim() !== "" && (
                      <div className="search-results-wrapper">
                         <div className="search-results">
-                           {filteredPeople.length > 0 ? (
+                           {isSearching ? (
+                              <div className="search-result-empty">
+                                 Searching...
+                              </div>
+                           ) : filteredPeople.length > 0 ? (
                               <>
                                  <div className="search-result-spacer" />
                                  {filteredPeople.map(

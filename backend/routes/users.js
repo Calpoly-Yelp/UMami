@@ -64,14 +64,22 @@ const syncFollowsSchema = z.object({
 
 // ===============================
 // GET /api/users
-// Get up to 50 users
+// Get users, optionally filtered by search
 // ===============================
 router.get("/", async (req, res) => {
    try {
-      const { data, error } = await supabase
+      const { search } = req.query;
+
+      let query = supabase
          .from("users")
          .select("*")
-         .limit(50);
+         .order("created_at", { ascending: false });
+
+      if (search) {
+         query = query.ilike("name", `%${search}%`);
+      }
+
+      const { data, error } = await query.limit(50);
 
       if (error) {
          throw error;

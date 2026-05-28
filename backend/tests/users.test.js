@@ -63,6 +63,8 @@ describe("User Endpoints", () => {
 
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: mockUsers,
             error: null,
@@ -80,6 +82,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should handle null data gracefully", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: null,
             error: null,
@@ -95,6 +99,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should handle errors", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest
             .fn()
             .mockRejectedValue(new Error("Database error")),
@@ -109,6 +115,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should throw on returned DB error", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: null,
             error: { message: " returned error" },
@@ -126,6 +134,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should catch unexpected errors", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockImplementation(() => {
             throw new Error("Unexpected error");
          }),
@@ -140,6 +150,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should handle errors without a message", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: null,
             error: {}, // No message property
