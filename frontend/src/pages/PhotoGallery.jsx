@@ -2,12 +2,31 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./PhotoGallery.css";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 
-// Extract photo URLs from a review row
-const getPhotoUrls = (review) =>
-   Array.isArray(review.photo_urls)
-      ? review.photo_urls
-      : [];
+const getPhotosByType = (review, type) => {
+   if (!Array.isArray(review.photo_urls)) {
+      return [];
+   }
+
+   return review.photo_urls.filter(
+      (photo) =>
+         photo?.url &&
+         photo?.type?.toLowerCase() === type.toLowerCase(),
+   );
+};
+
+const getPhotoCaption = (photo) => {
+   if (!photo || typeof photo !== "object") {
+      return null;
+   }
+
+   if (photo.type === "Menu Item" && photo.item) {
+      return photo.item;
+   }
+
+   return photo.type || null;
+};
 
 export default function PhotoGallery() {
    const navigate = useNavigate();
@@ -24,7 +43,17 @@ export default function PhotoGallery() {
       useState(true);
    const [photoError, setPhotoError] = useState("");
 
-   const menuItemPhotos = reviews.flatMap(getPhotoUrls);
+   const menuItemPhotos = reviews.flatMap((review) =>
+      getPhotosByType(review, "Menu Item"),
+   );
+
+   const ambiancePhotos = reviews.flatMap((review) =>
+      getPhotosByType(review, "Ambiance"),
+   );
+
+   const otherPhotos = reviews.flatMap((review) =>
+      getPhotosByType(review, "Other"),
+   );
 
    const galleryTabs = [
       {
@@ -35,52 +64,55 @@ export default function PhotoGallery() {
       {
          label: "Ambiance",
          key: "ambiance",
-         photos: [],
+         photos: ambiancePhotos,
       },
       {
          label: "Other",
          key: "other",
-         photos: [],
+         photos: otherPhotos,
       },
    ];
-
-   // Ambiance and Other are empty for now.
-   // TODO: Add photo categorization to the database.
 
    const selectedGallery =
       galleryTabs.find((tab) => tab.key === activeTab) ||
       galleryTabs[0];
 
-   // Fetch restaurant name and banner image for hero
    useEffect(() => {
       const fetchRestaurant = async () => {
          try {
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+               `${API_BASE_URL}/api/restaurants/${id}`,
             );
 
-            if (response.ok) {
-               const data = await response.json();
-               setRestaurantName(data.name);
-               setRestaurantBanner(
-                  data.image_urls?.[0] || null,
-               );
-            } else {
+            if (!response.ok) {
                setRestaurantName("Unknown Restaurant");
+               setRestaurantBanner(null);
+               return;
             }
+
+            const data = await response.json();
+
+            setRestaurantName(
+               data.name || "Unknown Restaurant",
+            );
+            setRestaurantBanner(
+               data.image_urls?.[0] || null,
+            );
          } catch (error) {
             console.error(
                "Failed to fetch restaurant:",
                error,
             );
             setRestaurantName("Unknown Restaurant");
+            setRestaurantBanner(null);
          }
       };
 
-      fetchRestaurant();
+      if (id) {
+         fetchRestaurant();
+      }
    }, [id]);
 
-   // Fetch reviews that contain photos from Supabase
    useEffect(() => {
       const fetchPhotos = async () => {
          try {
@@ -204,24 +236,40 @@ export default function PhotoGallery() {
                selectedGallery.photos.length > 0 && (
                   <div className="photo-grid">
                      {selectedGallery.photos.map(
-                        (url, index) => (
-                           <button
-                              type="button"
-                              className="photo-card"
-                              key={`${url}-${index}`}
-                           >
-                              <img
-                                 src={url}
-                                 alt={`${restaurantName} review ${index + 1}`}
-                                 onError={() =>
-                                    console.error(
-                                       "Image failed:",
-                                       url,
-                                    )
-                                 }
-                              />
-                           </button>
-                        ),
+                        (photo, index) => {
+                           const caption =
+                              getPhotoCaption(photo);
+
+                           return (
+                              <button
+                                 type="button"
+                                 className="photo-card"
+                                 key={`${photo.url}-${index}`}
+                              >
+                                 <div className="photo-wrapper">
+                                    <img
+                                       src={photo.url}
+                                       alt={
+                                          caption ||
+                                          `${restaurantName} photo ${index + 1}`
+                                       }
+                                       onError={() =>
+                                          console.error(
+                                             "Image failed:",
+                                             photo.url,
+                                          )
+                                       }
+                                    />
+
+                                    {caption && (
+                                       <div className="photo-caption">
+                                          {caption}
+                                       </div>
+                                    )}
+                                 </div>
+                              </button>
+                           );
+                        },
                      )}
                   </div>
                )}

@@ -125,7 +125,14 @@ function AppLayout() {
                      </ProtectedRoute>
                   }
                />
-
+               <Route
+                  path="/user/:userId"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <UserPage session={session} />
+                     </ProtectedRoute>
+                  }
+               />
                <Route
                   path="/restaurants"
                   element={
@@ -135,7 +142,6 @@ function AppLayout() {
                   }
                />
 
-               {/* NEW ROUTES FROM MAIN */}
                <Route
                   path="/restaurants/:id"
                   element={
@@ -176,6 +182,7 @@ function AppLayout() {
       </div>
    );
 }
+
 export default function App() {
    return (
       <BrowserRouter>

@@ -337,8 +337,8 @@ describe("Review Endpoints", () => {
             user_id: "b677be85-81db-4245-91ca-acb713bd5564",
             rating: 5,
             comment: "Test",
-            photo_urls: undefined,
-            tags: undefined,
+            photo_urls: [],
+            tags: [],
          },
       ]);
    });
@@ -519,7 +519,7 @@ describe("Review Endpoints", () => {
 
       expect(res.statusCode).toBe(400);
       expect(res.body.error).toBe(
-         "user_id and rating are required",
+         "Missing required fields",
       );
    });
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { API_BASE_URL } from "../lib/api";
 import "./RestaurantMenu.css";
 
 const displayValue = (value) =>
@@ -24,7 +25,7 @@ export default function RestaurantMenu() {
       const fetchRestaurant = async () => {
          try {
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+               `${API_BASE_URL}/api/restaurants/${id}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -53,7 +54,7 @@ export default function RestaurantMenu() {
             setIsMenuLoading(true);
             setMenuError("");
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}/menu`,
+               `${API_BASE_URL}/api/restaurants/${id}/menu`,
             );
 
             if (!response.ok) {

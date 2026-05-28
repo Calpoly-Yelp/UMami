@@ -10,13 +10,15 @@ import { MagnifyingGlass } from "@phosphor-icons/react";
 import { supabase } from "../lib/supabase";
 import Modal from "../components/Modal.jsx";
 import { uploadProfilePhoto } from "../lib/uploadPhoto";
+import { API_BASE_URL } from "../lib/api";
 import "./Restaurants.css";
+import { getIsOpenNow } from "../utils/getIsOpenNow";
 
 function Restaurants({ restaurants: initialRestaurants }) {
    // Search query entered by the user
    const [query, setQuery] = useState("");
 
-   // Filter option: "all", "bookmarked", or "open_now"
+   // Filter option: "all", "bookmarked", "open_now", "closed_now"
    const [filter, setFilter] = useState("all");
 
    // Sort option: "default", "lowest_rating", or "highest_rating"
@@ -88,7 +90,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                if (!hasSkipped) {
                   try {
                      const userRes = await fetch(
-                        `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
+                        `${API_BASE_URL}/api/users/${user.id}`,
                      );
                      const userData = await userRes.json();
 
@@ -131,7 +133,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
             // Only fetch from backend if no restaurants were passed in as props
             if (!initialRestaurants) {
                const restaurantsResponse = await fetch(
-                  "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants",
+                  `${API_BASE_URL}/api/restaurants`,
                );
 
                if (!restaurantsResponse.ok) {
@@ -164,9 +166,11 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         : r.location || "",
                      tags: r.tags || [],
                      hours: r.hours || [],
+                     location_mapping:
+                        r.location_mapping || null,
                      rating_count: r.rating_count ?? 0,
                      rating_sum: r.rating_sum ?? 0,
-                     is_open_now: r.is_open_now ?? false,
+                     is_open_now: getIsOpenNow(r),
                   }),
                );
 
@@ -223,7 +227,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
          // Save the new avatar URL to the user's record in the database
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userId}`,
+            `${API_BASE_URL}/api/users/${userId}`,
             {
                method: "PATCH",
                headers: {
@@ -274,16 +278,10 @@ function Restaurants({ restaurants: initialRestaurants }) {
             "true",
          );
 
-         // Use localhost in dev, Azure in production
-         const baseUrl =
-            window.location.hostname === "localhost"
-               ? "http://localhost:4000"
-               : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
-
          // Send a persistent notification reminding them to add a photo
          try {
             const res = await fetch(
-               `${baseUrl}/api/notifications`,
+               `${API_BASE_URL}/api/notifications`,
                {
                   method: "POST",
                   headers: {
@@ -417,7 +415,16 @@ function Restaurants({ restaurants: initialRestaurants }) {
       // Filter to only currently open restaurants
       if (filter === "open_now") {
          filtered = filtered.filter(
-            (restaurant) => restaurant.is_open_now,
+            (restaurant) => restaurant.is_open_now === true,
+         );
+      }
+
+      // Filter to only currently closed restaurants
+
+      if (filter === "closed_now") {
+         filtered = filtered.filter(
+            (restaurant) =>
+               restaurant.is_open_now === false,
          );
       }
 
@@ -526,7 +533,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                   />
                   <input
                      className="search-input"
-                     placeholder="Search restaurants"
+                     placeholder="Search restaurants and interests"
                      value={query}
                      onChange={(e) =>
                         setQuery(e.target.value)
@@ -553,6 +560,9 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         </option>
                         <option value="open_now">
                            open now
+                        </option>
+                        <option value="closed_now">
+                           closed now
                         </option>
                      </select>
                   </div>

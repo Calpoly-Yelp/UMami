@@ -78,9 +78,9 @@ describe("PhotoUpload component", () => {
          screen.getByText(/what menu item is this\?/i),
       ).toBeInTheDocument();
 
-      expect(screen.getAllByRole("combobox")).toHaveLength(
-         2,
-      );
+      expect(
+         screen.getByPlaceholderText(/search menu items/i),
+      ).toBeInTheDocument();
    });
 
    test("hides menu item dropdown when switched away from Menu Item", async () => {
@@ -205,10 +205,10 @@ describe("PhotoUpload component", () => {
          "Menu Item",
       );
 
-      const selects = screen.getAllByRole("combobox");
-      const menuItemSelect = selects[1];
-
-      await user.selectOptions(menuItemSelect, "Menu Item");
+      const searchInput = screen.getByPlaceholderText(
+         /search menu items/i,
+      );
+      await user.type(searchInput, "Menu Item");
 
       const fileInput =
          container.querySelector(".file-input");

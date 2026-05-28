@@ -21,6 +21,17 @@ import {
    CaretRight,
 } from "@phosphor-icons/react";
 import { useBookmarks } from "../hooks/useBookmarks";
+import { API_BASE_URL } from "../lib/api";
+
+// Helper to get Menu Item Photos
+const getMenuItemPhotos = (reviews) =>
+   reviews.flatMap((review) =>
+      (review.photos || []).filter(
+         (photo) =>
+            photo?.url &&
+            photo?.type?.toLowerCase() === "menu item",
+      ),
+   );
 
 export default function Review() {
    const navigate = useNavigate();
@@ -427,10 +438,15 @@ export default function Review() {
 
    const [reviews, setReviews] = useState([]);
 
+   const menuItemPhotos = useMemo(
+      () => getMenuItemPhotos(reviews),
+      [reviews],
+   );
+
    // Fetches all the individual reviews associated with this restaurant
    const fetchReviews = useCallback(async () => {
       try {
-         let url = `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?restaurant_id=${id}`;
+         let url = `${API_BASE_URL}/api/reviews?restaurant_id=${id}`;
          if (CURRENT_USER_ID) {
             url += `&current_user_id=${CURRENT_USER_ID}`;
          }
@@ -467,7 +483,7 @@ export default function Review() {
    const fetchRestaurant = useCallback(async () => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+            `${API_BASE_URL}/api/restaurants/${id}`,
          );
          if (response.ok) {
             const data = await response.json();
@@ -539,7 +555,7 @@ export default function Review() {
    const handleDeleteReview = async (reviewId) => {
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
+            `${API_BASE_URL}/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
@@ -903,21 +919,26 @@ export default function Review() {
                      id="menu-carousel-list"
                      onScroll={checkMenuScroll}
                   >
-                     {restaurant.menuImages.map(
-                        (src, idx) => (
-                           <div
-                              key={idx}
-                              className="review__menuImgWrap"
-                           >
-                              <img
-                                 className="review__menuImg"
-                                 src={src}
-                                 alt={`menu ${idx + 1}`}
-                                 loading="lazy"
-                              />
+                     {menuItemPhotos.map((photo, idx) => (
+                        <div
+                           key={`${photo.url}-${idx}`}
+                           className="review__menuImgWrap"
+                        >
+                           <img
+                              className="review__menuImg"
+                              src={photo.url}
+                              alt={
+                                 photo.item ||
+                                 `menu item ${idx + 1}`
+                              }
+                              loading="lazy"
+                           />
+
+                           <div className="review__photoCaption">
+                              {photo.item || "Menu Item"}
                            </div>
-                        ),
-                     )}
+                        </div>
+                     ))}
                   </div>
 
                   {canScrollMenu.right && (
@@ -1015,10 +1036,6 @@ export default function Review() {
                                  ),
                               ),
                         )}
-                     </div>
-
-                     <div className="orderIndicator">
-                        order in-person
                      </div>
                   </div>
 

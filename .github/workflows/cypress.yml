@@ -1,0 +1,40 @@
+name: Cypress E2E Tests
+
+on:
+   pull_request:
+      branches: ["main"]
+
+jobs:
+   cypress-run:
+      runs-on: ubuntu-latest
+      steps:
+         - name: Checkout Code
+           uses: actions/checkout@v4
+
+         - name: Setup Node.js
+           uses: actions/setup-node@v4
+           with:
+              node-version: "20"
+
+         - name: Install Root Dependencies
+           run: npm install
+
+         - name: Install Backend Dependencies
+           run: npm install --prefix backend
+
+         - name: Install Frontend Dependencies
+           run: npm install --prefix frontend
+
+         - name: Cypress run
+           uses: cypress-io/github-action@v6
+           with:
+              start: npx concurrently "npm run dev --prefix backend" "npm run dev --prefix frontend"
+              wait-on: "http://localhost:5173,http://localhost:4000/api/restaurants"
+              wait-on-timeout: 120
+           env:
+              VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+              VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+              SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+              SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+              TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+              TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
