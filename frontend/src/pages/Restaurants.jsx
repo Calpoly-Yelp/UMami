@@ -533,7 +533,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                   />
                   <input
                      className="search-input"
-                     placeholder="Search restaurants"
+                     placeholder="Search restaurants and interests"
                      value={query}
                      onChange={(e) =>
                         setQuery(e.target.value)

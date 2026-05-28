@@ -927,7 +927,10 @@ export default function Review() {
                            <img
                               className="review__menuImg"
                               src={photo.url}
-                              alt={photo.item || `menu item ${idx + 1}`}
+                              alt={
+                                 photo.item ||
+                                 `menu item ${idx + 1}`
+                              }
                               loading="lazy"
                            />
 
