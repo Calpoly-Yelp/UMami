@@ -5,6 +5,7 @@ import {
    ThumbsUp,
    Trash,
 } from "@phosphor-icons/react";
+import { API_BASE_URL } from "../lib/api";
 import "./ReviewCard.css";
 
 function ReviewCard({
@@ -180,7 +181,7 @@ function ReviewCard({
          const CURRENT_USER_ID =
             "b677be85-81db-4245-91ca-acb713bd5564";
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${review.id}/helpful`,
+            `${API_BASE_URL}/api/reviews/${review.id}/helpful`,
             {
                method: "POST",
                headers: {
@@ -384,19 +385,39 @@ function ReviewCard({
                         typeof photo === "string"
                            ? photo
                            : photo?.url;
+
+                     const typeLabel =
+                        typeof photo === "object" &&
+                        photo !== null
+                           ? photo.type === "Menu Item" &&
+                             photo.item
+                              ? photo.item
+                              : photo.type
+                           : null;
+
                      const alt =
-                        typeof photo === "string"
-                           ? `Review photo ${index + 1}`
-                           : photo?.alt ||
-                             `Review photo ${index + 1}`;
+                        typeLabel ||
+                        (typeof photo === "object"
+                           ? photo?.alt
+                           : null) ||
+                        `Review photo ${index + 1}`;
 
                      return (
-                        <img
+                        <div
                            key={src || index}
-                           className="review-photo"
-                           src={src}
-                           alt={alt}
-                        />
+                           className="review-photo-wrapper"
+                        >
+                           <img
+                              className="review-photo"
+                              src={src}
+                              alt={alt}
+                           />
+                           {typeLabel && (
+                              <div className="review-photo-caption">
+                                 {typeLabel}
+                              </div>
+                           )}
+                        </div>
                      );
                   })}
                </div>

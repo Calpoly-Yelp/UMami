@@ -54,13 +54,16 @@ describe("WriteReview component", () => {
    beforeEach(() => {
       jest.clearAllMocks();
 
-      global.fetch = jest.fn(() =>
-         Promise.resolve({
+      global.fetch = jest.fn((url) => {
+         if (url && url.includes("/menu")) {
+            return new Promise(() => {}); // Hangs the promise to prevent the state update act() warning
+         }
+         return Promise.resolve({
             ok: true,
             json: () =>
                Promise.resolve({ id: 123, rating: 4 }),
-         }),
-      );
+         });
+      });
    });
 
    test("renders the basic UI elements", () => {

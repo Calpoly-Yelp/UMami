@@ -20,6 +20,7 @@ import {
    Route,
 } from "react-router-dom";
 import RestaurantMenu from "../pages/RestaurantMenu.jsx";
+import { API_BASE_URL } from "../lib/api";
 
 // Custom render function that wraps components in MemoryRouter so React Router hooks work
 const render = (ui, options) =>
@@ -138,7 +139,7 @@ describe("Restaurant Menu Page", () => {
          ).toBeInTheDocument();
       });
       expect(global.fetch).toHaveBeenCalledWith(
-         "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/1/menu",
+         `${API_BASE_URL}/api/restaurants/1/menu`,
       );
    });
 

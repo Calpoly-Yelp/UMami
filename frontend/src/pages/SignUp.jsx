@@ -4,6 +4,7 @@ import "./SignUp.css";
 import heroImg from "../assets/signup2.jpg";
 import logo from "../assets/logo.png";
 import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 
 export default function SignUp() {
    const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function SignUp() {
          }
 
          const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
+            `${API_BASE_URL}/api/users`,
             {
                method: "POST",
                headers: {
