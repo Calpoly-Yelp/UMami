@@ -94,6 +94,7 @@ function User({
    const followingIdsRef = useRef(new Set());
 
    const fileInputRef = useRef(null);
+   const profilePhotoPreviewUrlRef = useRef("");
 
    const [uploadingPhoto, setUploadingPhoto] =
       useState(false);
@@ -554,21 +555,25 @@ function User({
    };
 
    useEffect(() => {
-      if (!selectedProfilePhoto) {
-         setProfilePhotoPreviewUrl("");
-         return undefined;
-      }
-
-      const objectUrl = URL.createObjectURL(
-         selectedProfilePhoto,
-      );
-      setProfilePhotoPreviewUrl(objectUrl);
-
-      return () => URL.revokeObjectURL(objectUrl);
-   }, [selectedProfilePhoto]);
+      return () => {
+         if (profilePhotoPreviewUrlRef.current) {
+            URL.revokeObjectURL(
+               profilePhotoPreviewUrlRef.current,
+            );
+         }
+      };
+   }, []);
 
    const resetSelectedProfilePhoto = () => {
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+         profilePhotoPreviewUrlRef.current = "";
+      }
+
       setSelectedProfilePhoto(null);
+      setProfilePhotoPreviewUrl("");
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
@@ -580,7 +585,17 @@ function User({
       const file = e.target.files?.[0];
       if (!file || !user.id) return;
 
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      profilePhotoPreviewUrlRef.current = objectUrl;
+
       setSelectedProfilePhoto(file);
+      setProfilePhotoPreviewUrl(objectUrl);
    };
 
    const handleChooseDifferentPhoto = () => {

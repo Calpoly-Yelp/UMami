@@ -62,6 +62,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
    // Ref to the hidden file input for profile photo selection
    const fileInputRef = useRef(null);
+   const profilePhotoPreviewUrlRef = useRef("");
 
    const navigate = useNavigate();
 
@@ -223,21 +224,25 @@ function Restaurants({ restaurants: initialRestaurants }) {
    }, [initialRestaurants]);
 
    useEffect(() => {
-      if (!selectedProfilePhoto) {
-         setProfilePhotoPreviewUrl("");
-         return undefined;
-      }
-
-      const objectUrl = URL.createObjectURL(
-         selectedProfilePhoto,
-      );
-      setProfilePhotoPreviewUrl(objectUrl);
-
-      return () => URL.revokeObjectURL(objectUrl);
-   }, [selectedProfilePhoto]);
+      return () => {
+         if (profilePhotoPreviewUrlRef.current) {
+            URL.revokeObjectURL(
+               profilePhotoPreviewUrlRef.current,
+            );
+         }
+      };
+   }, []);
 
    const resetSelectedProfilePhoto = () => {
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+         profilePhotoPreviewUrlRef.current = "";
+      }
+
       setSelectedProfilePhoto(null);
+      setProfilePhotoPreviewUrl("");
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
@@ -247,7 +252,17 @@ function Restaurants({ restaurants: initialRestaurants }) {
       const file = e.target.files?.[0];
       if (!file || !userId) return;
 
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      profilePhotoPreviewUrlRef.current = objectUrl;
+
       setSelectedProfilePhoto(file);
+      setProfilePhotoPreviewUrl(objectUrl);
    };
 
    const handleChooseDifferentProfilePhoto = () => {
