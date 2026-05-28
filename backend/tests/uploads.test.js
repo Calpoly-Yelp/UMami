@@ -132,8 +132,8 @@ describe("Uploads Endpoints", () => {
             );
 
          expect(res.statusCode).toBe(201);
-         expect(res.body.url).toBe(
-            "http://example.com/image.png",
+         expect(res.body.url).toMatch(
+            /^http:\/\/example\.com\/image\.png\?v=\d+$/,
          );
          expect(supabase.storage.from).toHaveBeenCalledWith(
             "profile-photos",
@@ -150,8 +150,8 @@ describe("Uploads Endpoints", () => {
             );
 
          expect(res.statusCode).toBe(201);
-         expect(res.body.url).toBe(
-            "http://example.com/image.png",
+         expect(res.body.url).toMatch(
+            /^http:\/\/example\.com\/image\.png\?v=\d+$/,
          );
       });
 

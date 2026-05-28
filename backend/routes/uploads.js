@@ -84,9 +84,13 @@ router.post(
             .from(AVATAR_BUCKET)
             .getPublicUrl(fileName);
 
-         return res
-            .status(201)
-            .json({ url: data.publicUrl });
+         const separator = data.publicUrl.includes("?")
+            ? "&"
+            : "?";
+
+         return res.status(201).json({
+            url: `${data.publicUrl}${separator}v=${Date.now()}`,
+         });
       } catch (err) {
          console.error("Profile photo upload error:", err);
          return res
