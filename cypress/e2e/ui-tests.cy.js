@@ -91,4 +91,95 @@ describe("Frontend UI Tests", () => {
       cy.contains(".dropdown-item", "Sign Out").click();
       cy.url().should("include", "/signin");
    });
+
+   it("should simulate user following, bookmarking, and profile navigation", () => {
+      cy.intercept("GET", `${API_URL}/restaurants*`).as(
+         "getRestaurants",
+      );
+
+      const testEmail = Cypress.env("TEST_EMAIL");
+      const testPassword = Cypress.env("TEST_PASSWORD");
+      expect(testEmail, "Test Email must be defined").to.not
+         .be.undefined;
+      expect(testPassword, "Test Password must be defined")
+         .to.not.be.undefined;
+
+      // 1. Log in
+      cy.visit(`${FRONTEND_URL}/signin`);
+      cy.get('.auth__input[type="email"]').type(testEmail);
+      cy.get('.auth__input[type="password"]').type(
+         testPassword,
+      );
+      cy.get('button[type="submit"].auth__primary').click();
+
+      cy.wait("@getRestaurants");
+      cy.get(".profile-icon").should("be.visible");
+
+      // 2. Follow 'musty mustang' in the search bar
+      cy.intercept("GET", `${API_URL}/users?search=*`).as(
+         "searchUsers",
+      );
+      cy.get(".search-icon").first().click();
+      cy.get(".search-modal-input").type("musty mustang");
+      cy.wait("@searchUsers");
+
+      cy.contains(".search-result-name", /musty mustang/i)
+         .parents(".search-result-item")
+         .find("button.follow-btn")
+         .click({ force: true });
+
+      cy.get(".search-modal-close").click();
+
+      // 3. Bookmark a noodles restaurant
+      cy.contains(".restaurant-name", /noodle/i)
+         .parents(".restaurant-card")
+         .find(".bookmark-button")
+         .click({ force: true });
+
+      // 4. Enter the user page via the header
+      cy.get(".profile-icon").click();
+      cy.contains(".dropdown-item", "My Account").click();
+      cy.url().should("include", "/user");
+
+      // 5. Click the restaurant the user bookmarked
+      cy.get("#restaurants-list")
+         .contains(".restaurant-name", /noodle/i)
+         .click({ force: true });
+      cy.url().should("include", "/restaurants/");
+
+      // 6. Go back to user page
+      cy.get(".profile-icon").click();
+      cy.contains(".dropdown-item", "My Account").click();
+      cy.url().should("include", "/user");
+
+      // 7. Unbookmark the restaurant
+      cy.get("#restaurants-list")
+         .contains(".restaurant-name", /noodle/i)
+         .parents(".restaurant-card")
+         .find(".bookmark-button")
+         .click({ force: true });
+
+      // 8. Enter 'musty mustang' user page via the users followed list
+      cy.get("#following-list")
+         .contains(/musty mustang/i)
+         .click({ force: true });
+      cy.url().should("include", "/user/");
+
+      // 9. Go back to the user page
+      cy.get(".profile-icon").click();
+      cy.contains(".dropdown-item", "My Account").click();
+      cy.url().should("include", "/user");
+
+      // 10. Unfollow musty
+      cy.get("#following-list")
+         .contains(/musty mustang/i)
+         .parents(".followed-user-card")
+         .find(".follow-button")
+         .click({ force: true });
+
+      // 11. Sign out via the header
+      cy.get(".profile-icon").click();
+      cy.contains(".dropdown-item", "Sign Out").click();
+      cy.url().should("include", "/signin");
+   });
 });

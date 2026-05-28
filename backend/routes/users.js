@@ -90,7 +90,6 @@ router.get("/", async (req, res) => {
          normalizeUser,
       );
 
-      console.log("Fetched users:", normalizedUsers.length);
       return res.status(200).json(normalizedUsers);
    } catch (error) {
       return handleServerError(
@@ -140,13 +139,6 @@ router.get("/:id", async (req, res) => {
    try {
       // Validate route param first so bad ids fail fast.
       const { id } = userIdParamsSchema.parse(req.params);
-
-      // 🔴 Debug
-      console.log("GET /api/users/:id id =", id);
-      console.log(
-         "SUPABASE_URL =",
-         process.env.SUPABASE_URL,
-      );
 
       const { data, error } = await supabase
          .from("users")

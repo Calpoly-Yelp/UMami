@@ -289,7 +289,6 @@ function Header() {
             );
             if (response.ok) {
                const data = await response.json();
-               console.log("Fetched users:", data);
                setAllUsers(data);
             }
          } catch (error) {
