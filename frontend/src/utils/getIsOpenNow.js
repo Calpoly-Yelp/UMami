@@ -19,7 +19,8 @@ export function getIsOpenNow(restaurant) {
    } else if (hours.length === 42) {
       for (let i = 0; i < 3; i++) {
          const openTime = hours[currentDayIdx * 6 + i * 2];
-         const closeTime = hours[currentDayIdx * 6 + i * 2 + 1];
+         const closeTime =
+            hours[currentDayIdx * 6 + i * 2 + 1];
 
          if (openTime && closeTime) {
             intervals.push({
@@ -49,7 +50,7 @@ export function getIsOpenNow(restaurant) {
          });
       }
    }
-   
+
    return intervals.some((interval) => {
       if (!interval.open || !interval.close) return false;
 

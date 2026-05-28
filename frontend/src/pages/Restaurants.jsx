@@ -165,7 +165,8 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         : r.location || "",
                      tags: r.tags || [],
                      hours: r.hours || [],
-                     location_mapping: r.location_mapping || null,
+                     location_mapping:
+                        r.location_mapping || null,
                      rating_count: r.rating_count ?? 0,
                      rating_sum: r.rating_sum ?? 0,
                      is_open_now: getIsOpenNow(r),
@@ -427,7 +428,8 @@ function Restaurants({ restaurants: initialRestaurants }) {
 
       if (filter === "closed_now") {
          filtered = filtered.filter(
-            (restaurant) => restaurant.is_open_now === false,
+            (restaurant) =>
+               restaurant.is_open_now === false,
          );
       }
 
