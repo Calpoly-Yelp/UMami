@@ -2,6 +2,7 @@ import { MdOutlineAccountCircle } from "react-icons/md";
 import ReviewCard from "../components/ReviewCard.jsx";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import FollowedUserCard from "../components/FollowUserCard.jsx";
+import ProfilePhotoPreviewModal from "../components/ProfilePhotoPreviewModal.jsx";
 import {
    CaretLeft,
    CaretRight,
@@ -96,6 +97,12 @@ function User({
 
    const [uploadingPhoto, setUploadingPhoto] =
       useState(false);
+   const [selectedProfilePhoto, setSelectedProfilePhoto] =
+      useState(null);
+   const [
+      profilePhotoPreviewUrl,
+      setProfilePhotoPreviewUrl,
+   ] = useState("");
 
    const [canScroll, setCanScroll] = useState({
       reviews: { left: false, right: false },
@@ -546,17 +553,55 @@ function User({
       }
    };
 
-   const handleAddPhoto = async (e) => {
+   useEffect(() => {
+      if (!selectedProfilePhoto) {
+         setProfilePhotoPreviewUrl("");
+         return undefined;
+      }
+
+      const objectUrl = URL.createObjectURL(
+         selectedProfilePhoto,
+      );
+      setProfilePhotoPreviewUrl(objectUrl);
+
+      return () => URL.revokeObjectURL(objectUrl);
+   }, [selectedProfilePhoto]);
+
+   const resetSelectedProfilePhoto = () => {
+      setSelectedProfilePhoto(null);
+      if (fileInputRef.current) {
+         fileInputRef.current.value = "";
+      }
+   };
+
+   const handleAddPhoto = (e) => {
       if (!isOwnProfile) return;
 
       const file = e.target.files?.[0];
       if (!file || !user.id) return;
 
+      setSelectedProfilePhoto(file);
+   };
+
+   const handleChooseDifferentPhoto = () => {
+      resetSelectedProfilePhoto();
+      fileInputRef.current?.click();
+   };
+
+   const handleSubmitProfilePhoto = async () => {
+      if (
+         !isOwnProfile ||
+         !selectedProfilePhoto ||
+         !user.id
+      ) {
+         return;
+      }
+
       setUploadingPhoto(true);
 
       try {
          const url = await uploadProfilePhoto(
-            file,
+            selectedProfilePhoto,
             user.id,
          );
 
@@ -603,9 +648,7 @@ function User({
          );
       } finally {
          setUploadingPhoto(false);
-
-         if (fileInputRef.current)
-            fileInputRef.current.value = "";
+         resetSelectedProfilePhoto();
       }
    };
 
@@ -658,6 +701,16 @@ function User({
 
    return (
       <div className="user-page">
+         <ProfilePhotoPreviewModal
+            open={Boolean(selectedProfilePhoto)}
+            previewUrl={profilePhotoPreviewUrl}
+            fileName={selectedProfilePhoto?.name}
+            uploading={uploadingPhoto}
+            onCancel={resetSelectedProfilePhoto}
+            onChooseDifferent={handleChooseDifferentPhoto}
+            onSubmit={handleSubmitProfilePhoto}
+         />
+
          <div className="user-content">
             <div className="user-info">
                <div className="user-card">
