@@ -92,10 +92,17 @@ export default function PhotoGallery() {
 
             const data = await response.json();
 
-            setRestaurantName(data.name || "Unknown Restaurant");
-            setRestaurantBanner(data.image_urls?.[0] || null);
+            setRestaurantName(
+               data.name || "Unknown Restaurant",
+            );
+            setRestaurantBanner(
+               data.image_urls?.[0] || null,
+            );
          } catch (error) {
-            console.error("Failed to fetch restaurant:", error);
+            console.error(
+               "Failed to fetch restaurant:",
+               error,
+            );
             setRestaurantName("Unknown Restaurant");
             setRestaurantBanner(null);
          }
@@ -126,7 +133,10 @@ export default function PhotoGallery() {
 
             setReviews(Array.isArray(data) ? data : []);
          } catch (error) {
-            console.error("Failed to fetch review photos:", error);
+            console.error(
+               "Failed to fetch review photos:",
+               error,
+            );
             setPhotoError("Photos unavailable.");
             setReviews([]);
          } finally {
@@ -225,39 +235,42 @@ export default function PhotoGallery() {
                !photoError &&
                selectedGallery.photos.length > 0 && (
                   <div className="photo-grid">
-                     {selectedGallery.photos.map((photo, index) => {
-                        const caption = getPhotoCaption(photo);
+                     {selectedGallery.photos.map(
+                        (photo, index) => {
+                           const caption =
+                              getPhotoCaption(photo);
 
-                        return (
-                           <button
-                              type="button"
-                              className="photo-card"
-                              key={`${photo.url}-${index}`}
-                           >
-                              <div className="photo-wrapper">
-                                 <img
-                                    src={photo.url}
-                                    alt={
-                                       caption ||
-                                       `${restaurantName} photo ${index + 1}`
-                                    }
-                                    onError={() =>
-                                       console.error(
-                                          "Image failed:",
-                                          photo.url,
-                                       )
-                                    }
-                                 />
+                           return (
+                              <button
+                                 type="button"
+                                 className="photo-card"
+                                 key={`${photo.url}-${index}`}
+                              >
+                                 <div className="photo-wrapper">
+                                    <img
+                                       src={photo.url}
+                                       alt={
+                                          caption ||
+                                          `${restaurantName} photo ${index + 1}`
+                                       }
+                                       onError={() =>
+                                          console.error(
+                                             "Image failed:",
+                                             photo.url,
+                                          )
+                                       }
+                                    />
 
-                                 {caption && (
-                                    <div className="photo-caption">
-                                       {caption}
-                                    </div>
-                                 )}
-                              </div>
-                           </button>
-                        );
-                     })}
+                                    {caption && (
+                                       <div className="photo-caption">
+                                          {caption}
+                                       </div>
+                                    )}
+                                 </div>
+                              </button>
+                           );
+                        },
+                     )}
                   </div>
                )}
          </main>
