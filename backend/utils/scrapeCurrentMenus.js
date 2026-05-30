@@ -159,10 +159,6 @@ function isSubwayRestaurant(restaurant) {
 }
 
 function isSubwayNutritionSource(sourceUrl) {
-   if (!sourceUrl) {
-      return false;
-   }
-
    const normalizedUrl = String(sourceUrl).toLowerCase();
    return (
       SUBWAY_SOURCE_ALIASES.has(normalizedUrl) ||
@@ -208,18 +204,12 @@ function getDineOnCampusPeriodsUrl(sourceUrl) {
    const locationIndex = parts.indexOf("locations");
    const locationId = parts[locationIndex + 1];
 
-   if (!locationId) {
-      return null;
-   }
-
    const periodsUrl = new URL(
       `/locations/${locationId}/periods`,
       url.origin,
    );
    const date = url.searchParams.get("date");
-   if (date) {
-      periodsUrl.searchParams.set("date", date);
-   }
+   periodsUrl.searchParams.set("date", date);
 
    return periodsUrl.toString();
 }
@@ -266,10 +256,6 @@ async function resolveDineOnCampusMenuUrl(
    }
 
    const periodsUrl = getDineOnCampusPeriodsUrl(sourceUrl);
-   if (!periodsUrl) {
-      return sourceUrl;
-   }
-
    const payload = JSON.parse(
       await fetchMenuSource(periodsUrl),
    );
@@ -325,7 +311,7 @@ function normalizeList(value) {
       return value
          .map((item) =>
             normalizeText(
-               typeof item === "object"
+               typeof item === "object" && item !== null
                   ? item.name ||
                        item.title ||
                        item.label ||
@@ -417,14 +403,6 @@ function findNutrientValue(item, names) {
 }
 
 function looksLikeMenuItem(item) {
-   if (
-      !item ||
-      typeof item !== "object" ||
-      Array.isArray(item)
-   ) {
-      return false;
-   }
-
    const name = getNestedValue(item, [
       "name",
       "title",
@@ -455,15 +433,7 @@ function looksLikeMenuItem(item) {
    );
 }
 
-function getContextName(value, key = "") {
-   if (
-      !value ||
-      typeof value !== "object" ||
-      Array.isArray(value)
-   ) {
-      return null;
-   }
-
+function getContextName(value, key) {
    const explicitName = normalizeText(
       value.category ||
          value.category_name ||
@@ -997,7 +967,7 @@ export async function fetchDineOnCampusSource(url) {
    }
 }
 
-async function fetchRestaurants({ restaurantId } = {}) {
+async function fetchRestaurants({ restaurantId }) {
    let query = supabase
       .from("restaurants")
       .select("id,name,menu_source_url");
