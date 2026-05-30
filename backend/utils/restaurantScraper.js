@@ -114,6 +114,11 @@ export const scrapeRestaurants = async () => {
          if (baseName.includes("Wednesday BBQ")) {
             baseName = "Grill at Campus Market";
             subName = "BBQ";
+         } else if (
+            baseName.includes("Streats (Wed. Chef's Table)")
+         ) {
+            baseName = "Streats";
+            subName = "Chef's Table";
          }
 
          return { baseName, subName };

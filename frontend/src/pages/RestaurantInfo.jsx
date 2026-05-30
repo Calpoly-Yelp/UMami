@@ -274,12 +274,12 @@ export default function Review() {
                const subNamesList = Array.from(
                   i.subNames || [],
                ).filter((name) => name !== "Default");
-               const subNameStr =
-                  subNamesList.length > 0
-                     ? ` (${subNamesList.join(", ")})`
-                     : "";
                return {
-                  time: `${formatTime(i.open)} - ${formatTime(i.close)}${subNameStr}`,
+                  time: `${formatTime(i.open)} - ${formatTime(i.close)}`,
+                  subName:
+                     subNamesList.length > 0
+                        ? subNamesList.join(", ")
+                        : null,
                   isOpen: i.isOpenNow || false,
                   isClosed:
                      idx === currentDayIdx &&
@@ -292,6 +292,7 @@ export default function Review() {
             formattedIntervals = [
                {
                   time: "Closed",
+                  subName: null,
                   isOpen: false,
                   isClosed: idx === currentDayIdx,
                   isCurrentDay: idx === currentDayIdx,
@@ -301,6 +302,7 @@ export default function Review() {
             formattedIntervals = [
                {
                   time: "Loading...",
+                  subName: null,
                   isOpen: false,
                   isClosed: false,
                   isCurrentDay: false,
@@ -998,6 +1000,8 @@ export default function Review() {
                                              dayIndex > 0
                                                 ? "14px"
                                                 : undefined,
+                                          alignItems:
+                                             "baseline",
                                        }}
                                     >
                                        <span
@@ -1029,9 +1033,48 @@ export default function Review() {
                                              ? "open"
                                              : "closed"}
                                        </span>
-                                       <span className="review__time">
-                                          {interval.time}
-                                       </span>
+                                       <div
+                                          className="review__time"
+                                          style={{
+                                             display:
+                                                "flex",
+                                             flexDirection:
+                                                "column",
+                                             alignItems:
+                                                "flex-end",
+                                          }}
+                                       >
+                                          <span
+                                             style={{
+                                                whiteSpace:
+                                                   "nowrap",
+                                             }}
+                                          >
+                                             {interval.time}
+                                          </span>
+                                          {interval.subName && (
+                                             <span
+                                                style={{
+                                                   fontSize:
+                                                      "11px",
+                                                   fontWeight: 700,
+                                                   color: "var(--muted)",
+                                                   backgroundColor:
+                                                      "rgba(0, 0, 0, 0.05)",
+                                                   padding:
+                                                      "2px 8px",
+                                                   borderRadius:
+                                                      "999px",
+                                                   marginTop:
+                                                      "4px",
+                                                }}
+                                             >
+                                                {
+                                                   interval.subName
+                                                }
+                                             </span>
+                                          )}
+                                       </div>
                                     </div>
                                  ),
                               ),
