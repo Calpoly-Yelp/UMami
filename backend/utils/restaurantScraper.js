@@ -824,7 +824,10 @@ export const scrapeRestaurants = async () => {
 };
 
 // Schedule to run every Monday at 8:00 AM (local server time)
-if (process.env.NODE_ENV !== "test") {
+if (
+   process.env.NODE_ENV !== "test" &&
+   !process.env.JEST_WORKER_ID
+) {
    cron.schedule("0 8 * * 1", () => {
       scrapeRestaurants().catch(() => {});
    });

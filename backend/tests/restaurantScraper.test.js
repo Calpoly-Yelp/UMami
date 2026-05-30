@@ -1123,6 +1123,7 @@ describe("restaurantScraper", () => {
       beforeEach(() => {
          jest.resetModules(); // Crucial for re-running top-level code
          process.env = { ...OLD_ENV };
+         delete process.env.JEST_WORKER_ID;
          process.exit = jest.fn(); // Mock process.exit to prevent tests from stopping
       });
 

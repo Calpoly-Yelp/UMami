@@ -922,6 +922,7 @@ function User({
                                        ? handleDeleteReview
                                        : undefined
                                  }
+                                 disableProfileClick={true}
                               />
                            ))
                         ) : (

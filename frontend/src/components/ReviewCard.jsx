@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UserName from "./UserName.jsx";
 import {
    Tag,
@@ -13,7 +14,9 @@ function ReviewCard({
    showHelpful = false,
    currentUserId,
    onDelete,
+   disableProfileClick = false,
 }) {
+   const navigate = useNavigate();
    // assign our review object to variables
    const {
       id,
@@ -68,6 +71,20 @@ function ReviewCard({
       // Prevent triggering the card click (which expands comments)
       e.stopPropagation();
       setAreTagsExpanded((v) => !v);
+   };
+
+   const handlePhotoClick = (e) => {
+      e.stopPropagation(); // Prevent the review card from expanding
+      if (user_id) {
+         navigate(`/user/${user_id}`);
+      }
+   };
+
+   const handleProfileClick = (e) => {
+      e.stopPropagation(); // Prevent the review card from expanding
+      if (!disableProfileClick && user_id) {
+         navigate(`/user/${user_id}`);
+      }
    };
 
    // Temporarily force the "collapsed" class, measure height, and determine whether the "see more" indicator should appear
@@ -217,7 +234,15 @@ function ReviewCard({
       >
          <header className="review-header">
             <div className="review-header-top">
-               <div className="review-user-info">
+               <div
+                  className="review-user-info"
+                  onClick={handleProfileClick}
+                  style={{
+                     cursor: disableProfileClick
+                        ? "default"
+                        : "pointer",
+                  }}
+               >
                   {/* Review avatar that contains pfp */}
                   <img
                      className="review-avatar"
@@ -406,6 +431,8 @@ function ReviewCard({
                         <div
                            key={src || index}
                            className="review-photo-wrapper"
+                           onClick={handlePhotoClick}
+                           style={{ cursor: "pointer" }}
                         >
                            <img
                               className="review-photo"

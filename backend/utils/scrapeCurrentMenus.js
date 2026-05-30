@@ -1,6 +1,5 @@
 import "dotenv/config";
 import cron from "node-cron";
-import { PDFParse } from "pdf-parse";
 import { chromium } from "playwright";
 import { supabase } from "../config/supabaseClient.js";
 
@@ -895,6 +894,7 @@ export function parseSubwayNutritionText(
 }
 
 async function fetchSubwayNutritionText(url) {
+   const { PDFParse } = await import("pdf-parse");
    const parser = new PDFParse({ url });
 
    try {

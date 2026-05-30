@@ -8,7 +8,7 @@
       "dev": "nodemon index.js",
       "scrape:menus": "node utils/scrapeCurrentMenus.js",
       "seed:reviews": "node utils/seedReviews.js",
-      "test": "jest",
+      "test": "DOTENV_CONFIG_QUIET=true jest",
       "lint": "eslint .",
       "lint:fix": "eslint . --fix"
    },
