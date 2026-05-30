@@ -326,7 +326,10 @@ function normalizeList(value) {
          .map((item) =>
             normalizeText(
                typeof item === "object"
-                  ? item.name || item.title || item.label
+                  ? item.name ||
+                       item.title ||
+                       item.label ||
+                       item.value
                   : item,
             ),
          )
@@ -570,15 +573,18 @@ function normalizeMenuItem(
          ) ||
          category ||
          "Uncategorized",
-      name: normalizeText(
-         getNestedValue(item, [
-            "name",
-            "title",
-            "item_name",
-            "product_name",
-            "formal_name",
-         ]),
-      ),
+      name:
+         normalizeText(
+            getNestedValue(item, [
+               "name",
+               "title",
+               "item_name",
+               "product_name",
+               "formal_name",
+            ]),
+         )
+            ?.replace(/\s*\|\s*(?:VG|AG|PR)\b/gi, "")
+            .trim() || null,
       description: normalizeText(
          getNestedValue(item, [
             "description",
@@ -606,6 +612,7 @@ function normalizeMenuItem(
             "allergens",
             "allergen_list",
             "contains",
+            "customAllergens",
          ]),
       ),
       dietary_tags: normalizeList(
@@ -614,6 +621,10 @@ function normalizeMenuItem(
             "preferences",
             "traits",
             "filters",
+            "cor_icons",
+            "icons",
+            "dietaries",
+            "webtrition_tags",
          ]),
       ),
       source_url: sourceUrl,
@@ -1095,6 +1106,7 @@ export async function scrapeRestaurantMenu(
       : parseMenuPayload(await fetchMenuSource(sourceUrl), {
            sourceUrl,
            mealPeriod: effectiveMealPeriod,
+           restaurantName: restaurant.name,
         });
 
    if (dryRun) {

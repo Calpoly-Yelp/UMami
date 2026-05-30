@@ -168,13 +168,19 @@ router.get("/:id/menu", async (req, res) => {
             (section) => section.category === category,
          );
 
-         if (existingSection) {
-            existingSection.items.push(item);
+         if (!existingSection) {
+            acc.push({ category, items: [item] });
          } else {
-            acc.push({
-               category,
-               items: [item],
-            });
+            // Check if an item with this exact name already exists in this section
+            const isDuplicate = existingSection.items.some(
+               (existingItem) =>
+                  existingItem.name.toLowerCase() ===
+                  item.name.toLowerCase(),
+            );
+
+            if (!isDuplicate) {
+               existingSection.items.push(item);
+            }
          }
 
          return acc;

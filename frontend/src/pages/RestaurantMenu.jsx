@@ -8,6 +8,59 @@ const displayValue = (value) =>
       ? "N/A"
       : value;
 
+const renderDietaryIcons = (tags) => {
+   if (!tags || tags.length === 0) return null;
+
+   const icons = [];
+   const tagStr = tags.join(" ").toLowerCase();
+
+   // Use a single "VG" or "V" to avoid duplicate visual clutter
+   if (
+      tagStr.includes("vegan") ||
+      tagStr.includes("plant-based")
+   ) {
+      icons.push(
+         <span
+            key="vegan"
+            className="dietary-icon dietary-vegan"
+            data-tooltip="Vegan"
+         >
+            VG
+         </span>,
+      );
+   } else if (tagStr.includes("vegetarian")) {
+      icons.push(
+         <span
+            key="veg"
+            className="dietary-icon dietary-veg"
+            data-tooltip="Vegetarian"
+         >
+            V
+         </span>,
+      );
+   }
+
+   if (
+      tagStr.includes("gluten-free") ||
+      tagStr.includes("gluten free") ||
+      tagStr.includes("avoiding gluten") ||
+      tags.some((t) => t.toLowerCase().trim() === "gf")
+   ) {
+      icons.push(
+         <span
+            key="gf"
+            className="dietary-icon dietary-gf"
+            data-tooltip="Gluten-Free"
+         >
+            GF
+         </span>,
+      );
+   }
+
+   if (icons.length === 0) return null;
+   return <div className="dietary-icons-row">{icons}</div>;
+};
+
 export default function RestaurantMenu() {
    const navigate = useNavigate();
    const { id } = useParams();
@@ -217,7 +270,24 @@ export default function RestaurantMenu() {
                                           )
                                        }
                                     >
-                                       <td>{item.name}</td>
+                                       <td>
+                                          <div
+                                             style={{
+                                                display:
+                                                   "flex",
+                                                alignItems:
+                                                   "center",
+                                                gap: "8px",
+                                             }}
+                                          >
+                                             <span>
+                                                {item.name}
+                                             </span>
+                                             {renderDietaryIcons(
+                                                item.dietary_tags,
+                                             )}
+                                          </div>
+                                       </td>
                                        <td>
                                           {displayValue(
                                              item.portion,
@@ -235,6 +305,40 @@ export default function RestaurantMenu() {
                         </table>
                      </div>
                   ))}
+
+               {!isMenuLoading &&
+                  !menuError &&
+                  menuData.length > 0 && (
+                     <div className="menu-legend">
+                        <div className="menu-legend-items">
+                           <div className="menu-legend-item">
+                              <span className="dietary-icon dietary-vegan">
+                                 VG
+                              </span>{" "}
+                              Vegan
+                           </div>
+                           <div className="menu-legend-item">
+                              <span className="dietary-icon dietary-veg">
+                                 V
+                              </span>{" "}
+                              Vegetarian
+                           </div>
+                           <div className="menu-legend-item">
+                              <span className="dietary-icon dietary-gf">
+                                 GF
+                              </span>{" "}
+                              Gluten-Free
+                           </div>
+                        </div>
+                        <p className="menu-disclaimer">
+                           * Dietary tags are provided by
+                           campus dining and may
+                           occasionally be inaccurate.
+                           Please verify with the restaurant
+                           if you have a severe allergy.
+                        </p>
+                     </div>
+                  )}
             </main>
          </div>
 
@@ -291,6 +395,40 @@ export default function RestaurantMenu() {
                            )}
                         </span>
                      </div>
+                     {selectedItem.dietary_tags &&
+                        selectedItem.dietary_tags.length >
+                           0 && (
+                           <div className="modal-nutrient-row">
+                              <span>Dietary</span>
+                              <span
+                                 style={{
+                                    textAlign: "right",
+                                    maxWidth: "65%",
+                                 }}
+                              >
+                                 {selectedItem.dietary_tags.join(
+                                    ", ",
+                                 )}
+                              </span>
+                           </div>
+                        )}
+                     {selectedItem.allergens &&
+                        selectedItem.allergens.length >
+                           0 && (
+                           <div className="modal-nutrient-row">
+                              <span>Allergens</span>
+                              <span
+                                 style={{
+                                    textAlign: "right",
+                                    maxWidth: "65%",
+                                 }}
+                              >
+                                 {selectedItem.allergens.join(
+                                    ", ",
+                                 )}
+                              </span>
+                           </div>
+                        )}
                   </div>
                </div>
             </div>
