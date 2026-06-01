@@ -1,0 +1,28 @@
+.shared-photo-caption {
+   position: absolute;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   z-index: 10;
+   padding: 14px 16px;
+   background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.82) 0%,
+      rgba(0, 0, 0, 0.55) 60%,
+      rgba(0, 0, 0, 0) 100%
+   );
+   color: #fff;
+   font-size: 0.95rem;
+   font-weight: 700;
+   line-height: 1.2;
+   text-align: left;
+   pointer-events: none;
+   word-wrap: break-word;
+}
+
+@media (max-width: 560px) {
+   .shared-photo-caption {
+      font-size: 0.85rem;
+      padding: 12px;
+   }
+}

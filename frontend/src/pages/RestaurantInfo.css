@@ -1035,31 +1035,6 @@
    transform: scale(1.05);
 }
 
-.review__photoCaption {
-   position: absolute;
-   left: 0;
-   right: 0;
-   bottom: 0;
-   z-index: 5;
-
-   padding: 14px 16px;
-
-   background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.82) 0%,
-      rgba(0, 0, 0, 0.55) 60%,
-      rgba(0, 0, 0, 0) 100%
-   );
-
-   color: #fff;
-   font-size: 0.95rem;
-   font-weight: 700;
-   line-height: 1.2;
-   text-align: left;
-
-   pointer-events: none;
-}
-
 .carousel-arrow {
    position: absolute;
    top: 50%;
@@ -1124,10 +1099,5 @@
       width: 190px;
       height: 130px;
       flex-basis: 190px;
-   }
-
-   .review__photoCaption {
-      font-size: 0.85rem;
-      padding: 12px;
    }
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./PhotoGallery.css";
+import "../components/PhotoOverlay.css";
 import { supabase } from "../lib/supabase";
 import { API_BASE_URL } from "../lib/api";
 
@@ -262,7 +263,7 @@ export default function PhotoGallery() {
                                     />
 
                                     {caption && (
-                                       <div className="photo-caption">
+                                       <div className="shared-photo-caption">
                                           {caption}
                                        </div>
                                     )}

@@ -10,6 +10,7 @@ import ReviewCard from "../components/ReviewCard";
 import Modal from "../components/Modal";
 import WriteReview from "../components/WriteReview";
 import "./RestaurantInfo.css";
+import "../components/PhotoOverlay.css";
 import { supabase } from "../lib/supabase";
 import {
    Camera,
@@ -936,7 +937,7 @@ export default function Review() {
                               loading="lazy"
                            />
 
-                           <div className="review__photoCaption">
+                           <div className="shared-photo-caption">
                               {photo.item || "Menu Item"}
                            </div>
                         </div>

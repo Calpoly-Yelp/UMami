@@ -8,6 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import { API_BASE_URL } from "../lib/api";
 import "./ReviewCard.css";
+import "./PhotoOverlay.css";
 
 function ReviewCard({
    review = {},
@@ -440,7 +441,7 @@ function ReviewCard({
                               alt={alt}
                            />
                            {typeLabel && (
-                              <div className="review-photo-caption">
+                              <div className="shared-photo-caption">
                                  {typeLabel}
                               </div>
                            )}
