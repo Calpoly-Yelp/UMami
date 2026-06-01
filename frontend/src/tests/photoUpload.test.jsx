@@ -103,9 +103,9 @@ describe("PhotoUpload component", () => {
          screen.getByText(/what menu item is this\?/i),
       ).toBeInTheDocument();
 
-      await user.selectOptions(photoTypeSelect, "Vibe");
+      await user.selectOptions(photoTypeSelect, "Ambiance");
 
-      expect(photoTypeSelect).toHaveValue("Vibe");
+      expect(photoTypeSelect).toHaveValue("Ambiance");
       expect(
          screen.queryByText(/what menu item is this\?/i),
       ).not.toBeInTheDocument();

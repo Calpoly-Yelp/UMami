@@ -123,8 +123,8 @@ function PhotoUpload({
                            <option value="Menu Item">
                               Menu Item
                            </option>
-                           <option value="Vibe">
-                              Vibe of the Restaurant
+                           <option value="Ambiance">
+                              Ambiance
                            </option>
                            <option value="Other">
                               Other
