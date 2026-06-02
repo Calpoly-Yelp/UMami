@@ -126,7 +126,11 @@ describe("Frontend UI Tests", () => {
       cy.contains(".search-result-name", /musty mustang/i)
          .parents(".search-result-item")
          .find("button.follow-btn")
-         .click({ force: true });
+         .then(($btn) => {
+            if ($btn.attr("title") === "Follow User") {
+               cy.wrap($btn).click({ force: true });
+            }
+         });
 
       cy.get(".search-modal-close").click();
 
@@ -134,7 +138,11 @@ describe("Frontend UI Tests", () => {
       cy.contains(".restaurant-name", /noodle/i)
          .parents(".restaurant-card")
          .find(".bookmark-button")
-         .click({ force: true });
+         .then(($btn) => {
+            if (!$btn.hasClass("bookmarked")) {
+               cy.wrap($btn).click({ force: true });
+            }
+         });
 
       // 4. Enter the user page via the header
       cy.get(".profile-icon").click();

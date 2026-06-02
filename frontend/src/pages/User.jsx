@@ -624,7 +624,7 @@ function User({
             user.id,
          );
 
-         await fetch(
+         const response = await fetch(
             `${API_BASE_URL}/api/users/${user.id}`,
             {
                method: "PATCH",
@@ -634,6 +634,12 @@ function User({
                body: JSON.stringify({ avatar_url: url }),
             },
          );
+
+         if (!response.ok) {
+            throw new Error(
+               "Failed to save new profile photo URL",
+            );
+         }
 
          setUser((prev) => ({ ...prev, avatar_url: url }));
 
@@ -680,7 +686,7 @@ function User({
             user.id,
          );
 
-         await fetch(
+         const response = await fetch(
             `${API_BASE_URL}/api/users/${user.id}`,
             {
                method: "PATCH",
@@ -692,6 +698,12 @@ function User({
                }),
             },
          );
+
+         if (!response.ok) {
+            throw new Error(
+               "Failed to save removed profile photo URL",
+            );
+         }
 
          setUser((prev) => ({
             ...prev,

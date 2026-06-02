@@ -18,7 +18,32 @@ function getCoverage(summaryPath, name) {
    if (!fs.existsSync(summaryPath)) {
       return `| ${name} | N/A | N/A | N/A | N/A |`;
    }
-   const summary = require(summaryPath);
+   const summary = JSON.parse(
+      fs.readFileSync(summaryPath, "utf8"),
+   );
+   let changed = false;
+   const normalizedSummary = {};
+
+   for (const key in summary) {
+      if (key !== "total" && path.isAbsolute(key)) {
+         const relativeKey = path
+            .relative(rootDir, key)
+            .split(path.sep)
+            .join("/");
+         normalizedSummary[relativeKey] = summary[key];
+         changed = true;
+      } else {
+         normalizedSummary[key] = summary[key];
+      }
+   }
+
+   if (changed) {
+      fs.writeFileSync(
+         summaryPath,
+         JSON.stringify(normalizedSummary, null, 2),
+      );
+   }
+
    const { lines, statements, functions, branches } =
       summary.total;
    return `| ${name} | ${lines.pct}% | ${statements.pct}% | ${functions.pct}% | ${branches.pct}% |`;

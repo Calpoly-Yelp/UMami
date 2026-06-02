@@ -307,29 +307,38 @@ function Header() {
          return;
       }
 
-      let isActive = true;
+      const controller = new AbortController();
 
       // Debounce: Wait 300ms after the user stops typing before making the request
       const delayDebounceFn = setTimeout(async () => {
          try {
             const response = await fetch(
                `${API_BASE_URL}/api/users?search=${encodeURIComponent(searchQuery.trim())}`,
+               { signal: controller.signal },
             );
-            if (response.ok && isActive) {
+            if (response.ok) {
                const data = await response.json();
                setAllUsers(data);
+            } else {
+               setAllUsers([]);
             }
          } catch (error) {
-            console.error("Error fetching users:", error);
+            if (error.name !== "AbortError") {
+               console.error(
+                  "Error fetching users:",
+                  error,
+               );
+               setAllUsers([]);
+            }
          } finally {
-            if (isActive) {
+            if (!controller.signal.aborted) {
                setIsSearching(false);
             }
          }
       }, 300);
 
       return () => {
-         isActive = false;
+         controller.abort();
          clearTimeout(delayDebounceFn);
       };
    }, [isSearchOpen, searchQuery]);

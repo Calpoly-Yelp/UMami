@@ -1348,6 +1348,75 @@ describe("menu replacement safety", () => {
       expect(result.updated).toHaveLength(1);
       expect(result.inserted).toHaveLength(1);
    });
+
+   it("handles existing duplicate menu items by deleting them", async () => {
+      const mockQuery = {
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 1,
+                     name: "Oatmeal",
+                     meal_period: "breakfast",
+                  },
+                  {
+                     id: 2,
+                     name: "Oatmeal",
+                     meal_period: "breakfast",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      const mockDeleteQuery = {
+         in: jest.fn().mockResolvedValue({ error: null }),
+      };
+      const mockUpdateQuery = {
+         single: jest.fn().mockResolvedValue({
+            data: { id: 1, name: "Oatmeal" },
+            error: null,
+         }),
+      };
+      mockUpdateQuery.select = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+      mockUpdateQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+
+      const mockUpdate = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+
+      supabase.from.mockImplementation(() => ({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => mockDeleteQuery),
+         update: mockUpdate,
+         insert: jest.fn(),
+      }));
+
+      const result = await replaceRestaurantMenu({
+         restaurantId: 13,
+         mealPeriod: "breakfast",
+         items: [
+            {
+               category: "Breakfast",
+               name: "Oatmeal",
+               calories: 150,
+               meal_period: "breakfast",
+            },
+         ],
+      });
+
+      expect(mockDeleteQuery.in).toHaveBeenCalledWith(
+         "id",
+         [2],
+      );
+      expect(result.deleted).toEqual([2]);
+      expect(result.updated).toHaveLength(1);
+   });
 });
 
 describe("edge cases and fallbacks", () => {

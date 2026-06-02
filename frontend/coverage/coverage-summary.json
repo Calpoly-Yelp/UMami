@@ -1,18 +1,450 @@
-{"total": {"lines":{"total":909,"covered":543,"skipped":0,"pct":59.73},"statements":{"total":969,"covered":561,"skipped":0,"pct":57.89},"functions":{"total":256,"covered":138,"skipped":0,"pct":53.9},"branches":{"total":770,"covered":415,"skipped":0,"pct":53.89},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/test-setup.js": {"lines":{"total":2,"covered":2,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":2,"covered":2,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/FollowUserCard.jsx": {"lines":{"total":6,"covered":3,"skipped":0,"pct":50},"functions":{"total":3,"covered":1,"skipped":0,"pct":33.33},"statements":{"total":6,"covered":3,"skipped":0,"pct":50},"branches":{"total":8,"covered":5,"skipped":0,"pct":62.5}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/Header.jsx": {"lines":{"total":192,"covered":87,"skipped":0,"pct":45.31},"functions":{"total":55,"covered":17,"skipped":0,"pct":30.9},"statements":{"total":201,"covered":88,"skipped":0,"pct":43.78},"branches":{"total":92,"covered":33,"skipped":0,"pct":35.86}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/Map.jsx": {"lines":{"total":18,"covered":16,"skipped":0,"pct":88.88},"functions":{"total":8,"covered":7,"skipped":0,"pct":87.5},"statements":{"total":19,"covered":17,"skipped":0,"pct":89.47},"branches":{"total":8,"covered":7,"skipped":0,"pct":87.5}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/Modal.jsx": {"lines":{"total":10,"covered":10,"skipped":0,"pct":100},"functions":{"total":5,"covered":5,"skipped":0,"pct":100},"statements":{"total":13,"covered":13,"skipped":0,"pct":100},"branches":{"total":13,"covered":11,"skipped":0,"pct":84.61}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/PhotoUpload.jsx": {"lines":{"total":39,"covered":30,"skipped":0,"pct":76.92},"functions":{"total":12,"covered":6,"skipped":0,"pct":50},"statements":{"total":40,"covered":30,"skipped":0,"pct":75},"branches":{"total":23,"covered":15,"skipped":0,"pct":65.21}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/ProfilePhotoPreviewModal.jsx": {"lines":{"total":1,"covered":1,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":1,"covered":1,"skipped":0,"pct":100},"branches":{"total":16,"covered":15,"skipped":0,"pct":93.75}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/RestaurantCard.jsx": {"lines":{"total":17,"covered":17,"skipped":0,"pct":100},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":18,"covered":18,"skipped":0,"pct":100},"branches":{"total":23,"covered":22,"skipped":0,"pct":95.65}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/ReviewCard.jsx": {"lines":{"total":92,"covered":59,"skipped":0,"pct":64.13},"functions":{"total":27,"covered":16,"skipped":0,"pct":59.25},"statements":{"total":104,"covered":66,"skipped":0,"pct":63.46},"branches":{"total":111,"covered":62,"skipped":0,"pct":55.85}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/UserName.jsx": {"lines":{"total":1,"covered":1,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":1,"covered":1,"skipped":0,"pct":100},"branches":{"total":3,"covered":3,"skipped":0,"pct":100}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/components/WriteReview.jsx": {"lines":{"total":85,"covered":52,"skipped":0,"pct":61.17},"functions":{"total":30,"covered":16,"skipped":0,"pct":53.33},"statements":{"total":88,"covered":53,"skipped":0,"pct":60.22},"branches":{"total":78,"covered":49,"skipped":0,"pct":62.82}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/hooks/useBookmarks.js": {"lines":{"total":30,"covered":4,"skipped":0,"pct":13.33},"functions":{"total":5,"covered":2,"skipped":0,"pct":40},"statements":{"total":33,"covered":4,"skipped":0,"pct":12.12},"branches":{"total":18,"covered":0,"skipped":0,"pct":0}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/pages/RestaurantMenu.jsx": {"lines":{"total":93,"covered":74,"skipped":0,"pct":79.56},"functions":{"total":21,"covered":18,"skipped":0,"pct":85.71},"statements":{"total":96,"covered":76,"skipped":0,"pct":79.16},"branches":{"total":91,"covered":55,"skipped":0,"pct":60.43}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/pages/SignUp.jsx": {"lines":{"total":26,"covered":22,"skipped":0,"pct":84.61},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":28,"covered":22,"skipped":0,"pct":78.57},"branches":{"total":14,"covered":7,"skipped":0,"pct":50}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/pages/User.jsx": {"lines":{"total":267,"covered":146,"skipped":0,"pct":54.68},"functions":{"total":78,"covered":39,"skipped":0,"pct":50},"statements":{"total":286,"covered":148,"skipped":0,"pct":51.74},"branches":{"total":238,"covered":114,"skipped":0,"pct":47.89}}
-,"/Users/elischiffler/Documents/School/CSC-308-SWE/UMami/frontend/src/utils/getIsOpenNow.js": {"lines":{"total":30,"covered":19,"skipped":0,"pct":63.33},"functions":{"total":3,"covered":2,"skipped":0,"pct":66.66},"statements":{"total":33,"covered":19,"skipped":0,"pct":57.57},"branches":{"total":34,"covered":17,"skipped":0,"pct":50}}
+{
+  "total": {
+    "lines": {
+      "total": 936,
+      "covered": 547,
+      "skipped": 0,
+      "pct": 58.44
+    },
+    "statements": {
+      "total": 995,
+      "covered": 565,
+      "skipped": 0,
+      "pct": 56.78
+    },
+    "functions": {
+      "total": 260,
+      "covered": 140,
+      "skipped": 0,
+      "pct": 53.84
+    },
+    "branches": {
+      "total": 784,
+      "covered": 416,
+      "skipped": 0,
+      "pct": 53.06
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "frontend/src/test-setup.js": {
+    "lines": {
+      "total": 2,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 2,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "frontend/src/components/FollowUserCard.jsx": {
+    "lines": {
+      "total": 6,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 50
+    },
+    "functions": {
+      "total": 3,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 33.33
+    },
+    "statements": {
+      "total": 6,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 50
+    },
+    "branches": {
+      "total": 8,
+      "covered": 5,
+      "skipped": 0,
+      "pct": 62.5
+    }
+  },
+  "frontend/src/components/Header.jsx": {
+    "lines": {
+      "total": 215,
+      "covered": 90,
+      "skipped": 0,
+      "pct": 41.86
+    },
+    "functions": {
+      "total": 59,
+      "covered": 19,
+      "skipped": 0,
+      "pct": 32.2
+    },
+    "statements": {
+      "total": 223,
+      "covered": 91,
+      "skipped": 0,
+      "pct": 40.8
+    },
+    "branches": {
+      "total": 102,
+      "covered": 33,
+      "skipped": 0,
+      "pct": 32.35
+    }
+  },
+  "frontend/src/components/Map.jsx": {
+    "lines": {
+      "total": 18,
+      "covered": 16,
+      "skipped": 0,
+      "pct": 88.88
+    },
+    "functions": {
+      "total": 8,
+      "covered": 7,
+      "skipped": 0,
+      "pct": 87.5
+    },
+    "statements": {
+      "total": 19,
+      "covered": 17,
+      "skipped": 0,
+      "pct": 89.47
+    },
+    "branches": {
+      "total": 8,
+      "covered": 7,
+      "skipped": 0,
+      "pct": 87.5
+    }
+  },
+  "frontend/src/components/Modal.jsx": {
+    "lines": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 5,
+      "covered": 5,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 13,
+      "covered": 13,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 13,
+      "covered": 11,
+      "skipped": 0,
+      "pct": 84.61
+    }
+  },
+  "frontend/src/components/PhotoUpload.jsx": {
+    "lines": {
+      "total": 39,
+      "covered": 30,
+      "skipped": 0,
+      "pct": 76.92
+    },
+    "functions": {
+      "total": 12,
+      "covered": 6,
+      "skipped": 0,
+      "pct": 50
+    },
+    "statements": {
+      "total": 40,
+      "covered": 30,
+      "skipped": 0,
+      "pct": 75
+    },
+    "branches": {
+      "total": 23,
+      "covered": 15,
+      "skipped": 0,
+      "pct": 65.21
+    }
+  },
+  "frontend/src/components/ProfilePhotoPreviewModal.jsx": {
+    "lines": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 16,
+      "covered": 15,
+      "skipped": 0,
+      "pct": 93.75
+    }
+  },
+  "frontend/src/components/RestaurantCard.jsx": {
+    "lines": {
+      "total": 17,
+      "covered": 17,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 4,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 18,
+      "covered": 18,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 23,
+      "covered": 22,
+      "skipped": 0,
+      "pct": 95.65
+    }
+  },
+  "frontend/src/components/ReviewCard.jsx": {
+    "lines": {
+      "total": 92,
+      "covered": 59,
+      "skipped": 0,
+      "pct": 64.13
+    },
+    "functions": {
+      "total": 27,
+      "covered": 16,
+      "skipped": 0,
+      "pct": 59.25
+    },
+    "statements": {
+      "total": 104,
+      "covered": 66,
+      "skipped": 0,
+      "pct": 63.46
+    },
+    "branches": {
+      "total": 111,
+      "covered": 62,
+      "skipped": 0,
+      "pct": 55.85
+    }
+  },
+  "frontend/src/components/UserName.jsx": {
+    "lines": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 3,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "frontend/src/components/WriteReview.jsx": {
+    "lines": {
+      "total": 85,
+      "covered": 52,
+      "skipped": 0,
+      "pct": 61.17
+    },
+    "functions": {
+      "total": 30,
+      "covered": 16,
+      "skipped": 0,
+      "pct": 53.33
+    },
+    "statements": {
+      "total": 88,
+      "covered": 53,
+      "skipped": 0,
+      "pct": 60.22
+    },
+    "branches": {
+      "total": 78,
+      "covered": 49,
+      "skipped": 0,
+      "pct": 62.82
+    }
+  },
+  "frontend/src/hooks/useBookmarks.js": {
+    "lines": {
+      "total": 30,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 13.33
+    },
+    "functions": {
+      "total": 5,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 40
+    },
+    "statements": {
+      "total": 33,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 12.12
+    },
+    "branches": {
+      "total": 18,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "frontend/src/pages/RestaurantMenu.jsx": {
+    "lines": {
+      "total": 93,
+      "covered": 74,
+      "skipped": 0,
+      "pct": 79.56
+    },
+    "functions": {
+      "total": 21,
+      "covered": 18,
+      "skipped": 0,
+      "pct": 85.71
+    },
+    "statements": {
+      "total": 96,
+      "covered": 76,
+      "skipped": 0,
+      "pct": 79.16
+    },
+    "branches": {
+      "total": 91,
+      "covered": 55,
+      "skipped": 0,
+      "pct": 60.43
+    }
+  },
+  "frontend/src/pages/SignUp.jsx": {
+    "lines": {
+      "total": 26,
+      "covered": 22,
+      "skipped": 0,
+      "pct": 84.61
+    },
+    "functions": {
+      "total": 3,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 28,
+      "covered": 22,
+      "skipped": 0,
+      "pct": 78.57
+    },
+    "branches": {
+      "total": 14,
+      "covered": 7,
+      "skipped": 0,
+      "pct": 50
+    }
+  },
+  "frontend/src/pages/User.jsx": {
+    "lines": {
+      "total": 271,
+      "covered": 147,
+      "skipped": 0,
+      "pct": 54.24
+    },
+    "functions": {
+      "total": 78,
+      "covered": 39,
+      "skipped": 0,
+      "pct": 50
+    },
+    "statements": {
+      "total": 290,
+      "covered": 149,
+      "skipped": 0,
+      "pct": 51.37
+    },
+    "branches": {
+      "total": 242,
+      "covered": 115,
+      "skipped": 0,
+      "pct": 47.52
+    }
+  },
+  "frontend/src/utils/getIsOpenNow.js": {
+    "lines": {
+      "total": 30,
+      "covered": 19,
+      "skipped": 0,
+      "pct": 63.33
+    },
+    "functions": {
+      "total": 3,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 66.66
+    },
+    "statements": {
+      "total": 33,
+      "covered": 19,
+      "skipped": 0,
+      "pct": 57.57
+    },
+    "branches": {
+      "total": 34,
+      "covered": 17,
+      "skipped": 0,
+      "pct": 50
+    }
+  }
 }

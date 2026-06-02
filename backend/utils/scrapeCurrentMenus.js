@@ -1087,12 +1087,30 @@ export async function replaceRestaurantMenu({
       `${item.name}|${item.meal_period}`;
 
    const scrapedKeys = new Set(items.map(getCompositeKey));
-   const idsToDelete = (existingItems || [])
-      .filter(
-         (existing) =>
-            !scrapedKeys.has(getCompositeKey(existing)),
-      )
-      .map((item) => item.id);
+
+   const seenExistingKeys = new Set();
+   const duplicateIds = [];
+   const uniqueExistingItems = [];
+
+   for (const item of existingItems || []) {
+      const key = getCompositeKey(item);
+      if (seenExistingKeys.has(key)) {
+         duplicateIds.push(item.id);
+      } else {
+         seenExistingKeys.add(key);
+         uniqueExistingItems.push(item);
+      }
+   }
+
+   const idsToDelete = [
+      ...duplicateIds,
+      ...uniqueExistingItems
+         .filter(
+            (existing) =>
+               !scrapedKeys.has(getCompositeKey(existing)),
+         )
+         .map((item) => item.id),
+   ];
 
    if (idsToDelete.length > 0) {
       const { error: deleteError } = await supabase
@@ -1114,7 +1132,7 @@ export async function replaceRestaurantMenu({
    }
 
    const existingMap = new Map(
-      (existingItems || []).map((item) => [
+      uniqueExistingItems.map((item) => [
          getCompositeKey(item),
          item.id,
       ]),
