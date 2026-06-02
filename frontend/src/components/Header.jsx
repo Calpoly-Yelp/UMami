@@ -237,6 +237,34 @@ function Header() {
          );
    }, []);
 
+   // Listen for avatar updates to instantly update the profile picture in the header
+   useEffect(() => {
+      const handleAvatarUpdate = (e) => {
+         if (
+            e.detail &&
+            e.detail.avatar_url !== undefined
+         ) {
+            setUser((prev) =>
+               prev
+                  ? {
+                       ...prev,
+                       avatar_url: e.detail.avatar_url,
+                    }
+                  : prev,
+            );
+         }
+      };
+      window.addEventListener(
+         "avatar-updated",
+         handleAvatarUpdate,
+      );
+      return () =>
+         window.removeEventListener(
+            "avatar-updated",
+            handleAvatarUpdate,
+         );
+   }, []);
+
    // calculate unread count for badge display
    const unreadCount = notifications.filter(
       (n) => !n.is_read,
