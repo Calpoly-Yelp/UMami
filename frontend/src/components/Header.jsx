@@ -47,6 +47,8 @@ function Header() {
    const toggleSearch = () => {
       setIsSearchOpen(!isSearchOpen);
       setSearchQuery("");
+      setAllUsers([]);
+      setIsSearching(false);
       if (isDropdownOpen) setIsDropdownOpen(false);
       if (isNotificationsOpen)
          setIsNotificationsOpen(false);
@@ -302,12 +304,10 @@ function Header() {
    // logic for fetching all users for search
    useEffect(() => {
       if (!isSearchOpen || searchQuery.trim() === "") {
-         setAllUsers([]);
-         setIsSearching(false);
          return;
       }
 
-      setIsSearching(true);
+      let isActive = true;
 
       // Debounce: Wait 300ms after the user stops typing before making the request
       const delayDebounceFn = setTimeout(async () => {
@@ -315,18 +315,23 @@ function Header() {
             const response = await fetch(
                `${API_BASE_URL}/api/users?search=${encodeURIComponent(searchQuery.trim())}`,
             );
-            if (response.ok) {
+            if (response.ok && isActive) {
                const data = await response.json();
                setAllUsers(data);
             }
          } catch (error) {
             console.error("Error fetching users:", error);
          } finally {
-            setIsSearching(false);
+            if (isActive) {
+               setIsSearching(false);
+            }
          }
       }, 300);
 
-      return () => clearTimeout(delayDebounceFn);
+      return () => {
+         isActive = false;
+         clearTimeout(delayDebounceFn);
+      };
    }, [isSearchOpen, searchQuery]);
 
    // logic for fetching users the current user follows
@@ -620,6 +625,8 @@ function Header() {
                onClick={() => {
                   setIsSearchOpen(false);
                   setSearchQuery("");
+                  setAllUsers([]);
+                  setIsSearching(false);
                }}
             >
                <div
@@ -633,9 +640,14 @@ function Header() {
                         placeholder="Search Umami..."
                         className="search-modal-input"
                         value={searchQuery}
-                        onChange={(e) =>
-                           setSearchQuery(e.target.value)
-                        }
+                        onChange={(e) => {
+                           const val = e.target.value;
+                           setSearchQuery(val);
+                           setAllUsers([]);
+                           setIsSearching(
+                              val.trim() !== "",
+                           );
+                        }}
                         autoFocus
                      />
                      <MdClose
@@ -645,6 +657,8 @@ function Header() {
                         onClick={() => {
                            setIsSearchOpen(false);
                            setSearchQuery("");
+                           setAllUsers([]);
+                           setIsSearching(false);
                         }}
                      />
                   </div>
@@ -672,6 +686,12 @@ function Header() {
                                              );
                                              setSearchQuery(
                                                 "",
+                                             );
+                                             setAllUsers(
+                                                [],
+                                             );
+                                             setIsSearching(
+                                                false,
                                              );
                                           }}
                                           style={{
