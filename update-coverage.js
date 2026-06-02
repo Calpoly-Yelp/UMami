@@ -25,11 +25,20 @@ function getCoverage(summaryPath, name) {
    const normalizedSummary = {};
 
    for (const key in summary) {
-      if (key !== "total" && path.isAbsolute(key)) {
-         const relativeKey = path
-            .relative(rootDir, key)
-            .split(path.sep)
-            .join("/");
+      if (
+         key !== "total" &&
+         (path.isAbsolute(key) ||
+            path.win32.isAbsolute(key))
+      ) {
+         const relativeKey = path.win32.isAbsolute(key)
+            ? path.win32
+                 .relative(rootDir, key)
+                 .split(path.win32.sep)
+                 .join("/")
+            : path
+                 .relative(rootDir, key)
+                 .split(path.sep)
+                 .join("/");
          normalizedSummary[relativeKey] = summary[key];
          changed = true;
       } else {
