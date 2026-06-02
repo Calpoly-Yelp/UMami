@@ -8,7 +8,6 @@ import {
 import { supabase } from "../config/supabaseClient.js";
 import {
    buildMenuUrl,
-   getCurrentMealPeriod,
    parseMenuPayload,
    parseSubwayNutritionText,
    replaceRestaurantMenu,
@@ -46,31 +45,6 @@ jest.mock("pdf-parse", () => {
 
 beforeEach(() => {
    jest.clearAllMocks();
-});
-
-describe("menu schedule helpers", () => {
-   it("maps Los Angeles time to the expected meal period boundaries", () => {
-      expect(
-         getCurrentMealPeriod(
-            new Date("2026-05-13T17:29:00Z"),
-         ),
-      ).toBe("breakfast");
-      expect(
-         getCurrentMealPeriod(
-            new Date("2026-05-13T17:30:00Z"),
-         ),
-      ).toBe("lunch");
-      expect(
-         getCurrentMealPeriod(
-            new Date("2026-05-13T23:00:00Z"),
-         ),
-      ).toBe("dinner");
-      expect(
-         getCurrentMealPeriod(
-            new Date("2026-05-14T05:00:00Z"),
-         ),
-      ).toBe("late_night");
-   });
 });
 
 describe("menu source URL building", () => {
@@ -254,18 +228,39 @@ describe("generic menu payload parsing", () => {
    });
 
    it("deletes all meal periods if mealPeriod is not provided", async () => {
-      const deleteEq = jest
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 99,
+                     name: "Old Item",
+                     meal_period: "breakfast",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      const selectMock = jest
+         .fn()
+         .mockReturnValue(mockQuery);
+      const mockDeleteIn = jest
          .fn()
          .mockResolvedValue({ error: null });
-      const deleteMock = jest.fn(() => ({ eq: deleteEq }));
+      const mockDelete = jest.fn(() => ({
+         in: mockDeleteIn,
+      }));
       const insertMock = jest.fn(() => ({
-         select: jest
-            .fn()
-            .mockResolvedValue({ data: [], error: null }),
+         select: jest.fn().mockResolvedValue({
+            data: [{ id: 100 }],
+            error: null,
+         }),
       }));
 
       supabase.from.mockReturnValue({
-         delete: deleteMock,
+         select: selectMock,
+         delete: mockDelete,
          insert: insertMock,
       });
 
@@ -276,12 +271,12 @@ describe("generic menu payload parsing", () => {
          ],
       });
 
-      expect(deleteMock).toHaveBeenCalled();
-      expect(deleteEq).toHaveBeenCalledTimes(1);
-      expect(deleteEq).toHaveBeenCalledWith(
-         "restaurant_id",
-         13,
+      expect(selectMock).toHaveBeenCalledWith(
+         "id, name, meal_period",
       );
+      // Since mealPeriod was NOT provided, eq("meal_period") should not have been chained
+      expect(mockDelete).toHaveBeenCalled();
+      expect(mockDeleteIn).toHaveBeenCalledWith("id", [99]);
    });
 });
 
@@ -298,7 +293,7 @@ describe("URL building and resolution edge cases", () => {
 describe("Normalizers and JSON extraction", () => {
    it("normalizes text, numbers, lists and strips dietary tags from names", () => {
       const payload = {
-         name: "Veggie Burger | VG | AG",
+         name: "Veggie Burger | V | VG | GF | AG | PR",
          description: "  A tasty &amp; healthy burger  ",
          calories: "350.5 kcal",
          dietary_tags: [{ name: "Vegan" }, "Gluten-Free"],
@@ -314,7 +309,12 @@ describe("Normalizers and JSON extraction", () => {
             name: "Veggie Burger",
             description: "A tasty & healthy burger",
             calories: 350.5,
-            dietary_tags: ["Vegan", "Gluten-Free"],
+            dietary_tags: [
+               "Vegan",
+               "Gluten-Free",
+               "Vegetarian",
+               "Protein",
+            ],
             allergens: ["Soy", "Wheat", "Peanuts"],
          }),
       );
@@ -522,7 +522,7 @@ describe("Subway PDF specific edge cases", () => {
    });
 });
 
-describe("scrapeRestaurantMenu and resolveDineOnCampusMenuUrl", () => {
+describe("scrapeRestaurantMenu", () => {
    it("resolves DineOnCampus periods and fetches menu", async () => {
       let callCount = 0;
       chromium.launch.mockResolvedValue({
@@ -573,14 +573,11 @@ describe("scrapeRestaurantMenu and resolveDineOnCampusMenuUrl", () => {
          { mealPeriod: "lunch", dryRun: true },
       );
 
-      expect(result.sourceUrl).toContain(
-         "period=period123",
-      );
       expect(result.items).toHaveLength(1);
       expect(result.items[0].name).toBe("DOC Burger");
    });
 
-   it("returns warning if no items parsed", async () => {
+   it("returns gracefully if no items parsed", async () => {
       chromium.launch.mockResolvedValue({
          newContext: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue({
@@ -605,7 +602,7 @@ describe("scrapeRestaurantMenu and resolveDineOnCampusMenuUrl", () => {
          { mealPeriod: "lunch", dryRun: false },
       );
 
-      expect(result.warning).toBeDefined();
+      expect(result.warning).toBeUndefined();
       expect(result.items).toHaveLength(0);
    });
 
@@ -628,6 +625,111 @@ describe("scrapeRestaurantMenu and resolveDineOnCampusMenuUrl", () => {
       );
       expect(result.sourceUrl).toContain("subway.com");
       expect(result.items.length).toBeGreaterThan(0);
+   });
+
+   it("catches and warns on periods fetch failure", async () => {
+      const consoleWarnSpy = jest
+         .spyOn(console, "warn")
+         .mockImplementation(() => {});
+      let callCount = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockImplementation(() => {
+                  callCount++;
+                  if (callCount === 1) {
+                     return Promise.resolve({
+                        ok: () => false,
+                        status: () => 500,
+                     });
+                  }
+                  return Promise.resolve({
+                     ok: () => true,
+                     status: () => 200,
+                     text: () =>
+                        Promise.resolve(
+                           JSON.stringify({ items: [] }),
+                        ),
+                  });
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+
+      await scrapeRestaurantMenu(
+         {
+            id: 1,
+            name: "Test Dining",
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/abc/menu",
+         },
+         { dryRun: true },
+      );
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+         expect.stringContaining(
+            "Could not fetch periods for Test Dining",
+         ),
+      );
+      consoleWarnSpy.mockRestore();
+   });
+
+   it("catches and warns on specific period fetch failure", async () => {
+      const consoleWarnSpy = jest
+         .spyOn(console, "warn")
+         .mockImplementation(() => {});
+      let callCount = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockImplementation(() => {
+                  callCount++;
+                  if (callCount === 1) {
+                     return Promise.resolve({
+                        ok: () => true,
+                        status: () => 200,
+                        text: () =>
+                           Promise.resolve(
+                              JSON.stringify({
+                                 periods: [
+                                    {
+                                       id: "p1",
+                                       name: "Lunch",
+                                    },
+                                 ],
+                              }),
+                           ),
+                     });
+                  }
+                  return Promise.resolve({
+                     ok: () => false,
+                     status: () => 500,
+                  });
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+
+      await scrapeRestaurantMenu(
+         {
+            id: 1,
+            name: "Test Dining",
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/abc/menu",
+         },
+         { dryRun: true },
+      );
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+         expect.stringContaining(
+            "Failed to fetch period Lunch for Test Dining",
+         ),
+      );
+      consoleWarnSpy.mockRestore();
    });
 });
 
@@ -687,12 +789,6 @@ describe("scrapeCurrentMenus orchestration", () => {
       );
    });
 
-   it("throws on invalid meal period", async () => {
-      await expect(
-         scrapeCurrentMenus({ mealPeriod: "invalid" }),
-      ).rejects.toThrow("Invalid meal period");
-   });
-
    it("throws if sourceUrl is provided without restaurantId (not dry-run)", async () => {
       await expect(
          scrapeCurrentMenus({
@@ -727,15 +823,23 @@ describe("scrapeCurrentMenus orchestration", () => {
             error: null,
          }),
       }));
-      const deleteEq = jest.fn().mockReturnValue({
-         eq: jest.fn().mockResolvedValue({ error: null }),
-      });
-      const deleteMock = jest.fn(() => ({ eq: deleteEq }));
 
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnValue(mockQuery),
-         delete: deleteMock,
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
          insert: insertMock,
+         update: jest.fn(() => ({
+            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
+               data: null,
+               error: null,
+            }),
+         })),
       });
 
       global.fetch = jest.fn().mockResolvedValue({
@@ -922,7 +1026,7 @@ describe("Subway menu scraping", () => {
       ]);
    });
 
-   it("removes duplicate subway items based on category, name, and meal period", () => {
+   it("removes duplicate subway items based on name and meal period", () => {
       const text = `
          6" Sandwiches
          Cheesesteaks
@@ -937,43 +1041,103 @@ describe("Subway menu scraping", () => {
 });
 
 describe("menu replacement safety", () => {
-   it("does not delete existing rows when no items were parsed", async () => {
+   it("deletes missing items even when no items were parsed", async () => {
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 99,
+                     name: "Old Item",
+                     meal_period: "lunch",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      const mockDeleteQuery = {
+         in: jest.fn().mockResolvedValue({ error: null }),
+      };
+      supabase.from.mockImplementation(() => ({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => mockDeleteQuery),
+      }));
+
       const result = await replaceRestaurantMenu({
          restaurantId: 13,
          items: [],
          mealPeriod: "lunch",
       });
 
-      expect(result).toEqual([]);
-      expect(supabase.from).not.toHaveBeenCalled();
+      expect(result).toEqual({
+         inserted: [],
+         updated: [],
+         deleted: [99],
+      });
+      expect(mockDeleteQuery.in).toHaveBeenCalledWith(
+         "id",
+         [99],
+      );
    });
 
-   it("deletes the current meal period and inserts parsed rows", async () => {
-      const deleteEq = jest.fn();
-      deleteEq
-         .mockReturnValueOnce({ eq: deleteEq })
-         .mockResolvedValueOnce({ error: null });
-      const deleteMock = jest.fn(() => ({ eq: deleteEq }));
-      const selectMock = jest.fn().mockResolvedValue({
-         data: [
-            {
-               id: 99,
-               name: "Oatmeal",
-               category: "Breakfast",
-               restaurant_id: 13,
-               meal_period: "breakfast",
-            },
-         ],
-         error: null,
-      });
-      const insertMock = jest.fn(() => ({
-         select: selectMock,
-      }));
+   it("performs comparison check, deletes missing, updates existing, and inserts new", async () => {
+      const mockQuery = {
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 1,
+                     name: "Old Missing Item",
+                     meal_period: "breakfast",
+                  },
+                  {
+                     id: 2,
+                     name: "Oatmeal",
+                     meal_period: "breakfast",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
 
-      supabase.from.mockReturnValue({
-         delete: deleteMock,
-         insert: insertMock,
-      });
+      const mockDeleteQuery = {
+         in: jest.fn().mockResolvedValue({ error: null }),
+      };
+      const mockUpdateQuery = {
+         single: jest.fn().mockResolvedValue({
+            data: { id: 2, name: "Oatmeal" },
+            error: null,
+         }),
+      };
+      mockUpdateQuery.select = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+      mockUpdateQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+
+      const mockInsertQuery = {
+         select: jest.fn().mockResolvedValue({
+            data: [{ id: 3, name: "New Pancakes" }],
+            error: null,
+         }),
+      };
+
+      const mockUpdate = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+      const mockInsert = jest
+         .fn()
+         .mockReturnValue(mockInsertQuery);
+
+      supabase.from.mockImplementation(() => ({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => mockDeleteQuery),
+         update: mockUpdate,
+         insert: mockInsert,
+      }));
 
       const result = await replaceRestaurantMenu({
          restaurantId: 13,
@@ -982,45 +1146,41 @@ describe("menu replacement safety", () => {
             {
                category: "Breakfast",
                name: "Oatmeal",
+               calories: 150,
+               meal_period: "breakfast",
+            },
+            {
+               category: "Breakfast",
+               name: "New Pancakes",
+               calories: 300,
                meal_period: "breakfast",
             },
          ],
       });
 
-      expect(supabase.from).toHaveBeenCalledWith(
-         "menu_items",
+      expect(mockDeleteQuery.in).toHaveBeenCalledWith(
+         "id",
+         [1],
       );
-      expect(deleteMock).toHaveBeenCalled();
-      expect(deleteEq).toHaveBeenNthCalledWith(
-         1,
-         "restaurant_id",
-         13,
+      expect(mockUpdate).toHaveBeenCalledWith(
+         expect.objectContaining({
+            name: "Oatmeal",
+            calories: 150,
+         }),
       );
-      expect(deleteEq).toHaveBeenNthCalledWith(
+      expect(mockUpdateQuery.eq).toHaveBeenCalledWith(
+         "id",
          2,
-         "meal_period",
-         "breakfast",
       );
-      expect(insertMock).toHaveBeenCalledWith([
-         {
-            category: "Breakfast",
-            name: "Oatmeal",
-            meal_period: "breakfast",
-            restaurant_id: 13,
-         },
+      expect(mockInsert).toHaveBeenCalledWith([
+         expect.objectContaining({
+            name: "New Pancakes",
+            calories: 300,
+         }),
       ]);
-      expect(selectMock).toHaveBeenCalledWith(
-         "id,name,category,restaurant_id,meal_period",
-      );
-      expect(result).toEqual([
-         {
-            id: 99,
-            name: "Oatmeal",
-            category: "Breakfast",
-            restaurant_id: 13,
-            meal_period: "breakfast",
-         },
-      ]);
+      expect(result.deleted).toEqual([1]);
+      expect(result.updated).toHaveLength(1);
+      expect(result.inserted).toHaveLength(1);
    });
 });
 
@@ -1046,19 +1206,6 @@ describe("edge cases and fallbacks", () => {
       consoleLogSpy.mockRestore();
       consoleWarnSpy.mockRestore();
       jest.clearAllMocks();
-   });
-
-   it("getCurrentMealPeriod handles missing time parts", () => {
-      const formatSpy = jest
-         .spyOn(
-            Intl.DateTimeFormat.prototype,
-            "formatToParts",
-         )
-         .mockReturnValue([]);
-      expect(getCurrentMealPeriod(new Date())).toBe(
-         "breakfast",
-      );
-      formatSpy.mockRestore();
    });
 
    it("buildMenuUrl handles whats-on-the-menu paths without dates", () => {
@@ -1154,23 +1301,38 @@ describe("edge cases and fallbacks", () => {
    });
 
    it("resolveDineOnCampusMenuUrl handles everyday periods", async () => {
-      chromium.launch.mockResolvedValueOnce({
+      let call = 0;
+      chromium.launch.mockResolvedValue({
          newContext: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue({
                goto: jest.fn().mockResolvedValue({
                   ok: () => true,
                   status: () => 200,
-                  text: () =>
-                     Promise.resolve(
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "every",
+                                    name: "every day",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
                         JSON.stringify({
-                           periods: [
+                           items: [
                               {
-                                 id: "every",
-                                 name: "every day",
+                                 name: "Item",
+                                 calories: 100,
                               },
                            ],
                         }),
-                     ),
+                     );
+                  },
                }),
                content: jest.fn().mockResolvedValue(""),
             }),
@@ -1185,59 +1347,42 @@ describe("edge cases and fallbacks", () => {
          },
          { mealPeriod: "dinner", dryRun: true },
       );
-      expect(result.sourceUrl).toContain("period=every");
+      expect(result.items[0].meal_period).toBe("every-day");
    });
 
-   it("resolveDineOnCampusMenuUrl returns sourceUrl if no ID in periods", async () => {
-      chromium.launch.mockResolvedValueOnce({
+   it("scrapeRestaurantMenu handles everyday periods", async () => {
+      let call = 0;
+      chromium.launch.mockResolvedValue({
          newContext: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue({
                goto: jest.fn().mockResolvedValue({
                   ok: () => true,
                   status: () => 200,
-                  text: () =>
-                     Promise.resolve(
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "every",
+                                    name: "every day",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
                         JSON.stringify({
-                           periods: [
-                              { name: "No ID Period" },
-                           ],
-                        }),
-                     ),
-               }),
-               content: jest.fn().mockResolvedValue(""),
-            }),
-         }),
-         close: jest.fn(),
-      });
-      const result = await scrapeRestaurantMenu(
-         {
-            id: 1,
-            menu_source_url:
-               "https://apiv4.dineoncampus.com/locations/123/menu",
-         },
-         { mealPeriod: "lunch", dryRun: true },
-      );
-      expect(result.sourceUrl).not.toContain("period=");
-   });
-
-   it("selectDineOnCampusPeriod fallback with null mealPeriod", async () => {
-      chromium.launch.mockResolvedValueOnce({
-         newContext: jest.fn().mockResolvedValue({
-            newPage: jest.fn().mockResolvedValue({
-               goto: jest.fn().mockResolvedValue({
-                  ok: () => true,
-                  status: () => 200,
-                  text: () =>
-                     Promise.resolve(
-                        JSON.stringify({
-                           periods: [
+                           items: [
                               {
-                                 id: "fallback",
-                                 name: "Any",
+                                 name: "Item",
+                                 calories: 100,
                               },
                            ],
                         }),
-                     ),
+                     );
+                  },
                }),
                content: jest.fn().mockResolvedValue(""),
             }),
@@ -1250,9 +1395,119 @@ describe("edge cases and fallbacks", () => {
             menu_source_url:
                "https://apiv4.dineoncampus.com/locations/123/menu",
          },
-         { mealPeriod: null, dryRun: true },
+         { dryRun: true },
       );
-      expect(result.sourceUrl).toContain("period=fallback");
+      expect(result.items[0].meal_period).toBe("every-day");
+   });
+
+   it("scrapeRestaurantMenu skips period if no ID in periods", async () => {
+      let call = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockResolvedValue({
+                  ok: () => true,
+                  status: () => 200,
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 { name: "No ID Period" },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
+                        JSON.stringify({ items: [] }),
+                     );
+                  },
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 1,
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/123/menu",
+         },
+         { dryRun: true },
+      );
+      expect(result.items).toHaveLength(0);
+   });
+
+   it("scrapeRestaurantMenu loops through multiple periods", async () => {
+      let call = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockResolvedValue({
+                  ok: () => true,
+                  status: () => 200,
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "p1",
+                                    name: "breakfast",
+                                 },
+                                 {
+                                    id: "p2",
+                                    name: "lunch",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     if (call === 2) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              items: [
+                                 {
+                                    name: "Eggs",
+                                    calories: 100,
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     if (call === 3) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              items: [
+                                 {
+                                    name: "Burger",
+                                    calories: 500,
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                  },
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 1,
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/123/menu",
+         },
+         { dryRun: true },
+      );
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].meal_period).toBe("breakfast");
+      expect(result.items[1].meal_period).toBe("lunch");
    });
 
    it("normalizeNumber returns null for text", () => {
@@ -1360,13 +1615,18 @@ describe("edge cases and fallbacks", () => {
          }),
       }));
       const deleteMock = jest.fn(() => ({
-         eq: jest.fn().mockReturnThis(),
-         then: (cb) => cb({ error: null }),
+         in: jest.fn().mockResolvedValue({ error: null }),
       }));
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (cb) => cb({ data: [], error: null }),
+      };
 
       supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
          delete: deleteMock,
          insert: insertMock,
+         update: jest.fn(),
       });
 
       global.fetch = jest.fn().mockResolvedValue({
@@ -1388,47 +1648,108 @@ describe("edge cases and fallbacks", () => {
       expect(insertMock).toHaveBeenCalled();
    });
 
-   it("replaceRestaurantMenu throws on insert error", async () => {
-      supabase.from.mockReturnValue({
-         delete: jest.fn(() => ({
-            eq: jest.fn().mockReturnThis(),
-            then: (cb) => cb({ error: null }),
-         })),
-         insert: jest.fn(() => ({
-            select: jest.fn().mockResolvedValue({
-               error: new Error("Insert failed"),
-            }),
-         })),
-      });
-      await expect(
-         replaceRestaurantMenu({
-            restaurantId: 1,
-            items: [{ name: "A", category: "B" }],
-            mealPeriod: "lunch",
-         }),
-      ).rejects.toThrow("Insert failed");
-   });
+   it.each([
+      [
+         "fetch",
+         { fetchError: new Error("Fetch failed") },
+         "Fetch failed",
+      ],
+      [
+         "insert",
+         { insertError: new Error("Insert failed") },
+         "Insert failed",
+      ],
+      [
+         "update",
+         { updateError: new Error("Update failed") },
+         "Update failed",
+      ],
+      [
+         "delete",
+         { deleteError: new Error("Delete failed") },
+         "Delete failed",
+      ],
+   ])(
+      "replaceRestaurantMenu throws on %s error",
+      async (name, errors, expectedMessage) => {
+         const mockQuery = {
+            then: (cb) =>
+               cb({
+                  data: errors.fetchError
+                     ? null
+                     : [
+                          {
+                             id: 99,
+                             name: "Missing",
+                             meal_period: "lunch",
+                          },
+                          ...(errors.updateError
+                             ? [
+                                  {
+                                     id: 1,
+                                     name: "A",
+                                     meal_period: "lunch",
+                                  },
+                               ]
+                             : []),
+                       ],
+                  error: errors.fetchError || null,
+               }),
+         };
+         mockQuery.eq = jest
+            .fn()
+            .mockReturnValue(mockQuery);
 
-   it("replaceRestaurantMenu throws on delete error", async () => {
-      const queryMock = {
-         eq: function () {
-            return this;
-         },
-         then: function (cb) {
-            cb({ error: new Error("Delete failed") });
-         },
-      };
-      supabase.from.mockReturnValue({
-         delete: jest.fn().mockReturnValue(queryMock),
-      });
-      await expect(
-         replaceRestaurantMenu({
-            restaurantId: 1,
-            items: [{ name: "A", category: "B" }],
-            mealPeriod: "lunch",
-         }),
-      ).rejects.toThrow("Delete failed");
-   });
+         const mockDeleteQuery = {
+            in: jest.fn().mockResolvedValue({
+               error: errors.deleteError || null,
+            }),
+         };
+
+         const mockUpdateQuery = {
+            single: jest.fn().mockResolvedValue({
+               error: errors.updateError || null,
+            }),
+         };
+         mockUpdateQuery.select = jest
+            .fn()
+            .mockReturnValue(mockUpdateQuery);
+         mockUpdateQuery.eq = jest
+            .fn()
+            .mockReturnValue(mockUpdateQuery);
+
+         const mockInsertQuery = {
+            select: jest.fn().mockResolvedValue({
+               error: errors.insertError || null,
+            }),
+         };
+
+         supabase.from.mockImplementation(() => ({
+            select: jest.fn().mockReturnValue(mockQuery),
+            delete: jest.fn(() => mockDeleteQuery),
+            update: jest
+               .fn()
+               .mockReturnValue(mockUpdateQuery),
+            insert: jest
+               .fn()
+               .mockReturnValue(mockInsertQuery),
+         }));
+
+         await expect(
+            replaceRestaurantMenu({
+               restaurantId: 1,
+               items: [
+                  {
+                     name: "A",
+                     category: "B",
+                     meal_period: "lunch",
+                  },
+               ],
+               mealPeriod: "lunch",
+            }),
+         ).rejects.toThrow(expectedMessage);
+      },
+   );
 
    it("fetchDineOnCampusSource throws Attention Required cloudflare error", async () => {
       chromium.launch.mockResolvedValueOnce({
@@ -1801,7 +2122,7 @@ describe("deep object parsing and formatting", () => {
       expect(items[0].price).toBe(5.99);
    });
 
-   it("covers resolveDineOnCampusMenuUrl payload null", async () => {
+   it("covers scrapeRestaurantMenu payload null", async () => {
       chromium.launch.mockResolvedValueOnce({
          newContext: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue({
@@ -1827,20 +2148,38 @@ describe("deep object parsing and formatting", () => {
    });
 
    it("covers selectDineOnCampusPeriod missing name using slug", async () => {
-      chromium.launch.mockResolvedValueOnce({
+      let call = 0;
+      chromium.launch.mockResolvedValue({
          newContext: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue({
                goto: jest.fn().mockResolvedValue({
                   ok: () => true,
                   status: () => 200,
-                  text: () =>
-                     Promise.resolve(
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "p1",
+                                    slug: "lunch",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
                         JSON.stringify({
-                           periods: [
-                              { id: "p1", slug: "lunch" },
+                           items: [
+                              {
+                                 name: "Item",
+                                 calories: 100,
+                              },
                            ],
                         }),
-                     ),
+                     );
+                  },
                }),
                content: jest.fn().mockResolvedValue(""),
             }),
@@ -1855,7 +2194,7 @@ describe("deep object parsing and formatting", () => {
          },
          { mealPeriod: "lunch", dryRun: true },
       );
-      expect(res.sourceUrl).toContain("period=p1");
+      expect(res.items[0].meal_period).toBe("lunch");
    });
 
    it("covers scrapeCurrentMenus > 10 items dryRun", async () => {
@@ -1957,22 +2296,28 @@ describe("deep object parsing and formatting", () => {
                }),
             ),
       });
+
+      const mockQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
       const insertMock = jest.fn().mockReturnValue({
          select: jest.fn().mockResolvedValue({
             data: [{ id: 1 }],
             error: null,
          }),
       });
-      supabase.from.mockReturnValue({
-         delete: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-               eq: jest
-                  .fn()
-                  .mockResolvedValue({ error: null }),
-            }),
-         }),
+      supabase.from.mockImplementation(() => ({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
          insert: insertMock,
-      });
+         update: jest.fn(),
+      }));
 
       await scrapeCurrentMenus({
          sourceUrl: "http://example.com",
@@ -2010,7 +2355,7 @@ describe("deep object parsing and formatting", () => {
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith(
          expect.stringContaining(
-            "Scheduled late_night menu scrape failed:",
+            "Scheduled menu scrape failed:",
          ),
          expect.any(Error),
       );
@@ -2054,29 +2399,58 @@ describe("deep object parsing and formatting", () => {
    });
 
    it("covers selectDineOnCampusPeriod everyday fallback with slug", async () => {
-      chromium.launch.mockResolvedValueOnce({
+      let call = 0;
+      chromium.launch.mockResolvedValue({
          newContext: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue({
                goto: jest.fn().mockResolvedValue({
                   ok: () => true,
                   status: () => 200,
-                  text: () =>
-                     Promise.resolve(
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "every",
+                                    slug: "everyday",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
                         JSON.stringify({
-                           periods: [
+                           items: [
                               {
-                                 id: "every",
-                                 slug: "everyday",
+                                 name: "Item",
+                                 calories: 100,
                               },
                            ],
                         }),
-                     ),
+                     );
+                  },
                }),
                content: jest.fn().mockResolvedValue(""),
             }),
          }),
          close: jest.fn(),
       });
+
+      const mockQuery = {
+         eq: jest.fn().mockReturnThis(),
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+      });
+
       const result = await scrapeRestaurantMenu(
          {
             id: 1,
@@ -2085,7 +2459,7 @@ describe("deep object parsing and formatting", () => {
          },
          { mealPeriod: "dinner", dryRun: true },
       );
-      expect(result.sourceUrl).toContain("period=every");
+      expect(result.items[0].meal_period).toBe("every-day");
    });
 
    it("covers findNutrientValue alternative nutrient value keys", () => {
@@ -2186,21 +2560,26 @@ describe("deep object parsing and formatting", () => {
                }),
             ),
       });
+
+      const mockQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
       const insertMock = jest.fn().mockReturnValue({
-         select: jest.fn().mockResolvedValue({
-            data: null,
-            error: null,
-         }),
+         select: jest
+            .fn()
+            .mockResolvedValue({ data: null, error: null }),
       });
       supabase.from.mockReturnValue({
-         delete: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-               eq: jest
-                  .fn()
-                  .mockResolvedValue({ error: null }),
-            }),
-         }),
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
          insert: insertMock,
+         update: jest.fn(),
       });
 
       await scrapeCurrentMenus({
@@ -2218,10 +2597,625 @@ describe("deep object parsing and formatting", () => {
          text: () =>
             Promise.resolve(JSON.stringify({ items: [] })),
       });
+      const mockQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+      });
       const res = await scrapeRestaurantMenu({
          id: 1,
          menu_source_url: "http://example.com",
       });
       expect(res.items).toEqual([]);
+   });
+});
+
+describe("explicit line coverage targeting", () => {
+   it("covers normalizeMealPeriodName brunch, dinner, late night (lines 175-180)", async () => {
+      let call = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockResolvedValue({
+                  ok: () => true,
+                  status: () => 200,
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "p1",
+                                    name: "brunch",
+                                 },
+                                 {
+                                    id: "p2",
+                                    name: "dinner",
+                                 },
+                                 {
+                                    id: "p3",
+                                    name: "late night",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
+                        JSON.stringify({
+                           items: [
+                              {
+                                 name: "Item",
+                                 calories: 100,
+                              },
+                           ],
+                        }),
+                     );
+                  },
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 1,
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/123/menu",
+         },
+         { dryRun: true },
+      );
+      const periods = result.items.map(
+         (i) => i.meal_period,
+      );
+      expect(periods).toContain("brunch");
+      expect(periods).toContain("dinner");
+      expect(periods).toContain("late_night");
+   });
+
+   it("covers PR tag and filters list (lines 452, 463)", () => {
+      const payload = {
+         name: "Muscle Builder | PR",
+         filters: ["Keto", "Paleo"],
+         calories: 300,
+      };
+      const items = parseMenuPayload([payload], {
+         mealPeriod: "lunch",
+      });
+      expect(items[0].name).toBe("Muscle Builder");
+      expect(items[0].dietary_tags).toContain("Protein");
+      expect(items[0].dietary_tags).toContain("Keto");
+      expect(items[0].dietary_tags).toContain("Paleo");
+   });
+
+   it("covers replaceRestaurantMenu fetch throw (line 939)", async () => {
+      const mockErrorQuery = {
+         then: (cb) =>
+            cb({
+               data: null,
+               error: new Error("Fetch error line 939"),
+            }),
+      };
+      mockErrorQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockErrorQuery);
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockErrorQuery),
+      });
+
+      await expect(
+         replaceRestaurantMenu({
+            restaurantId: 1,
+            items: [],
+            mealPeriod: "lunch",
+         }),
+      ).rejects.toThrow("Fetch error line 939");
+   });
+
+   it("covers replaceRestaurantMenu update mapping (line 963)", async () => {
+      const mockSuccessQuery = {
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 5,
+                     name: "Update",
+                     meal_period: "lunch",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      mockSuccessQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockSuccessQuery);
+
+      const mockUpdateQuery = {
+         single: jest.fn().mockResolvedValue({
+            data: { id: 5, name: "Update" },
+            error: null,
+         }),
+      };
+      mockUpdateQuery.select = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+      mockUpdateQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockUpdateQuery);
+
+      supabase.from.mockReturnValue({
+         select: jest
+            .fn()
+            .mockReturnValue(mockSuccessQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+         update: jest.fn().mockReturnValue(mockUpdateQuery),
+         insert: jest.fn(),
+      });
+
+      const res = await replaceRestaurantMenu({
+         restaurantId: 1,
+         items: [
+            {
+               name: "Update",
+               meal_period: "lunch",
+               category: "Test",
+            },
+         ],
+         mealPeriod: "lunch",
+      });
+      expect(res.updated).toHaveLength(1);
+   });
+
+   it("covers missing sourceUrl object properties (line 1010)", async () => {
+      const restaurant = {
+         id: 77,
+         name: "No URL Restaurant",
+      };
+      const result = await scrapeRestaurantMenu(
+         restaurant,
+         { dryRun: true },
+      );
+      expect(result).toEqual({
+         restaurant,
+         sourceUrl: null,
+         items: [],
+         inserted: [],
+         error: "Missing menu_source_url",
+      });
+   });
+
+   it("covers standard generic HTML parsing else block (line 1105)", async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+         ok: true,
+         text: () =>
+            Promise.resolve(
+               `{"items": [{"name": "Standard HTML Item", "calories": 400}]}`,
+            ),
+      });
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 2,
+            menu_source_url: "https://example.com/menu",
+         },
+         { dryRun: true },
+      );
+      expect(result.items[0].name).toBe(
+         "Standard HTML Item",
+      );
+   });
+
+   it("covers scrapeCurrentMenus throw when sourceUrl provided without restaurantId (line 1136)", async () => {
+      await expect(
+         scrapeCurrentMenus({
+            sourceUrl: "https://example.com/menu",
+            dryRun: false,
+         }),
+      ).rejects.toThrow(
+         "Pass --restaurant-id with --source-url when not using --dry-run.",
+      );
+   });
+});
+
+describe("Final edge cases coverage", () => {
+   it("covers normalizeMealPeriodName breakfast (line 175)", async () => {
+      let call = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockResolvedValue({
+                  ok: () => true,
+                  status: () => 200,
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [
+                                 {
+                                    id: "b1",
+                                    name: "breakfast",
+                                 },
+                              ],
+                           }),
+                        );
+                     }
+                     return Promise.resolve(
+                        JSON.stringify({
+                           items: [
+                              {
+                                 name: "Eggs",
+                                 calories: 100,
+                              },
+                           ],
+                        }),
+                     );
+                  },
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 1,
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/123/menu",
+         },
+         { dryRun: true },
+      );
+      expect(result.items[0].meal_period).toBe("breakfast");
+   });
+
+   it("covers missing branches for dietary tags loop and PR check (lines 452, 463)", () => {
+      const payload = {
+         name: "Everything Burger | V | VG | GF | AG | PR",
+         calories: 100,
+      };
+      const items = parseMenuPayload([payload]);
+      expect(items[0].dietary_tags).toContain("Protein");
+   });
+
+   it("covers replaceRestaurantMenu missing items deletion filter (line 939)", async () => {
+      const mockQuery = {
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 10,
+                     name: "Stale Item",
+                     meal_period: "lunch",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      const mockDeleteQuery = {
+         in: jest.fn().mockResolvedValue({ error: null }),
+      };
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => mockDeleteQuery),
+         insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockResolvedValue({
+               data: [],
+               error: null,
+            }),
+         }),
+         update: jest.fn(),
+      });
+
+      await replaceRestaurantMenu({
+         restaurantId: 1,
+         items: [
+            { name: "Fresh Item", meal_period: "lunch" },
+         ],
+         mealPeriod: "lunch",
+      });
+      expect(mockDeleteQuery.in).toHaveBeenCalledWith(
+         "id",
+         [10],
+      );
+   });
+
+   it("covers replaceRestaurantMenu rowsToInsert else block (line 963)", async () => {
+      const mockSuccessQuery = {
+         then: (cb) =>
+            cb({
+               data: [
+                  {
+                     id: 5,
+                     name: "Update",
+                     meal_period: "lunch",
+                  },
+               ],
+               error: null,
+            }),
+      };
+      mockSuccessQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockSuccessQuery);
+
+      const mockInsertQuery = {
+         select: jest.fn().mockResolvedValue({
+            data: [{ id: 6 }],
+            error: null,
+         }),
+      };
+
+      supabase.from.mockReturnValue({
+         select: jest
+            .fn()
+            .mockReturnValue(mockSuccessQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+         update: jest.fn(() => ({
+            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
+               data: { id: 5 },
+               error: null,
+            }),
+         })),
+         insert: jest.fn().mockReturnValue(mockInsertQuery),
+      });
+
+      const res = await replaceRestaurantMenu({
+         restaurantId: 1,
+         items: [
+            {
+               name: "Update",
+               meal_period: "lunch",
+               category: "Test",
+            },
+            {
+               name: "New Item",
+               meal_period: "lunch",
+               category: "Test",
+            },
+         ],
+         mealPeriod: "lunch",
+      });
+      expect(res.inserted).toHaveLength(1);
+   });
+
+   it("covers scrapeRestaurantMenu return block when dryRun is false (line 1105)", async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+         ok: true,
+         text: () =>
+            Promise.resolve(
+               `{"items": [{"name": "Standard HTML Item", "calories": 400}]}`,
+            ),
+      });
+
+      const mockQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+         insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockResolvedValue({
+               data: [],
+               error: null,
+            }),
+         }),
+         update: jest.fn(),
+      });
+
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 2,
+            menu_source_url: "https://example.com/menu",
+         },
+         { dryRun: false },
+      );
+      expect(result.syncStats).toBeDefined();
+   });
+
+   it("covers scrapeCurrentMenus logging ternary when dryRun is false (line 1136)", async () => {
+      const consoleLogSpy = jest
+         .spyOn(console, "log")
+         .mockImplementation(() => {});
+
+      const mockQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+         insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockResolvedValue({
+               data: [],
+               error: null,
+            }),
+         }),
+         update: jest.fn(),
+      });
+
+      global.fetch = jest.fn().mockResolvedValue({
+         ok: true,
+         text: () => Promise.resolve(`{"items": []}`),
+      });
+
+      await scrapeCurrentMenus({
+         sourceUrl: "https://example.com/menu",
+         restaurantId: 99,
+         dryRun: false,
+         delayMs: 0,
+      });
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+         expect.stringMatching(
+            /Scraping 1 restaurant menu source\(s\) for/,
+         ),
+      );
+      consoleLogSpy.mockRestore();
+   });
+
+   it("covers rawName falsy branch via dynamic getter (line 452)", () => {
+      const payload = { calories: 100 };
+      let count = 0;
+      Object.defineProperty(payload, "name", {
+         get: () => {
+            count++;
+            return count <= 2 ? "Dynamic Name" : null;
+         },
+      });
+      const items = parseMenuPayload([payload]);
+      expect(items.length).toBe(0);
+   });
+
+   it("covers existingItems fallback in replaceRestaurantMenu (lines 939, 963)", async () => {
+      const mockQuery = {
+         then: (cb) => cb({ data: null, error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      const mockInsertQuery = {
+         select: jest.fn().mockResolvedValue({
+            data: [{ id: 1 }],
+            error: null,
+         }),
+      };
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(),
+         update: jest.fn(),
+         insert: jest.fn().mockReturnValue(mockInsertQuery),
+      });
+
+      const result = await replaceRestaurantMenu({
+         restaurantId: 1,
+         items: [
+            { name: "New Item", meal_period: "lunch" },
+         ],
+         mealPeriod: "lunch",
+      });
+      expect(result.inserted).toHaveLength(1);
+   });
+
+   it("covers empty items array with null existingItems in replaceRestaurantMenu (line 939)", async () => {
+      const mockQuery = {
+         then: (cb) => cb({ data: null, error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(),
+         insert: jest.fn(),
+         update: jest.fn(),
+      });
+
+      const result = await replaceRestaurantMenu({
+         restaurantId: 1,
+         items: [],
+         mealPeriod: "lunch",
+      });
+      expect(result.deleted).toEqual([]);
+      expect(result.inserted).toEqual([]);
+   });
+
+   it("covers replaceAllPeriods and missing period name/slug in scrapeRestaurantMenu (lines 1105, 1136)", async () => {
+      let call = 0;
+      chromium.launch.mockResolvedValue({
+         newContext: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue({
+               goto: jest.fn().mockResolvedValue({
+                  ok: () => true,
+                  status: () => 200,
+                  text: () => {
+                     call++;
+                     if (call === 1) {
+                        return Promise.resolve(
+                           JSON.stringify({
+                              periods: [{ id: "p1" }],
+                           }),
+                        );
+                     } // No name or slug
+                     return Promise.resolve(
+                        JSON.stringify({
+                           items: [
+                              {
+                                 name: "Period Item",
+                                 calories: 100,
+                              },
+                           ],
+                        }),
+                     );
+                  },
+               }),
+               content: jest.fn().mockResolvedValue(""),
+            }),
+         }),
+         close: jest.fn(),
+      });
+
+      const mockQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockQuery.eq = jest.fn().mockReturnValue(mockQuery);
+      const mockInsertQuery = {
+         select: jest
+            .fn()
+            .mockResolvedValue({ data: [], error: null }),
+      };
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnValue(mockQuery),
+         delete: jest.fn(() => ({
+            in: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+         })),
+         insert: jest.fn().mockReturnValue(mockInsertQuery),
+         update: jest.fn(),
+      });
+
+      const result = await scrapeRestaurantMenu(
+         {
+            id: 1,
+            menu_source_url:
+               "https://apiv4.dineoncampus.com/locations/123/menu",
+         },
+         { dryRun: false },
+      );
+
+      expect(result.items[0].meal_period).toBe("every-day");
+      expect(result.syncStats).toBeDefined();
    });
 });
