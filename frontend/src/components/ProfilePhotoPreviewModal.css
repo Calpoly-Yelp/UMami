@@ -32,13 +32,23 @@
 
 .profile-photo-preview__actions {
    width: 100%;
-   display: grid;
-   grid-template-columns: 1fr 1fr;
+   display: flex;
    gap: 12px;
 }
 
 .profile-photo-preview__actions .btn {
+   flex: 1;
    min-height: 42px;
+}
+
+.profile-photo-preview__actions .btn-danger {
+   background-color: #dc3545;
+   color: #ffffff;
+   border: 1px solid #dc3545;
+}
+
+.profile-photo-preview__actions .btn-danger:hover {
+   background-color: #c82333;
 }
 
 @media (max-width: 520px) {
@@ -48,6 +58,6 @@
    }
 
    .profile-photo-preview__actions {
-      grid-template-columns: 1fr;
+      flex-direction: column;
    }
 }

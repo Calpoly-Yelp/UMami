@@ -393,7 +393,7 @@ describe("User Profile Page", () => {
    test("renders edit profile buttons", () => {
       render(<UserPage user={testUser} />);
       expect(
-         screen.getByText("Add Photo"),
+         screen.getByText("Edit Photo"),
       ).toBeInTheDocument();
       expect(
          screen.getByText("Edit Profile"),

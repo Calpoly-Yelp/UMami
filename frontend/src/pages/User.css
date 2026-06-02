@@ -49,8 +49,8 @@
    display: flex;
    flex-direction: column;
    align-items: center;
-   justify-content: space-evenly;
-   height: 40vh;
+   padding: 32px 24px;
+   gap: 16px;
    border-radius: 2vw;
    background-color: var(--light-gray-bg);
    box-shadow: var(--card-shadow);
@@ -59,9 +59,23 @@
 .user-profile-picture {
    border-radius: 50%;
    width: 8vw;
-   height: auto;
+   aspect-ratio: 1 / 1;
    object-fit: cover;
    flex-shrink: 0;
+}
+
+.user-review-count {
+   margin: 0;
+}
+
+.user-privacy {
+   margin: 0;
+   font-size: 0.9rem;
+   font-weight: 700;
+   color: #3a8f34;
+   background: rgba(122, 176, 104, 0.18);
+   padding: 4px 12px;
+   border-radius: 999px;
 }
 
 .edit-icons {
@@ -281,14 +295,5 @@
    }
    .restaurant-card-click {
       cursor: pointer;
-   }
-   .user-privacy {
-      margin: -10px 0 8px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #3a8f34;
-      background: rgba(122, 176, 104, 0.18);
-      padding: 4px 12px;
-      border-radius: 999px;
    }
 }

@@ -9,6 +9,9 @@ export default function ProfilePhotoPreviewModal({
    onCancel,
    onChooseDifferent,
    onSubmit,
+   onRemove,
+   showRemove,
+   hasNewSelection = true,
 }) {
    return (
       <Modal
@@ -33,21 +36,41 @@ export default function ProfilePhotoPreviewModal({
             )}
 
             <div className="profile-photo-preview__actions">
-               <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={onChooseDifferent}
-                  disabled={uploading}
-               >
-                  Choose Different
-               </button>
+               {!hasNewSelection && showRemove && (
+                  <button
+                     type="button"
+                     className="btn btn-danger"
+                     onClick={onRemove}
+                     disabled={uploading}
+                  >
+                     Delete
+                  </button>
+               )}
+               {hasNewSelection && (
+                  <button
+                     type="button"
+                     className="btn btn-secondary"
+                     onClick={onChooseDifferent}
+                     disabled={uploading}
+                  >
+                     Choose Different
+                  </button>
+               )}
                <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={onSubmit}
+                  onClick={
+                     hasNewSelection
+                        ? onSubmit
+                        : onChooseDifferent
+                  }
                   disabled={uploading}
                >
-                  {uploading ? "Uploading..." : "Use Photo"}
+                  {uploading
+                     ? "Uploading..."
+                     : hasNewSelection
+                       ? "Use Photo"
+                       : "Change Photo"}
                </button>
             </div>
          </div>

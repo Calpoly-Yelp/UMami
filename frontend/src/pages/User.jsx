@@ -104,6 +104,8 @@ function User({
       profilePhotoPreviewUrl,
       setProfilePhotoPreviewUrl,
    ] = useState("");
+   const [isPhotoModalOpen, setIsPhotoModalOpen] =
+      useState(false);
 
    const [canScroll, setCanScroll] = useState({
       reviews: { left: false, right: false },
@@ -577,6 +579,7 @@ function User({
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
+      setIsPhotoModalOpen(false);
    };
 
    const handleAddPhoto = (e) => {
@@ -596,6 +599,7 @@ function User({
 
       setSelectedProfilePhoto(file);
       setProfilePhotoPreviewUrl(objectUrl);
+      setIsPhotoModalOpen(true);
    };
 
    const handleChooseDifferentPhoto = () => {
@@ -670,9 +674,23 @@ function User({
    const handleRemovePhoto = async () => {
       if (!isOwnProfile || !user.id) return;
 
+      setUploadingPhoto(true);
       try {
          const defaultAvatar = await removeProfilePhoto(
             user.id,
+         );
+
+         await fetch(
+            `${API_BASE_URL}/api/users/${user.id}`,
+            {
+               method: "PATCH",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  avatar_url: defaultAvatar,
+               }),
+            },
          );
 
          setUser((prev) => ({
@@ -711,19 +729,49 @@ function User({
             "Failed to remove profile photo:",
             err,
          );
+      } finally {
+         setUploadingPhoto(false);
+         resetSelectedProfilePhoto();
       }
    };
 
    return (
       <div className="user-page">
          <ProfilePhotoPreviewModal
-            open={Boolean(selectedProfilePhoto)}
-            previewUrl={profilePhotoPreviewUrl}
-            fileName={selectedProfilePhoto?.name}
+            open={
+               isPhotoModalOpen ||
+               Boolean(selectedProfilePhoto)
+            }
+            previewUrl={
+               profilePhotoPreviewUrl ||
+               (user.avatar_url &&
+               !user.avatar_url.includes("ui-avatars.com")
+                  ? user.avatar_url
+                  : "")
+            }
+            fileName={
+               selectedProfilePhoto?.name ||
+               (user.avatar_url &&
+               !user.avatar_url.includes("ui-avatars.com")
+                  ? "Current Photo"
+                  : "")
+            }
             uploading={uploadingPhoto}
             onCancel={resetSelectedProfilePhoto}
             onChooseDifferent={handleChooseDifferentPhoto}
-            onSubmit={handleSubmitProfilePhoto}
+            onSubmit={() => {
+               if (selectedProfilePhoto) {
+                  handleSubmitProfilePhoto();
+               } else {
+                  setIsPhotoModalOpen(false);
+               }
+            }}
+            onRemove={handleRemovePhoto}
+            showRemove={Boolean(
+               user.avatar_url &&
+               !user.avatar_url.includes("ui-avatars.com"),
+            )}
+            hasNewSelection={Boolean(selectedProfilePhoto)}
          />
 
          <div className="user-content">
@@ -772,10 +820,19 @@ function User({
                      <div className="edit-icons">
                         <div
                            className="edit-icon-wrapper"
-                           onClick={() =>
-                              !uploadingPhoto &&
-                              fileInputRef.current?.click()
-                           }
+                           onClick={() => {
+                              if (uploadingPhoto) return;
+                              if (
+                                 user.avatar_url &&
+                                 !user.avatar_url.includes(
+                                    "ui-avatars.com",
+                                 )
+                              ) {
+                                 setIsPhotoModalOpen(true);
+                              } else {
+                                 fileInputRef.current?.click();
+                              }
+                           }}
                            style={{
                               cursor: uploadingPhoto
                                  ? "wait"
@@ -792,34 +849,27 @@ function User({
 
                            <img
                               src={addPhotoIcon}
-                              alt="Add Photo"
+                              alt={
+                                 user.avatar_url &&
+                                 !user.avatar_url.includes(
+                                    "ui-avatars.com",
+                                 )
+                                    ? "Edit Photo"
+                                    : "Add Photo"
+                              }
                            />
 
                            <span>
                               {uploadingPhoto
                                  ? "Uploading..."
-                                 : "Add Photo"}
+                                 : user.avatar_url &&
+                                     !user.avatar_url.includes(
+                                        "ui-avatars.com",
+                                     )
+                                   ? "Edit Photo"
+                                   : "Add Photo"}
                            </span>
                         </div>
-
-                        {user.avatar_url &&
-                           !user.avatar_url.includes(
-                              "ui-avatars.com",
-                           ) && (
-                              <div
-                                 className="edit-icon-wrapper"
-                                 onClick={handleRemovePhoto}
-                                 style={{
-                                    cursor: "pointer",
-                                 }}
-                              >
-                                 <img
-                                    src={addPhotoIcon}
-                                    alt="Remove Photo"
-                                 />
-                                 <span>Remove Photo</span>
-                              </div>
-                           )}
 
                         <div
                            className="edit-icon-wrapper"
