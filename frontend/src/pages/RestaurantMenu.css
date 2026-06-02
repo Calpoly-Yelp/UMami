@@ -138,6 +138,7 @@
 
 .menu-categories li.is-active {
    color: #1b1b1b;
+   font-weight: 800;
 }
 
 .menu-section {

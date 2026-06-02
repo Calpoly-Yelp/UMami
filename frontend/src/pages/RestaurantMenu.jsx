@@ -134,6 +134,79 @@ export default function RestaurantMenu() {
       fetchMenu();
    }, [id]);
 
+   useEffect(() => {
+      if (isMenuLoading || menuData.length === 0) return;
+
+      const handleScroll = (e) => {
+         // Ignore scroll events from the sidebar to prevent jitter
+         if (
+            e?.target?.classList?.contains(
+               "menu-categories",
+            )
+         )
+            return;
+
+         const sectionElements = Array.from(
+            document.querySelectorAll(".menu-section"),
+         );
+         let currentCategory = "";
+
+         for (const el of sectionElements) {
+            const rect = el.getBoundingClientRect();
+            // 300px threshold clears the top header/nav area and provides breathing room
+            if (rect.top <= 300) {
+               currentCategory =
+                  el.getAttribute("data-category");
+            } else {
+               break;
+            }
+         }
+
+         if (
+            !currentCategory &&
+            sectionElements.length > 0
+         ) {
+            currentCategory =
+               sectionElements[0].getAttribute(
+                  "data-category",
+               );
+         }
+
+         // Dynamically find the scroll container (handles if a specific div is scrolling instead of window)
+         const scrollContainer =
+            e?.target && e.target !== document
+               ? e.target
+               : document.documentElement;
+
+         // Check if scrolled to the absolute bottom of the scroll container
+         if (
+            scrollContainer.scrollHeight -
+               scrollContainer.scrollTop <=
+               scrollContainer.clientHeight + 10 &&
+            scrollContainer.scrollTop > 0
+         ) {
+            currentCategory =
+               sectionElements[
+                  sectionElements.length - 1
+               ].getAttribute("data-category");
+         }
+
+         if (currentCategory)
+            setActiveCategory(currentCategory);
+      };
+
+      // Use capture phase to catch scroll events from internal scrollable divs
+      window.addEventListener("scroll", handleScroll, true);
+      handleScroll(); // Initial check on mount
+
+      return () =>
+         window.removeEventListener(
+            "scroll",
+            handleScroll,
+            true,
+         );
+   }, [isMenuLoading, menuData]);
+
    const scrollToCategory = (category) => {
       setActiveCategory(category);
       const el = document.getElementById(
@@ -244,6 +317,7 @@ export default function RestaurantMenu() {
                         id={section.category
                            .replace(/\s+/g, "-")
                            .toLowerCase()}
+                        data-category={section.category}
                      >
                         <h3 className="menu-section-title">
                            {section.category}
