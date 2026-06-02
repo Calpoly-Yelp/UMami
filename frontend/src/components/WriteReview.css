@@ -259,25 +259,6 @@ button.wr-uploadBtn:active {
    object-fit: cover;
 }
 
-.wr-photoDetailsH {
-   position: absolute;
-   bottom: 0;
-   left: 0;
-   right: 0;
-   background: rgba(0, 0, 0, 0.65);
-   padding: 8px 10px;
-   text-align: center;
-}
-
-.wr-photoCaptionH {
-   font-size: 13px;
-   color: #fff;
-   font-weight: 500;
-   display: block;
-   word-wrap: break-word;
-   line-height: 1.3;
-}
-
 .wr-photoRemoveBtnH {
    position: absolute;
    top: 6px;

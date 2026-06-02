@@ -14,6 +14,10 @@ jest.mock("../components/UserName.jsx", () => {
    };
 });
 
+jest.mock("react-router-dom", () => ({
+   useNavigate: () => jest.fn(),
+}));
+
 beforeAll(() => {
    global.IntersectionObserver = class {
       constructor() {}

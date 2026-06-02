@@ -64,14 +64,22 @@ const syncFollowsSchema = z.object({
 
 // ===============================
 // GET /api/users
-// Get up to 50 users
+// Get users, optionally filtered by search
 // ===============================
 router.get("/", async (req, res) => {
    try {
-      const { data, error } = await supabase
+      const { search } = req.query;
+
+      let query = supabase
          .from("users")
          .select("*")
-         .limit(50);
+         .order("created_at", { ascending: false });
+
+      if (search) {
+         query = query.ilike("name", `%${search}%`);
+      }
+
+      const { data, error } = await query.limit(50);
 
       if (error) {
          throw error;
@@ -82,7 +90,6 @@ router.get("/", async (req, res) => {
          normalizeUser,
       );
 
-      console.log("Fetched users:", normalizedUsers.length);
       return res.status(200).json(normalizedUsers);
    } catch (error) {
       return handleServerError(
@@ -132,13 +139,6 @@ router.get("/:id", async (req, res) => {
    try {
       // Validate route param first so bad ids fail fast.
       const { id } = userIdParamsSchema.parse(req.params);
-
-      // 🔴 Debug
-      console.log("GET /api/users/:id id =", id);
-      console.log(
-         "SUPABASE_URL =",
-         process.env.SUPABASE_URL,
-      );
 
       const { data, error } = await supabase
          .from("users")

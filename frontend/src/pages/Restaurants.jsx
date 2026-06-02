@@ -435,29 +435,46 @@ function Restaurants({ restaurants: initialRestaurants }) {
    // Filters and sorts the restaurant list based on search query,
    // active filter, and sort selection — recomputed only when dependencies change
    const visibleRestaurants = useMemo(() => {
-      const lowerQuery = query.toLowerCase();
+      // Split the query into individual words, ignoring empty spaces
+      const queryTerms = query
+         .toLowerCase()
+         .split(/\s+/)
+         .filter(Boolean);
 
       let filtered = restaurants.filter((restaurant) => {
-         const nameMatch = restaurant.name
-            ?.toLowerCase()
-            .includes(lowerQuery);
+         // If nothing is typed, show all restaurants
+         if (queryTerms.length === 0) return true;
+
+         const nameText =
+            restaurant.name?.toLowerCase() || "";
 
          const locationText = Array.isArray(
             restaurant.location,
          )
-            ? restaurant.location.join(", ")
-            : restaurant.location || "";
+            ? restaurant.location.join(", ").toLowerCase()
+            : (restaurant.location || "").toLowerCase();
 
-         const locationMatch = locationText
-            .toLowerCase()
-            .includes(lowerQuery);
-
-         const tagsMatch = (restaurant.tags || []).some(
-            (tag) =>
-               tag?.toLowerCase().includes(lowerQuery),
+         const tagsList = (restaurant.tags || []).map(
+            (tag) => tag?.toLowerCase() || "",
          );
 
-         return nameMatch || locationMatch || tagsMatch;
+         // Ensure EVERY word in the user's search matches the name, location, or at least one tag
+         return queryTerms.every((term) => {
+            // Provide aliases for common shorthand terms
+            const searchTerms = [term];
+            if (term === "gf") searchTerms.push("gluten");
+            if (term === "veg")
+               searchTerms.push("vegetarian", "vegan");
+            if (term === "veggie")
+               searchTerms.push("vegetarian");
+
+            return searchTerms.some(
+               (st) =>
+                  nameText.includes(st) ||
+                  locationText.includes(st) ||
+                  tagsList.some((tag) => tag.includes(st)),
+            );
+         });
       });
 
       // Filter to only bookmarked restaurants

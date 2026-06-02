@@ -89,6 +89,10 @@ describe("restaurantScraper", () => {
             name: "Wednesday BBQ",
             concept_types: [{ name: "BBQ" }],
          },
+         {
+            id: "loc3",
+            name: "Streats (Wed. Chef's Table)",
+         },
       ];
 
       const mockSchedule = {
@@ -128,6 +132,23 @@ describe("restaurantScraper", () => {
                   },
                ],
             },
+            {
+               name: "Streats (Wed. Chef's Table)",
+               week: [
+                  {
+                     day: 3, // Wednesday
+                     status: "open",
+                     hours: [
+                        {
+                           start_hour: 17,
+                           start_minutes: 0,
+                           end_hour: 21,
+                           end_minutes: 0,
+                        },
+                     ],
+                  },
+               ],
+            },
          ],
       };
 
@@ -148,6 +169,12 @@ describe("restaurantScraper", () => {
          (r) => r.name === "Grill at Campus Market",
       );
       expect(bbq).toBeDefined();
+
+      // Check Streats Chef's Table fix
+      const streats = upsertedData.find(
+         (r) => r.name === "Streats",
+      );
+      expect(streats).toBeDefined();
 
       // Check Hearth tags inference (Pizza/Italian mapping)
       const hearth = upsertedData.find(
@@ -1123,6 +1150,7 @@ describe("restaurantScraper", () => {
       beforeEach(() => {
          jest.resetModules(); // Crucial for re-running top-level code
          process.env = { ...OLD_ENV };
+         delete process.env.JEST_WORKER_ID;
          process.exit = jest.fn(); // Mock process.exit to prevent tests from stopping
       });
 

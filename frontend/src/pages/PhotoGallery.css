@@ -171,20 +171,6 @@
    transform: scale(1.03);
 }
 
-.photo-caption {
-   position: absolute;
-   left: 0;
-   right: 0;
-   bottom: 0;
-   z-index: 10;
-   padding: 10px 12px;
-   background: rgba(0, 0, 0, 0.72);
-   color: white;
-   font-size: 0.9rem;
-   font-weight: 600;
-   text-align: left;
-}
-
 .photo-backBtn {
    background: none;
    border: none;

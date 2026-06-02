@@ -250,20 +250,6 @@
    display: block;
 }
 
-.review-photo-caption {
-   position: absolute;
-   bottom: 0;
-   left: 0;
-   right: 0;
-   background: rgba(0, 0, 0, 0.65);
-   color: #fff;
-   padding: 8px 12px;
-   font-size: 0.85rem;
-   font-weight: 600;
-   text-align: center;
-   pointer-events: none;
-}
-
 /* +N / show less tag pill (match .review-tag sizing and layout) */
 .review-tag-more {
    /* match the tag pill layout */

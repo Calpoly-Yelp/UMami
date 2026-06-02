@@ -22,6 +22,7 @@ function Header() {
       useState(false);
    const [isSearchOpen, setIsSearchOpen] = useState(false);
    const [searchQuery, setSearchQuery] = useState("");
+   const [isSearching, setIsSearching] = useState(false);
    const [allUsers, setAllUsers] = useState([]);
    const [followedSet, setFollowedSet] = useState(
       new Set(),
@@ -46,6 +47,8 @@ function Header() {
    const toggleSearch = () => {
       setIsSearchOpen(!isSearchOpen);
       setSearchQuery("");
+      setAllUsers([]);
+      setIsSearching(false);
       if (isDropdownOpen) setIsDropdownOpen(false);
       if (isNotificationsOpen)
          setIsNotificationsOpen(false);
@@ -236,6 +239,34 @@ function Header() {
          );
    }, []);
 
+   // Listen for avatar updates to instantly update the profile picture in the header
+   useEffect(() => {
+      const handleAvatarUpdate = (e) => {
+         if (
+            e.detail &&
+            e.detail.avatar_url !== undefined
+         ) {
+            setUser((prev) =>
+               prev
+                  ? {
+                       ...prev,
+                       avatar_url: e.detail.avatar_url,
+                    }
+                  : prev,
+            );
+         }
+      };
+      window.addEventListener(
+         "avatar-updated",
+         handleAvatarUpdate,
+      );
+      return () =>
+         window.removeEventListener(
+            "avatar-updated",
+            handleAvatarUpdate,
+         );
+   }, []);
+
    // calculate unread count for badge display
    const unreadCount = notifications.filter(
       (n) => !n.is_read,
@@ -272,21 +303,45 @@ function Header() {
 
    // logic for fetching all users for search
    useEffect(() => {
-      const fetchUsers = async () => {
+      if (!isSearchOpen || searchQuery.trim() === "") {
+         return;
+      }
+
+      const controller = new AbortController();
+
+      // Debounce: Wait 300ms after the user stops typing before making the request
+      const delayDebounceFn = setTimeout(async () => {
          try {
             const response = await fetch(
-               `${API_BASE_URL}/api/users`,
+               `${API_BASE_URL}/api/users?search=${encodeURIComponent(searchQuery.trim())}`,
+               { signal: controller.signal },
             );
             if (response.ok) {
                const data = await response.json();
                setAllUsers(data);
+            } else {
+               setAllUsers([]);
             }
          } catch (error) {
-            console.error("Error fetching users:", error);
+            if (error.name !== "AbortError") {
+               console.error(
+                  "Error fetching users:",
+                  error,
+               );
+               setAllUsers([]);
+            }
+         } finally {
+            if (!controller.signal.aborted) {
+               setIsSearching(false);
+            }
          }
+      }, 300);
+
+      return () => {
+         controller.abort();
+         clearTimeout(delayDebounceFn);
       };
-      fetchUsers();
-   }, []);
+   }, [isSearchOpen, searchQuery]);
 
    // logic for fetching users the current user follows
    useEffect(() => {
@@ -412,12 +467,7 @@ function Header() {
       searchQuery.trim() === ""
          ? []
          : allUsers.filter(
-              (p) =>
-                 p.id !== user?.id && // filter out the logged in user
-                 p.name &&
-                 p.name
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()),
+              (p) => p.id !== user?.id && p.name,
            );
 
    return (
@@ -584,6 +634,8 @@ function Header() {
                onClick={() => {
                   setIsSearchOpen(false);
                   setSearchQuery("");
+                  setAllUsers([]);
+                  setIsSearching(false);
                }}
             >
                <div
@@ -597,9 +649,14 @@ function Header() {
                         placeholder="Search Umami..."
                         className="search-modal-input"
                         value={searchQuery}
-                        onChange={(e) =>
-                           setSearchQuery(e.target.value)
-                        }
+                        onChange={(e) => {
+                           const val = e.target.value;
+                           setSearchQuery(val);
+                           setAllUsers([]);
+                           setIsSearching(
+                              val.trim() !== "",
+                           );
+                        }}
                         autoFocus
                      />
                      <MdClose
@@ -609,13 +666,19 @@ function Header() {
                         onClick={() => {
                            setIsSearchOpen(false);
                            setSearchQuery("");
+                           setAllUsers([]);
+                           setIsSearching(false);
                         }}
                      />
                   </div>
                   {searchQuery.trim() !== "" && (
                      <div className="search-results-wrapper">
                         <div className="search-results">
-                           {filteredPeople.length > 0 ? (
+                           {isSearching ? (
+                              <div className="search-result-empty">
+                                 Searching...
+                              </div>
+                           ) : filteredPeople.length > 0 ? (
                               <>
                                  <div className="search-result-spacer" />
                                  {filteredPeople.map(
@@ -632,6 +695,12 @@ function Header() {
                                              );
                                              setSearchQuery(
                                                 "",
+                                             );
+                                             setAllUsers(
+                                                [],
+                                             );
+                                             setIsSearching(
+                                                false,
                                              );
                                           }}
                                           style={{

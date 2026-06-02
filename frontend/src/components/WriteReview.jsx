@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./WriteReview.css";
+import "./PhotoOverlay.css";
 import PhotoUpload from "./PhotoUpload.jsx";
 import uploadIcon from "../assets/upload-icon.svg";
 import PRESET_TAGS from "../assets/tags.json";
@@ -427,14 +428,12 @@ function WriteReview({
                                     ×
                                  </button>
                                  {photo.type && (
-                                    <div className="wr-photoDetailsH">
-                                       <span className="wr-photoCaptionH">
-                                          {photo.type ===
-                                             "Menu Item" &&
-                                          photo.item
-                                             ? photo.item
-                                             : photo.type}
-                                       </span>
+                                    <div className="shared-photo-caption">
+                                       {photo.type ===
+                                          "Menu Item" &&
+                                       photo.item
+                                          ? photo.item
+                                          : photo.type}
                                     </div>
                                  )}
                               </div>

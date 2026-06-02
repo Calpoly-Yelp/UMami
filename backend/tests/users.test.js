@@ -63,6 +63,8 @@ describe("User Endpoints", () => {
 
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: mockUsers,
             error: null,
@@ -77,9 +79,41 @@ describe("User Endpoints", () => {
       expect(supabase.from).toHaveBeenCalledWith("users");
    });
 
+   it("GET /api/users should apply search filter if 'search' query param is provided", async () => {
+      const mockIlike = jest.fn().mockReturnThis();
+
+      supabase.from.mockReturnValue({
+         select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: mockIlike,
+         limit: jest.fn().mockResolvedValue({
+            data: [
+               {
+                  id: "b677be85-81db-4245-91ca-acb713bd5564",
+                  email: "eli@example.com",
+                  name: "Eli",
+               },
+            ],
+            error: null,
+         }),
+      });
+
+      const res = await request(app).get(
+         "/api/users?search=eli",
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(mockIlike).toHaveBeenCalledWith(
+         "name",
+         "%eli%",
+      );
+   });
+
    it("GET /api/users should handle null data gracefully", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: null,
             error: null,
@@ -95,6 +129,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should handle errors", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest
             .fn()
             .mockRejectedValue(new Error("Database error")),
@@ -109,6 +145,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should throw on returned DB error", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: null,
             error: { message: " returned error" },
@@ -126,6 +164,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should catch unexpected errors", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockImplementation(() => {
             throw new Error("Unexpected error");
          }),
@@ -140,6 +180,8 @@ describe("User Endpoints", () => {
    it("GET /api/users should handle errors without a message", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
+         order: jest.fn().mockReturnThis(),
+         ilike: jest.fn().mockReturnThis(),
          limit: jest.fn().mockResolvedValue({
             data: null,
             error: {}, // No message property

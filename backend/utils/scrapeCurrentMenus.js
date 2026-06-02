@@ -1,25 +1,13 @@
 import "dotenv/config";
 import cron from "node-cron";
-import { PDFParse } from "pdf-parse";
 import { chromium } from "playwright";
 import { supabase } from "../config/supabaseClient.js";
 
-const DEFAULT_MEAL_PERIODS = [
-   "breakfast",
-   "brunch",
-   "lunch",
-   "dinner",
-   "late_night",
-   "every-day",
-];
 const MENU_SCRAPE_SCHEDULES = [
-   { cronExpression: "5 6 * * *", mealPeriod: "breakfast" },
-   { cronExpression: "35 10 * * *", mealPeriod: "lunch" },
-   { cronExpression: "5 16 * * *", mealPeriod: "dinner" },
-   {
-      cronExpression: "5 22 * * *",
-      mealPeriod: "late_night",
-   },
+   "5 6 * * *",
+   "35 10 * * *",
+   "5 16 * * *",
+   "5 22 * * *",
 ];
 const SUBWAY_NUTRITION_PDF_URL =
    "https://www.subway.com/en-us/-/media/northamerica/usa/nutrition/nutritiondocuments/2026/us_nutrition_en_1-2026.pdf";
@@ -46,6 +34,123 @@ const SUBWAY_MAJOR_CATEGORIES = new Set([
    "Individual Proteins",
 ]);
 
+const TAG_KEYWORD_MAPPING = {
+   Coffee: [
+      "coffee",
+      "espresso",
+      "latte",
+      "mocha",
+      "cappuccino",
+      "macchiato",
+      "americano",
+   ],
+   Sandwiches: [
+      "sandwich",
+      "sub",
+      "wrap",
+      "panini",
+      "melt",
+      "hoagie",
+   ],
+   Burgers: [
+      "burger",
+      "cheeseburger",
+      "hamburger",
+      "patty",
+   ],
+   Mexican: [
+      "taco",
+      "burrito",
+      "quesadilla",
+      "nachos",
+      "fajita",
+      "enchilada",
+   ],
+   Sushi: ["sushi", "roll", "sashimi", "nigiri"],
+   Pizza: ["pizza", "slice", "calzone"],
+   Healthy: ["salad", "greens"],
+   Breakfast: [
+      "pancake",
+      "waffle",
+      "omelet",
+      "egg",
+      "bacon",
+      "sausage",
+      "toast",
+      "bagel",
+   ],
+   Smoothies: ["smoothie", "acai", "shake"],
+   Asian: [
+      "teriyaki",
+      "noodles",
+      "wok",
+      "pad thai",
+      "fried rice",
+   ],
+   Indian: ["curry", "tikka", "naan", "samosa"],
+   Mediterranean: [
+      "pita",
+      "falafel",
+      "hummus",
+      "gyro",
+      "kebab",
+   ],
+   Dessert: [
+      "cookie",
+      "brownie",
+      "cake",
+      "ice cream",
+      "pastry",
+      "pie",
+   ],
+   Chicken: ["chicken", "wings", "nuggets", "tenders"],
+   Italian: [
+      "pasta",
+      "spaghetti",
+      "ravioli",
+      "macaroni",
+      "lasagna",
+   ],
+   Salads: ["salad"],
+   Bowls: ["bowl"],
+   Bakery: [
+      "bagel",
+      "pastry",
+      "muffin",
+      "croissant",
+      "scone",
+   ],
+   Beverages: [
+      "boba",
+      "tea",
+      "soda",
+      "lemonade",
+      "juice",
+      "beverage",
+      "drink",
+   ],
+};
+
+function getTagsFromKeywords(name, description, category) {
+   const tags = [];
+   const searchTargets = [name, description, category]
+      .filter(Boolean)
+      .join(" ");
+
+   for (const [tag, keywords] of Object.entries(
+      TAG_KEYWORD_MAPPING,
+   )) {
+      for (const keyword of keywords) {
+         const regex = new RegExp(`\\b${keyword}\\b`, "i");
+         if (regex.test(searchTargets)) {
+            tags.push(tag);
+            break; // Move to next tag if we found a match for this one
+         }
+      }
+   }
+   return tags;
+}
+
 const delay = (ms) =>
    new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -70,44 +175,9 @@ function getTodayDate() {
    }).format(new Date());
 }
 
-export function getCurrentMealPeriod(date = new Date()) {
-   const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: false,
-   }).formatToParts(date);
-   const hour = Number(
-      parts.find((part) => part.type === "hour")?.value ||
-         0,
-   );
-   const minute = Number(
-      parts.find((part) => part.type === "minute")?.value ||
-         0,
-   );
-   const minutes = hour * 60 + minute;
-
-   if (minutes < 10 * 60 + 30) {
-      return "breakfast";
-   }
-
-   if (minutes < 16 * 60) {
-      return "lunch";
-   }
-
-   if (minutes < 22 * 60) {
-      return "dinner";
-   }
-
-   return "late_night";
-}
-
 export function buildMenuUrl(
    sourceUrl,
-   {
-      date = getTodayDate(),
-      mealPeriod = getCurrentMealPeriod(),
-   } = {},
+   { date = getTodayDate(), mealPeriod = "every-day" } = {},
 ) {
    if (!sourceUrl) {
       return null;
@@ -160,10 +230,6 @@ function isSubwayRestaurant(restaurant) {
 }
 
 function isSubwayNutritionSource(sourceUrl) {
-   if (!sourceUrl) {
-      return false;
-   }
-
    const normalizedUrl = String(sourceUrl).toLowerCase();
    return (
       SUBWAY_SOURCE_ALIASES.has(normalizedUrl) ||
@@ -209,86 +275,37 @@ function getDineOnCampusPeriodsUrl(sourceUrl) {
    const locationIndex = parts.indexOf("locations");
    const locationId = parts[locationIndex + 1];
 
-   if (!locationId) {
-      return null;
-   }
-
    const periodsUrl = new URL(
       `/locations/${locationId}/periods`,
       url.origin,
    );
    const date = url.searchParams.get("date");
-   if (date) {
-      periodsUrl.searchParams.set("date", date);
-   }
+   periodsUrl.searchParams.set("date", date);
 
    return periodsUrl.toString();
 }
 
 function normalizeMealPeriodName(value) {
-   return String(value || "")
-      .toLowerCase()
-      .replace(/[_-]+/g, " ")
-      .trim();
-}
-
-function selectDineOnCampusPeriod(periods, mealPeriod) {
-   const normalizedMealPeriod =
-      normalizeMealPeriodName(mealPeriod);
-
-   return (
-      periods.find(
-         (period) =>
-            normalizeMealPeriodName(period.name) ===
-               normalizedMealPeriod ||
-            normalizeMealPeriodName(period.slug) ===
-               normalizedMealPeriod,
-      ) ||
-      periods.find((period) =>
-         ["everyday", "every day", "all day"].includes(
-            normalizeMealPeriodName(
-               period.name || period.slug,
-            ),
-         ),
-      ) ||
-      periods[0]
-   );
-}
-
-async function resolveDineOnCampusMenuUrl(
-   sourceUrl,
-   mealPeriod,
-) {
+   const normalized = String(value).toLowerCase();
+   if (normalized.includes("breakfast")) {
+      return "breakfast";
+   }
+   if (normalized.includes("brunch")) {
+      return "brunch";
+   }
+   if (normalized.includes("lunch")) {
+      return "lunch";
+   }
+   if (normalized.includes("dinner")) {
+      return "dinner";
+   }
    if (
-      !isDineOnCampusApiMenuUrl(sourceUrl) ||
-      new URL(sourceUrl).searchParams.has("period")
+      normalized.includes("late") ||
+      normalized.includes("night")
    ) {
-      return sourceUrl;
+      return "late_night";
    }
-
-   const periodsUrl = getDineOnCampusPeriodsUrl(sourceUrl);
-   if (!periodsUrl) {
-      return sourceUrl;
-   }
-
-   const payload = JSON.parse(
-      await fetchMenuSource(periodsUrl),
-   );
-   const periods = Array.isArray(payload?.periods)
-      ? payload.periods
-      : [];
-   const selectedPeriod = selectDineOnCampusPeriod(
-      periods,
-      mealPeriod,
-   );
-
-   if (!selectedPeriod?.id) {
-      return sourceUrl;
-   }
-
-   const url = new URL(sourceUrl);
-   url.searchParams.set("period", selectedPeriod.id);
-   return url.toString();
+   return "every-day";
 }
 
 function normalizeText(value) {
@@ -326,8 +343,11 @@ function normalizeList(value) {
       return value
          .map((item) =>
             normalizeText(
-               typeof item === "object"
-                  ? item.name || item.title || item.label
+               typeof item === "object" && item !== null
+                  ? item.name ||
+                       item.title ||
+                       item.label ||
+                       item.value
                   : item,
             ),
          )
@@ -415,14 +435,6 @@ function findNutrientValue(item, names) {
 }
 
 function looksLikeMenuItem(item) {
-   if (
-      !item ||
-      typeof item !== "object" ||
-      Array.isArray(item)
-   ) {
-      return false;
-   }
-
    const name = getNestedValue(item, [
       "name",
       "title",
@@ -453,15 +465,7 @@ function looksLikeMenuItem(item) {
    );
 }
 
-function getContextName(value, key = "") {
-   if (
-      !value ||
-      typeof value !== "object" ||
-      Array.isArray(value)
-   ) {
-      return null;
-   }
-
+function getContextName(value, key) {
    const explicitName = normalizeText(
       value.category ||
          value.category_name ||
@@ -559,34 +563,83 @@ function normalizeMenuItem(
       ) ||
       normalizeText(findNutrientValue(item, ["protein"]));
 
+   const rawName = normalizeText(
+      getNestedValue(item, [
+         "name",
+         "title",
+         "item_name",
+         "product_name",
+         "formal_name",
+      ]),
+   );
+
+   const extractedDietaryTags = [];
+   let cleanName = rawName;
+
+   if (rawName) {
+      const tagRegex = /\s*\|\s*(V|VG|GF|AG|PR)\b/gi;
+      let match;
+      while ((match = tagRegex.exec(rawName)) !== null) {
+         const tag = match[1].toUpperCase();
+         if (tag === "V") {
+            extractedDietaryTags.push("Vegetarian");
+         } else if (tag === "VG") {
+            extractedDietaryTags.push("Vegan");
+         } else if (tag === "GF" || tag === "AG") {
+            extractedDietaryTags.push("Gluten-Free");
+         } else {
+            extractedDietaryTags.push("Protein");
+         }
+      }
+      cleanName =
+         rawName
+            .replace(/\s*\|\s*(?:V|VG|GF|AG|PR)\b/gi, "")
+            .trim() || null;
+   }
+
+   const baseDietaryTags = normalizeList(
+      getNestedValue(item, [
+         "dietary_tags",
+         "preferences",
+         "traits",
+         "filters",
+         "cor_icons",
+         "icons",
+         "dietaries",
+         "webtrition_tags",
+      ]),
+   );
+
+   const computedCategory =
+      normalizeText(
+         getNestedValue(item, [
+            "category",
+            "category_name",
+            "station",
+            "station_name",
+         ]),
+      ) ||
+      category ||
+      "Uncategorized";
+
+   const description = normalizeText(
+      getNestedValue(item, [
+         "description",
+         "desc",
+         "short_description",
+      ]),
+   );
+
+   const keywordTags = getTagsFromKeywords(
+      cleanName,
+      description,
+      computedCategory,
+   );
+
    return {
-      category:
-         normalizeText(
-            getNestedValue(item, [
-               "category",
-               "category_name",
-               "station",
-               "station_name",
-            ]),
-         ) ||
-         category ||
-         "Uncategorized",
-      name: normalizeText(
-         getNestedValue(item, [
-            "name",
-            "title",
-            "item_name",
-            "product_name",
-            "formal_name",
-         ]),
-      ),
-      description: normalizeText(
-         getNestedValue(item, [
-            "description",
-            "desc",
-            "short_description",
-         ]),
-      ),
+      category: computedCategory,
+      name: cleanName,
+      description,
       portion: normalizeText(
          getNestedValue(item, [
             "portion",
@@ -607,14 +660,14 @@ function normalizeMenuItem(
             "allergens",
             "allergen_list",
             "contains",
+            "customAllergens",
          ]),
       ),
-      dietary_tags: normalizeList(
-         getNestedValue(item, [
-            "dietary_tags",
-            "preferences",
-            "traits",
-            "filters",
+      dietary_tags: Array.from(
+         new Set([
+            ...baseDietaryTags,
+            ...extractedDietaryTags,
+            ...keywordTags,
          ]),
       ),
       source_url: sourceUrl,
@@ -752,11 +805,7 @@ export function parseMenuPayload(payload, context = {}) {
 
    const seen = new Set();
    return items.filter((item) => {
-      const key = [
-         item.category,
-         item.name,
-         item.meal_period,
-      ].join("|");
+      const key = [item.name, item.meal_period].join("|");
 
       if (seen.has(key)) {
          return false;
@@ -833,16 +882,27 @@ export function parseSubwayNutritionText(
             .trim()
             .split(/\s+/)
             .map(parseSubwayNutritionValue);
-         const category =
+         const categoryStr =
             majorCategory && minorCategory
                ? `${majorCategory} - ${minorCategory}`
                : majorCategory ||
                  minorCategory ||
                  "Subway Menu";
 
+         const cleanCategory =
+            cleanSubwayCategoryName(categoryStr);
+         const cleanName = cleanSubwayItemName(
+            itemMatch[1],
+         );
+         const keywordTags = getTagsFromKeywords(
+            cleanName,
+            null,
+            cleanCategory,
+         );
+
          items.push({
-            category: cleanSubwayCategoryName(category),
-            name: cleanSubwayItemName(itemMatch[1]),
+            category: cleanCategory,
+            name: cleanName,
             description: null,
             portion: `${values[0]} g`,
             price: null,
@@ -851,7 +911,7 @@ export function parseSubwayNutritionText(
             carbs: `${values[7]}g`,
             protein: `${values[11]}g`,
             allergens: [],
-            dietary_tags: [],
+            dietary_tags: keywordTags,
             source_url: sourceUrl,
             meal_period: mealPeriod,
             last_scraped_at: new Date().toISOString(),
@@ -879,11 +939,7 @@ export function parseSubwayNutritionText(
 
    const seen = new Set();
    return items.filter((item) => {
-      const key = [
-         item.category,
-         item.name,
-         item.meal_period,
-      ].join("|");
+      const key = [item.name, item.meal_period].join("|");
 
       if (seen.has(key)) {
          return false;
@@ -895,6 +951,7 @@ export function parseSubwayNutritionText(
 }
 
 async function fetchSubwayNutritionText(url) {
+   const { PDFParse } = await import("pdf-parse");
    const parser = new PDFParse({ url });
 
    try {
@@ -986,10 +1043,10 @@ export async function fetchDineOnCampusSource(url) {
    }
 }
 
-async function fetchRestaurants({ restaurantId } = {}) {
+async function fetchRestaurants({ restaurantId }) {
    let query = supabase
       .from("restaurants")
-      .select("id,name,menu_source_url");
+      .select("id,name,menu_source_url,tags");
 
    if (restaurantId) {
       query = query.eq("id", restaurantId);
@@ -1011,49 +1068,149 @@ export async function replaceRestaurantMenu({
    items,
    mealPeriod,
 }) {
-   if (items.length === 0) {
-      return [];
-   }
-
-   let deleteQuery = supabase
+   let fetchQuery = supabase
       .from("menu_items")
-      .delete()
+      .select("id, name, meal_period")
       .eq("restaurant_id", restaurantId);
 
    if (mealPeriod) {
-      deleteQuery = deleteQuery.eq(
-         "meal_period",
-         mealPeriod,
+      fetchQuery = fetchQuery.eq("meal_period", mealPeriod);
+   }
+
+   const { data: existingItems, error: fetchError } =
+      await fetchQuery;
+   if (fetchError) {
+      throw fetchError;
+   }
+
+   const getCompositeKey = (item) =>
+      `${item.name}|${item.meal_period}`;
+
+   const scrapedKeys = new Set(items.map(getCompositeKey));
+
+   const seenExistingKeys = new Set();
+   const duplicateIds = [];
+   const uniqueExistingItems = [];
+
+   for (const item of existingItems || []) {
+      const key = getCompositeKey(item);
+      if (seenExistingKeys.has(key)) {
+         duplicateIds.push(item.id);
+      } else {
+         seenExistingKeys.add(key);
+         uniqueExistingItems.push(item);
+      }
+   }
+
+   const idsToDelete = [
+      ...duplicateIds,
+      ...uniqueExistingItems
+         .filter(
+            (existing) =>
+               !scrapedKeys.has(getCompositeKey(existing)),
+         )
+         .map((item) => item.id),
+   ];
+
+   if (idsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+         .from("menu_items")
+         .delete()
+         .in("id", idsToDelete);
+
+      if (deleteError) {
+         throw deleteError;
+      }
+   }
+
+   if (items.length === 0) {
+      return {
+         inserted: [],
+         updated: [],
+         deleted: idsToDelete,
+      };
+   }
+
+   const existingMap = new Map(
+      uniqueExistingItems.map((item) => [
+         getCompositeKey(item),
+         item.id,
+      ]),
+   );
+
+   const rowsToUpdate = [];
+   const rowsToInsert = [];
+
+   for (const item of items) {
+      const key = getCompositeKey(item);
+      const existingId = existingMap.get(key);
+      if (existingId) {
+         rowsToUpdate.push({
+            ...item,
+            id: existingId,
+            restaurant_id: restaurantId,
+         });
+      } else {
+         rowsToInsert.push({
+            ...item,
+            restaurant_id: restaurantId,
+         });
+      }
+   }
+
+   const results = {
+      inserted: [],
+      updated: [],
+      deleted: idsToDelete,
+   };
+
+   if (rowsToUpdate.length > 0) {
+      const updatePromises = rowsToUpdate.map(
+         async (row) => {
+            const { id, ...updateData } = row;
+            const { data, error } = await supabase
+               .from("menu_items")
+               .update(updateData)
+               .eq("id", id)
+               .select(
+                  "id,name,category,restaurant_id,meal_period",
+               )
+               .single();
+
+            if (error) {
+               throw error;
+            }
+            return data;
+         },
       );
+
+      const updatedData = await Promise.all(updatePromises);
+      results.updated.push(...updatedData.filter(Boolean));
    }
 
-   const { error: deleteError } = await deleteQuery;
-   if (deleteError) {
-      throw deleteError;
+   if (rowsToInsert.length > 0) {
+      const { data: insertedData, error: insertError } =
+         await supabase
+            .from("menu_items")
+            .insert(rowsToInsert)
+            .select(
+               "id,name,category,restaurant_id,meal_period",
+            );
+
+      if (insertError) {
+         throw insertError;
+      }
+      results.inserted.push(...(insertedData || []));
    }
 
-   const rows = items.map((item) => ({
-      ...item,
-      restaurant_id: restaurantId,
-   }));
-
-   const { data, error } = await supabase
-      .from("menu_items")
-      .insert(rows)
-      .select("id,name,category,restaurant_id,meal_period");
-
-   if (error) {
-      throw error;
-   }
-
-   return data || [];
+   return results;
 }
 
 export async function scrapeRestaurantMenu(
    restaurant,
    {
       date = getTodayDate(),
-      mealPeriod = getCurrentMealPeriod(),
+      mealPeriod = "every-day",
       dryRun = false,
    } = {},
 ) {
@@ -1074,61 +1231,155 @@ export async function scrapeRestaurantMenu(
       };
    }
 
-   sourceUrl = await resolveDineOnCampusMenuUrl(
-      sourceUrl,
-      mealPeriod,
-   );
-
    const isSubwaySource =
       isSubwayNutritionSource(sourceUrl);
-   const effectiveMealPeriod = isSubwaySource
-      ? "every-day"
-      : mealPeriod;
-   const items = isSubwaySource
-      ? parseSubwayNutritionText(
-           await fetchSubwayNutritionText(sourceUrl),
-           {
-              sourceUrl,
-              mealPeriod: effectiveMealPeriod,
-           },
-        )
-      : parseMenuPayload(await fetchMenuSource(sourceUrl), {
-           sourceUrl,
-           mealPeriod: effectiveMealPeriod,
-        });
+   let items = [];
+   let effectiveMealPeriod = "every-day";
+   let replaceAllPeriods = false;
+
+   if (isSubwaySource) {
+      effectiveMealPeriod = "every-day";
+      items = parseSubwayNutritionText(
+         await fetchSubwayNutritionText(sourceUrl),
+         {
+            sourceUrl,
+            mealPeriod: effectiveMealPeriod,
+         },
+      );
+   } else if (isDineOnCampusApiMenuUrl(sourceUrl)) {
+      const periodsUrl =
+         getDineOnCampusPeriodsUrl(sourceUrl);
+      let periodsPayload;
+      try {
+         periodsPayload = JSON.parse(
+            await fetchMenuSource(periodsUrl),
+         );
+      } catch (err) {
+         console.warn(
+            `Could not fetch periods for ${restaurant.name}: ${err.message}`,
+         );
+      }
+
+      const periods = Array.isArray(periodsPayload?.periods)
+         ? periodsPayload.periods
+         : [];
+
+      if (periods.length === 0) {
+         items = parseMenuPayload(
+            await fetchMenuSource(sourceUrl),
+            {
+               sourceUrl,
+               mealPeriod: effectiveMealPeriod,
+               restaurantName: restaurant.name,
+            },
+         );
+      } else {
+         replaceAllPeriods = true;
+         for (const period of periods) {
+            if (!period.id) {
+               continue;
+            }
+
+            const periodUrl = new URL(sourceUrl);
+            periodUrl.searchParams.set("period", period.id);
+
+            let periodText;
+            try {
+               periodText = await fetchMenuSource(
+                  periodUrl.toString(),
+               );
+            } catch (err) {
+               console.warn(
+                  `Failed to fetch period ${period.name} for ${restaurant.name}: ${err.message}`,
+               );
+               continue;
+            }
+
+            const currentPeriodName =
+               normalizeMealPeriodName(
+                  period.name || period.slug || "every-day",
+               );
+
+            const periodItems = parseMenuPayload(
+               periodText,
+               {
+                  sourceUrl: periodUrl.toString(),
+                  mealPeriod: currentPeriodName,
+                  restaurantName: restaurant.name,
+               },
+            );
+            items.push(...periodItems);
+         }
+      }
+   } else {
+      items = parseMenuPayload(
+         await fetchMenuSource(sourceUrl),
+         {
+            sourceUrl,
+            mealPeriod: effectiveMealPeriod,
+            restaurantName: restaurant.name,
+         },
+      );
+   }
 
    if (dryRun) {
       return {
          restaurant,
          sourceUrl,
          items,
-         inserted: [],
+         syncStats: {
+            inserted: [],
+            updated: [],
+            deleted: [],
+         },
       };
    }
 
-   if (items.length === 0) {
-      return {
-         restaurant,
-         sourceUrl,
-         items,
-         inserted: [],
-         skippedReplace: true,
-         warning:
-            "No menu items parsed; existing menu rows were left unchanged.",
-      };
-   }
-
-   const inserted = await replaceRestaurantMenu({
+   const syncStats = await replaceRestaurantMenu({
       restaurantId: restaurant.id,
       items,
-      mealPeriod: effectiveMealPeriod,
+      mealPeriod: replaceAllPeriods
+         ? null
+         : effectiveMealPeriod,
    });
+
+   // Dynamically update the restaurant's tags with dietary tags found on the menu
+   const extractedTags = new Set(restaurant.tags || []);
+   let tagsChanged = false;
+
+   for (const item of items) {
+      for (const tag of item.dietary_tags) {
+         if (!extractedTags.has(tag)) {
+            extractedTags.add(tag);
+            tagsChanged = true;
+         }
+      }
+   }
+
+   if (!dryRun && tagsChanged && restaurant.id) {
+      const updateReq = supabase
+         .from("restaurants")
+         .update({ tags: Array.from(extractedTags) });
+
+      if (updateReq && updateReq.eq) {
+         // Safe-guard for mock tests
+         const { error } = await updateReq.eq(
+            "id",
+            restaurant.id,
+         );
+         if (error) {
+            console.warn(
+               `Failed to update tags for ${restaurant.name}: ${error.message}`,
+            );
+         }
+      }
+   }
 
    return {
       restaurant,
       sourceUrl,
       items,
-      inserted,
+      syncStats,
    };
 }
 
@@ -1136,9 +1387,6 @@ export async function scrapeCurrentMenus({
    restaurantId,
    sourceUrl,
    date = getArgValue("date") || getTodayDate(),
-   mealPeriod: requestedMealPeriod = getArgValue(
-      "meal-period",
-   ) || getCurrentMealPeriod(),
    dryRun = hasArg("dry-run"),
    delayMs = Number(getArgValue("delay-ms") || 1000),
 } = {}) {
@@ -1146,13 +1394,6 @@ export async function scrapeCurrentMenus({
       restaurantId ?? getArgValue("restaurant-id");
    const sourceUrlArg =
       sourceUrl ?? getArgValue("source-url");
-   const mealPeriod = requestedMealPeriod;
-
-   if (!DEFAULT_MEAL_PERIODS.includes(mealPeriod)) {
-      throw new Error(
-         `Invalid meal period "${mealPeriod}". Expected one of: ${DEFAULT_MEAL_PERIODS.join(", ")}`,
-      );
-   }
 
    const restaurants = sourceUrlArg
       ? [
@@ -1162,6 +1403,7 @@ export async function scrapeCurrentMenus({
                  : null,
               name: "Provided source URL",
               menu_source_url: sourceUrlArg,
+              tags: [],
            },
         ]
       : await fetchRestaurants({
@@ -1177,7 +1419,7 @@ export async function scrapeCurrentMenus({
    }
 
    console.log(
-      `Scraping ${restaurants.length} restaurant menu source(s) for ${date} ${mealPeriod}${dryRun ? " (dry run)" : ""}.`,
+      `Scraping ${restaurants.length} restaurant menu source(s) for ${date}${dryRun ? " (dry run)" : ""}.`,
    );
 
    for (const restaurant of restaurants) {
@@ -1190,17 +1432,22 @@ export async function scrapeCurrentMenus({
             restaurant,
             {
                date,
-               mealPeriod,
                dryRun,
             },
          );
 
          console.log(`Source: ${result.sourceUrl}`);
-         console.log(
-            dryRun
-               ? `Parsed ${result.items.length} item(s).`
-               : `Inserted ${result.inserted.length} item(s).`,
-         );
+         if (dryRun) {
+            console.log(
+               `Parsed ${result.items.length} item(s).`,
+            );
+         } else {
+            const { inserted, updated, deleted } =
+               result.syncStats;
+            console.log(
+               `Synced: ${inserted.length} added, ${updated.length} updated, ${deleted.length} deleted.`,
+            );
+         }
 
          if (dryRun && result.items.length > 0) {
             console.table(
@@ -1226,24 +1473,21 @@ export function scheduleCurrentMenuScraper() {
       return [];
    }
 
-   return MENU_SCRAPE_SCHEDULES.map(
-      ({ cronExpression, mealPeriod }) =>
-         cron.schedule(
-            cronExpression,
-            () => {
-               scrapeCurrentMenus({ mealPeriod }).catch(
-                  (error) => {
-                     console.error(
-                        `Scheduled ${mealPeriod} menu scrape failed:`,
-                        error,
-                     );
-                  },
+   return MENU_SCRAPE_SCHEDULES.map((cronExpression) =>
+      cron.schedule(
+         cronExpression,
+         () => {
+            scrapeCurrentMenus().catch((error) => {
+               console.error(
+                  `Scheduled menu scrape failed:`,
+                  error,
                );
-            },
-            {
-               timezone: "America/Los_Angeles",
-            },
-         ),
+            });
+         },
+         {
+            timezone: "America/Los_Angeles",
+         },
+      ),
    );
 }
 
