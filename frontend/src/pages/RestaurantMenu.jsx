@@ -151,10 +151,12 @@ export default function RestaurantMenu() {
          );
          let currentCategory = "";
 
+         // Use the vertical center of the viewport as the trigger line
+         const triggerLine = window.innerHeight / 2;
+
          for (const el of sectionElements) {
             const rect = el.getBoundingClientRect();
-            // 300px threshold clears the top header/nav area and provides breathing room
-            if (rect.top <= 300) {
+            if (rect.top <= triggerLine) {
                currentCategory =
                   el.getAttribute("data-category");
             } else {
