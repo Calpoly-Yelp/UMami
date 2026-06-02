@@ -150,7 +150,11 @@ describe("generic menu payload parsing", () => {
             carbs: "55g",
             protein: "34g",
             allergens: ["Wheat", "Milk"],
-            dietary_tags: ["Local", "Popular"],
+            dietary_tags: [
+               "Local",
+               "Popular",
+               "Sandwiches",
+            ],
             source_url: "https://example.com/menu",
             meal_period: "lunch",
          }),
@@ -314,6 +318,7 @@ describe("Normalizers and JSON extraction", () => {
                "Gluten-Free",
                "Vegetarian",
                "Protein",
+               "Burgers",
             ],
             allergens: ["Soy", "Wheat", "Peanuts"],
          }),
@@ -730,6 +735,167 @@ describe("scrapeRestaurantMenu", () => {
          ),
       );
       consoleWarnSpy.mockRestore();
+   });
+
+   it("dynamically updates restaurant tags when new dietary tags are found and handles update errors", async () => {
+      const consoleWarnSpy = jest
+         .spyOn(console, "warn")
+         .mockImplementation(() => {});
+      const originalFetch = global.fetch;
+
+      global.fetch = jest.fn().mockResolvedValue({
+         ok: true,
+         text: () =>
+            Promise.resolve(
+               JSON.stringify({
+                  items: [
+                     {
+                        name: "New Item",
+                        calories: 100,
+                        dietary_tags: [
+                           "New Tag",
+                           "Old Tag",
+                        ],
+                     },
+                  ],
+               }),
+            ),
+      });
+
+      const mockMenuQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockMenuQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockMenuQuery);
+
+      const mockUpdateRestaurant = jest
+         .fn()
+         .mockReturnValue({
+            eq: jest.fn().mockResolvedValue({
+               error: new Error("Update failed"),
+            }),
+         });
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "restaurants") {
+            return { update: mockUpdateRestaurant };
+         }
+         return {
+            select: jest
+               .fn()
+               .mockReturnValue(mockMenuQuery),
+            delete: jest.fn().mockReturnValue({
+               in: jest
+                  .fn()
+                  .mockResolvedValue({ error: null }),
+            }),
+            insert: jest.fn().mockReturnValue({
+               select: jest.fn().mockResolvedValue({
+                  data: [],
+                  error: null,
+               }),
+            }),
+            update: jest.fn(),
+         };
+      });
+
+      await scrapeRestaurantMenu(
+         {
+            id: 1,
+            name: "Test Dining",
+            menu_source_url: "https://example.com/menu",
+            tags: ["Old Tag"],
+         },
+         { mealPeriod: "lunch", dryRun: false },
+      );
+
+      expect(mockUpdateRestaurant).toHaveBeenCalledWith({
+         tags: ["Old Tag", "New Tag"],
+      });
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+         "Failed to update tags for Test Dining: Update failed",
+      );
+
+      consoleWarnSpy.mockRestore();
+      global.fetch = originalFetch;
+   });
+
+   it("dynamically updates restaurant tags when new dietary tags are found and handles successful updates", async () => {
+      const originalFetch = global.fetch;
+
+      global.fetch = jest.fn().mockResolvedValue({
+         ok: true,
+         text: () =>
+            Promise.resolve(
+               JSON.stringify({
+                  items: [
+                     {
+                        name: "New Item",
+                        calories: 100,
+                        dietary_tags: [
+                           "New Tag",
+                           "Old Tag",
+                        ],
+                     },
+                  ],
+               }),
+            ),
+      });
+
+      const mockMenuQuery = {
+         then: (cb) => cb({ data: [], error: null }),
+      };
+      mockMenuQuery.eq = jest
+         .fn()
+         .mockReturnValue(mockMenuQuery);
+
+      const mockUpdateRestaurant = jest
+         .fn()
+         .mockReturnValue({
+            eq: jest
+               .fn()
+               .mockResolvedValue({ error: null }), // Mocking a successful update
+         });
+
+      supabase.from.mockImplementation((table) => {
+         if (table === "restaurants") {
+            return { update: mockUpdateRestaurant };
+         }
+         return {
+            select: jest
+               .fn()
+               .mockReturnValue(mockMenuQuery),
+            delete: jest.fn().mockReturnValue({
+               in: jest
+                  .fn()
+                  .mockResolvedValue({ error: null }),
+            }),
+            insert: jest.fn().mockReturnValue({
+               select: jest.fn().mockResolvedValue({
+                  data: [],
+                  error: null,
+               }),
+            }),
+            update: jest.fn(),
+         };
+      });
+
+      await scrapeRestaurantMenu(
+         {
+            id: 1,
+            name: "Test Dining",
+            menu_source_url: "https://example.com/menu",
+            tags: ["Old Tag"],
+         },
+         { mealPeriod: "lunch", dryRun: false },
+      );
+
+      expect(mockUpdateRestaurant).toHaveBeenCalledWith({
+         tags: ["Old Tag", "New Tag"],
+      });
+
+      global.fetch = originalFetch;
    });
 });
 
@@ -2291,7 +2457,13 @@ describe("deep object parsing and formatting", () => {
             Promise.resolve(
                JSON.stringify({
                   items: [
-                     { name: "Insert Item", calories: 100 },
+                     {
+                        name: "Insert Item",
+                        calories: 100,
+                        dietary_tags: [
+                           "Trigger Tag Update",
+                        ],
+                     },
                   ],
                }),
             ),

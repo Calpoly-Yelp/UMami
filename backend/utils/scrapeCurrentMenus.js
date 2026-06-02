@@ -34,6 +34,123 @@ const SUBWAY_MAJOR_CATEGORIES = new Set([
    "Individual Proteins",
 ]);
 
+const TAG_KEYWORD_MAPPING = {
+   Coffee: [
+      "coffee",
+      "espresso",
+      "latte",
+      "mocha",
+      "cappuccino",
+      "macchiato",
+      "americano",
+   ],
+   Sandwiches: [
+      "sandwich",
+      "sub",
+      "wrap",
+      "panini",
+      "melt",
+      "hoagie",
+   ],
+   Burgers: [
+      "burger",
+      "cheeseburger",
+      "hamburger",
+      "patty",
+   ],
+   Mexican: [
+      "taco",
+      "burrito",
+      "quesadilla",
+      "nachos",
+      "fajita",
+      "enchilada",
+   ],
+   Sushi: ["sushi", "roll", "sashimi", "nigiri"],
+   Pizza: ["pizza", "slice", "calzone"],
+   Healthy: ["salad", "greens"],
+   Breakfast: [
+      "pancake",
+      "waffle",
+      "omelet",
+      "egg",
+      "bacon",
+      "sausage",
+      "toast",
+      "bagel",
+   ],
+   Smoothies: ["smoothie", "acai", "shake"],
+   Asian: [
+      "teriyaki",
+      "noodles",
+      "wok",
+      "pad thai",
+      "fried rice",
+   ],
+   Indian: ["curry", "tikka", "naan", "samosa"],
+   Mediterranean: [
+      "pita",
+      "falafel",
+      "hummus",
+      "gyro",
+      "kebab",
+   ],
+   Dessert: [
+      "cookie",
+      "brownie",
+      "cake",
+      "ice cream",
+      "pastry",
+      "pie",
+   ],
+   Chicken: ["chicken", "wings", "nuggets", "tenders"],
+   Italian: [
+      "pasta",
+      "spaghetti",
+      "ravioli",
+      "macaroni",
+      "lasagna",
+   ],
+   Salads: ["salad"],
+   Bowls: ["bowl"],
+   Bakery: [
+      "bagel",
+      "pastry",
+      "muffin",
+      "croissant",
+      "scone",
+   ],
+   Beverages: [
+      "boba",
+      "tea",
+      "soda",
+      "lemonade",
+      "juice",
+      "beverage",
+      "drink",
+   ],
+};
+
+function getTagsFromKeywords(name, description, category) {
+   const tags = [];
+   const searchTargets = [name, description, category]
+      .filter(Boolean)
+      .join(" ");
+
+   for (const [tag, keywords] of Object.entries(
+      TAG_KEYWORD_MAPPING,
+   )) {
+      for (const keyword of keywords) {
+         const regex = new RegExp(`\\b${keyword}\\b`, "i");
+         if (regex.test(searchTargets)) {
+            tags.push(tag);
+            break; // Move to next tag if we found a match for this one
+         }
+      }
+   }
+   return tags;
+}
+
 const delay = (ms) =>
    new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -493,26 +610,36 @@ function normalizeMenuItem(
       ]),
    );
 
-   return {
-      category:
-         normalizeText(
-            getNestedValue(item, [
-               "category",
-               "category_name",
-               "station",
-               "station_name",
-            ]),
-         ) ||
-         category ||
-         "Uncategorized",
-      name: cleanName,
-      description: normalizeText(
+   const computedCategory =
+      normalizeText(
          getNestedValue(item, [
-            "description",
-            "desc",
-            "short_description",
+            "category",
+            "category_name",
+            "station",
+            "station_name",
          ]),
-      ),
+      ) ||
+      category ||
+      "Uncategorized";
+
+   const description = normalizeText(
+      getNestedValue(item, [
+         "description",
+         "desc",
+         "short_description",
+      ]),
+   );
+
+   const keywordTags = getTagsFromKeywords(
+      cleanName,
+      description,
+      computedCategory,
+   );
+
+   return {
+      category: computedCategory,
+      name: cleanName,
+      description,
       portion: normalizeText(
          getNestedValue(item, [
             "portion",
@@ -540,6 +667,7 @@ function normalizeMenuItem(
          new Set([
             ...baseDietaryTags,
             ...extractedDietaryTags,
+            ...keywordTags,
          ]),
       ),
       source_url: sourceUrl,
@@ -754,16 +882,27 @@ export function parseSubwayNutritionText(
             .trim()
             .split(/\s+/)
             .map(parseSubwayNutritionValue);
-         const category =
+         const categoryStr =
             majorCategory && minorCategory
                ? `${majorCategory} - ${minorCategory}`
                : majorCategory ||
                  minorCategory ||
                  "Subway Menu";
 
+         const cleanCategory =
+            cleanSubwayCategoryName(categoryStr);
+         const cleanName = cleanSubwayItemName(
+            itemMatch[1],
+         );
+         const keywordTags = getTagsFromKeywords(
+            cleanName,
+            null,
+            cleanCategory,
+         );
+
          items.push({
-            category: cleanSubwayCategoryName(category),
-            name: cleanSubwayItemName(itemMatch[1]),
+            category: cleanCategory,
+            name: cleanName,
             description: null,
             portion: `${values[0]} g`,
             price: null,
@@ -772,7 +911,7 @@ export function parseSubwayNutritionText(
             carbs: `${values[7]}g`,
             protein: `${values[11]}g`,
             allergens: [],
-            dietary_tags: [],
+            dietary_tags: keywordTags,
             source_url: sourceUrl,
             meal_period: mealPeriod,
             last_scraped_at: new Date().toISOString(),
@@ -907,7 +1046,7 @@ export async function fetchDineOnCampusSource(url) {
 async function fetchRestaurants({ restaurantId }) {
    let query = supabase
       .from("restaurants")
-      .select("id,name,menu_source_url");
+      .select("id,name,menu_source_url,tags");
 
    if (restaurantId) {
       query = query.eq("id", restaurantId);
@@ -1186,6 +1325,38 @@ export async function scrapeRestaurantMenu(
          : effectiveMealPeriod,
    });
 
+   // Dynamically update the restaurant's tags with dietary tags found on the menu
+   const extractedTags = new Set(restaurant.tags || []);
+   let tagsChanged = false;
+
+   for (const item of items) {
+      for (const tag of item.dietary_tags) {
+         if (!extractedTags.has(tag)) {
+            extractedTags.add(tag);
+            tagsChanged = true;
+         }
+      }
+   }
+
+   if (!dryRun && tagsChanged && restaurant.id) {
+      const updateReq = supabase
+         .from("restaurants")
+         .update({ tags: Array.from(extractedTags) });
+
+      if (updateReq && updateReq.eq) {
+         // Safe-guard for mock tests
+         const { error } = await updateReq.eq(
+            "id",
+            restaurant.id,
+         );
+         if (error) {
+            console.warn(
+               `Failed to update tags for ${restaurant.name}: ${error.message}`,
+            );
+         }
+      }
+   }
+
    return {
       restaurant,
       sourceUrl,
@@ -1214,6 +1385,7 @@ export async function scrapeCurrentMenus({
                  : null,
               name: "Provided source URL",
               menu_source_url: sourceUrlArg,
+              tags: [],
            },
         ]
       : await fetchRestaurants({
