@@ -39,6 +39,8 @@
    height: 100%;
    overflow-y: auto; /* Allows left side to scroll cleanly on very tiny laptop screens */
    scrollbar-width: none;
+   position: relative;
+   z-index: 20;
 }
 
 .user-info::-webkit-scrollbar {
@@ -54,6 +56,8 @@
    border-radius: 2vw;
    background-color: var(--light-gray-bg);
    box-shadow: var(--card-shadow);
+   position: relative;
+   z-index: 10;
 }
 
 .user-profile-picture {
