@@ -11,7 +11,6 @@ import { supabase } from "./lib/supabase";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import PhotoGallery from "./pages/PhotoGallery";
-import Onboarding from "./pages/Onboarding";
 import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import RestaurantInfo from "./pages/RestaurantInfo";
@@ -38,7 +37,6 @@ function AppLayout() {
       "/signin",
       "/signup",
       "/signup-form",
-      "/onboarding",
       "/auth/callback",
       "/verify-email",
    ];
@@ -108,14 +106,7 @@ function AppLayout() {
                   element={<VerifyEmail />}
                />
 
-               <Route
-                  path="/onboarding"
-                  element={
-                     <ProtectedRoute session={session}>
-                        <Onboarding />
-                     </ProtectedRoute>
-                  }
-               />
+         
 
                <Route
                   path="/user"
