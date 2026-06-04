@@ -2,6 +2,17 @@ describe("Frontend UI Tests", () => {
    const FRONTEND_URL = "http://localhost:5173";
    const API_URL = "http://localhost:4000/api";
 
+   // Reusable helper to dismiss the photo prompt modal if it appears.
+   // The modal is shown to users who have not yet set a profile photo,
+   // and can block interactions with the rest of the page.
+   const dismissPhotoModal = () => {
+      cy.get("body").then(($body) => {
+         if ($body.find(".modal-overlay").length > 0) {
+            cy.contains("button", /skip for now/i).click();
+         }
+      });
+   };
+
    // This test performs a full end-to-end user journey through the UI.
    // It tests logging in, searching for a specific restaurant ("Taco Bell"),
    // opening the restaurant's page, writing and submitting a 5-star review with a photo and tags,
@@ -28,6 +39,9 @@ describe("Frontend UI Tests", () => {
 
       cy.wait("@getRestaurants");
       cy.get(".profile-icon").should("be.visible");
+
+      // Dismiss the photo prompt modal if it appears before interacting with the page
+      dismissPhotoModal();
 
       cy.get(
          '.search-input[placeholder*="Search restaurants" i]',
@@ -114,6 +128,9 @@ describe("Frontend UI Tests", () => {
 
       cy.wait("@getRestaurants");
       cy.get(".profile-icon").should("be.visible");
+
+      // Dismiss the photo prompt modal if it appears before interacting with the page
+      dismissPhotoModal();
 
       // 2. Follow 'musty mustang' in the search bar
       cy.intercept("GET", `${API_URL}/users?search=*`).as(
