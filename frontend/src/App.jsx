@@ -11,7 +11,7 @@ import { supabase } from "./lib/supabase";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import PhotoGallery from "./pages/PhotoGallery";
-import Onboarding from "./pages/Onboarding";
+// import Onboarding from "./pages/Onboarding";
 import UserPage from "./pages/User";
 import Restaurant from "./pages/Restaurants";
 import RestaurantInfo from "./pages/RestaurantInfo";
@@ -36,7 +36,7 @@ function AppLayout() {
       "/signin",
       "/signup",
       "/signup-form",
-      "/onboarding",
+     // "/onboarding",
    ];
 
    const showHeader = !hideHeaderPaths.includes(
@@ -96,6 +96,7 @@ function AppLayout() {
                <Route path="/signin" element={<SignIn />} />
                <Route path="/signup" element={<SignUp />} />
 
+               {/* 
                <Route
                   path="/onboarding"
                   element={
@@ -104,7 +105,7 @@ function AppLayout() {
                      </ProtectedRoute>
                   }
                />
-
+*/}
                <Route
                   path="/user"
                   element={
