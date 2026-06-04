@@ -36,7 +36,7 @@ function AppLayout() {
       "/signin",
       "/signup",
       "/signup-form",
-     // "/onboarding",
+      // "/onboarding",
    ];
 
    const showHeader = !hideHeaderPaths.includes(
