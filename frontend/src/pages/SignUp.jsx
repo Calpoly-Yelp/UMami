@@ -108,12 +108,26 @@ export default function SignUp() {
                      />
                   </div>
 
-                  <label
-                     className="signup__label"
-                     htmlFor="email"
-                  >
-                     Email Address
-                  </label>
+                  <div className="signup__labelRow">
+                     <label
+                        className="signup__label"
+                        htmlFor="email"
+                     >
+                        Email Address
+                     </label>
+
+                     <div className="signup__tooltipWrap">
+                        <span className="signup__tooltipIcon">
+                           i
+                        </span>
+
+                        <div className="signup__tooltip">
+                           Use your @calpoly.edu email to
+                           earn a verified badge on your
+                           profile.
+                        </div>
+                     </div>
+                  </div>
                   <div className="signup__inputWrap">
                      <span
                         className="signup__icon"

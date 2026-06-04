@@ -749,7 +749,7 @@ export default function Review() {
          cancelAnimationFrame(frame);
          window.removeEventListener("resize", handleResize);
       };
-   }, [checkMenuScroll, restaurantInfo]);
+   }, [checkMenuScroll, restaurantInfo, menuItemPhotos]);
 
    const scrollMenuCarousel = (direction) => {
       const container = document.getElementById(
@@ -921,6 +921,7 @@ export default function Review() {
                      className="review__menuRow"
                      id="menu-carousel-list"
                      onScroll={checkMenuScroll}
+                     onLoad={checkMenuScroll}
                   >
                      {menuItemPhotos.map((photo, idx) => (
                         <div
