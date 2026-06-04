@@ -5,7 +5,9 @@ describe("Frontend UI Tests", () => {
    // Reusable helper to dismiss the photo prompt modal if it appears.
    // The modal is shown to users who have not yet set a profile photo,
    // and can block interactions with the rest of the page.
+   // A short wait is added to allow the modal time to render after login.
    const dismissPhotoModal = () => {
+      cy.wait(1000);
       cy.get("body").then(($body) => {
          if ($body.find(".modal-overlay").length > 0) {
             cy.contains("button", /skip for now/i).click();
