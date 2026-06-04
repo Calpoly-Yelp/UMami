@@ -8,6 +8,7 @@ import notificationsRouter from "./routes/notifications.js";
 import { supabase } from "./config/supabaseClient.js";
 import uploadsRouter from "./routes/uploads.js";
 import "./utils/restaurantScraper.js";
+import { scheduleCurrentMenuScraper } from "./utils/scrapeCurrentMenus.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -19,6 +20,7 @@ app.use(
       origin: [
          "https://thankful-hill-0f3846d10.7.azurestaticapps.net", // Azure production frontend
          "http://localhost:5173", // Local Vite dev server
+         "http://localhost:5174",
       ],
       credentials: true, // Allow cookies and auth headers to be sent
    }),
@@ -55,6 +57,8 @@ app.get("/", (req, res) => {
 
 // Only start the server if we're not in a test environment
 if (process.env.NODE_ENV !== "test") {
+   scheduleCurrentMenuScraper();
+
    app.listen(PORT, () => {
       console.log(
          `Server is alive on http://localhost:${PORT}`,

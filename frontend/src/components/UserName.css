@@ -32,27 +32,27 @@
    flex-shrink: 0;
 }
 
-.verified-wrapper::after {
-   content: attr(data-tooltip);
-   position: absolute;
-   left: 115%;
-   top: 50%;
-   transform: translateY(-50%) translateX(-5px);
+.verified-tooltip {
+   position: fixed;
+   transform: translateY(-50%);
    background: #a0a39aec;
    color: black;
-   font-size: 0.65em;
+   font-size: 0.9rem;
    padding: 0.3em 0.5em;
    border-radius: 5px;
    white-space: nowrap;
-   opacity: 0;
    pointer-events: none;
-   transition:
-      opacity 0.15s ease,
-      transform 0.15s ease;
-   z-index: 9999;
+   z-index: 99999;
+   animation: tooltip-fade-in 0.15s ease forwards;
 }
 
-.verified-wrapper:hover::after {
-   opacity: 1;
-   transform: translateY(-50%) translateX(0);
+@keyframes tooltip-fade-in {
+   from {
+      opacity: 0;
+      margin-left: -5px;
+   }
+   to {
+      opacity: 1;
+      margin-left: 0;
+   }
 }

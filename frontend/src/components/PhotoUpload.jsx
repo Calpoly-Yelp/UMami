@@ -2,13 +2,26 @@ import "./PhotoUpload.css";
 import React, { useRef, useState } from "react";
 import uploadIcon from "../assets/upload-icon.svg";
 
-function PhotoUpload({ onPhotoSelected, onClose }) {
+function PhotoUpload({
+   onPhotoSelected,
+   onClose,
+   menuItems = [],
+}) {
    const inputRef = useRef(null);
    const [previewUrl, setPreviewUrl] = useState(null);
    const [selectedFile, setSelectedFile] = useState(null);
    const [photoType, setPhotoType] = useState("Other");
+   const [menuItemSearch, setMenuItemSearch] = useState("");
+   const [showMenuDropdown, setShowMenuDropdown] =
+      useState(false);
    const [menuItem, setMenuItem] = useState("");
    const [error, setError] = useState(null);
+
+   const filteredMenuItems = menuItems.filter((item) =>
+      (item.name || "")
+         .toLowerCase()
+         .includes((menuItemSearch || "").toLowerCase()),
+   );
 
    const handlePick = () => {
       inputRef.current?.click();
@@ -31,7 +44,7 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
             file: selectedFile,
             url: previewUrl,
             type: photoType,
-            item: menuItem,
+            item: photoType === "Menu Item" ? menuItem : "",
          });
          onClose?.();
       }
@@ -110,8 +123,8 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                            <option value="Menu Item">
                               Menu Item
                            </option>
-                           <option value="Vibe">
-                              Vibe of the Restaurant
+                           <option value="Ambiance">
+                              Ambiance
                            </option>
                            <option value="Other">
                               Other
@@ -121,20 +134,73 @@ function PhotoUpload({ onPhotoSelected, onClose }) {
                   </div>
 
                   {photoType === "Menu Item" && (
-                     <div className="form-group">
+                     <div
+                        className="form-group"
+                        style={{ position: "relative" }}
+                     >
                         <label>
                            What menu item is this?
                         </label>
-                        <div className="select-wrap">
-                           <select
-                              value={menuItem}
-                              onChange={(e) =>
-                                 setMenuItem(e.target.value)
-                              }
-                           >
-                              <option>Menu Item</option>
-                           </select>
-                        </div>
+                        <input
+                           type="text"
+                           className="menu-item-search-input"
+                           placeholder="Search menu items..."
+                           value={menuItemSearch}
+                           onChange={(e) => {
+                              setMenuItemSearch(
+                                 e.target.value,
+                              );
+                              setMenuItem(e.target.value);
+                              setShowMenuDropdown(true);
+                           }}
+                           onFocus={() =>
+                              setShowMenuDropdown(true)
+                           }
+                           onBlur={() =>
+                              setTimeout(
+                                 () =>
+                                    setShowMenuDropdown(
+                                       false,
+                                    ),
+                                 200,
+                              )
+                           }
+                        />
+                        {showMenuDropdown && (
+                           <div className="menu-item-dropdown">
+                              {filteredMenuItems.length >
+                              0 ? (
+                                 filteredMenuItems.map(
+                                    (item) => (
+                                       <div
+                                          key={item.id}
+                                          className="menu-item-option"
+                                          onMouseDown={(
+                                             e,
+                                          ) => {
+                                             e.preventDefault();
+                                             setMenuItem(
+                                                item.name,
+                                             );
+                                             setMenuItemSearch(
+                                                item.name,
+                                             );
+                                             setShowMenuDropdown(
+                                                false,
+                                             );
+                                          }}
+                                       >
+                                          {item.name}
+                                       </div>
+                                    ),
+                                 )
+                              ) : (
+                                 <div className="menu-item-option is-empty">
+                                    No items found
+                                 </div>
+                              )}
+                           </div>
+                        )}
                      </div>
                   )}
                </div>

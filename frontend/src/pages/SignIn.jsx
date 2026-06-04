@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./SignIn.css";
 import logo from "../assets/logo.png";
 import { supabase } from "../lib/supabase";
+import { ensureUserProfile } from "../lib/userProfile";
 
 export default function SignIn() {
    const navigate = useNavigate();
@@ -39,24 +40,9 @@ export default function SignIn() {
             );
          }
 
-         console.log("Supabase user:", data.user);
 
-         // Fetch the user's profile from our backend using their Supabase ID
-         const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${data.user.id}`,
-         );
+         const body = await ensureUserProfile(data.user);
 
-         const body = await response
-            .json()
-            .catch(() => ({}));
-
-         if (!response.ok) {
-            console.error("Backend error:", body);
-            throw new Error(
-               body.error ||
-                  `Failed to fetch user profile (${response.status})`,
-            );
-         }
 
          console.log("Fetched user data:", body);
 
@@ -68,7 +54,14 @@ export default function SignIn() {
          navigate("/restaurants");
       } catch (err) {
          console.error("Login failed:", err);
-         setError(err.message || "Login failed");
+         const message = err.message || "Login failed";
+         setError(
+            message
+               .toLowerCase()
+               .includes("email not confirmed")
+               ? "Please verify your email before signing in."
+               : message,
+         );
       } finally {
          setLoading(false);
       }

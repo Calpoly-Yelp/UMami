@@ -35,6 +35,7 @@ export default function SignUp() {
                password,
                options: {
                   data: { name },
+                  emailRedirectTo: `${window.location.origin}/auth/callback`,
                },
             });
 
@@ -48,45 +49,11 @@ export default function SignUp() {
             );
          }
 
-         // Save the user's profile to our backend database
-         const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
-            {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  id: user.id,
-                  name,
-                  email,
-                  // Generate a default avatar from the user's name
-                  avatar_url: `https://ui-avatars.com/api/?name=${name.trim().replace(/\s+/g, "+")}`,
-                  is_verified: false,
-               }),
-            },
-         );
 
-         const result = await response.json();
-
-         if (!response.ok) {
-            throw new Error(
-               result.error || "Failed to save user.",
-            );
-         }
-
-         // Persist user data locally so other pages can access it without re-fetching
-         localStorage.setItem(
-            "user",
-            JSON.stringify(result),
-         );
-         console.log("local storage updated", result);
-
-         // If Supabase returned a session, go to onboarding; otherwise prompt sign in
          if (data.session) {
-            navigate("/onboarding");
+            navigate("/auth/callback");
          } else {
-            navigate("/signin");
+            navigate("/verify-email");
          }
       } catch (err) {
          console.error("Sign up failed:", err);

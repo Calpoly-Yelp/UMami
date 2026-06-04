@@ -43,14 +43,18 @@ function handleServerError(res, label, error) {
  * Supabase auth user ids are UUIDs.
  */
 const userIdParamsSchema = z.object({
-   id: z.string().uuid("Invalid user id format"),
+   id: z
+      .string()
+      .uuid({ message: "Invalid user id format" }),
 });
 
 /**
  * Validation schema for syncing follows.
  */
 const syncFollowsSchema = z.object({
-   follower_id: z.string().uuid("Invalid follower_id"),
+   follower_id: z
+      .string()
+      .uuid({ message: "Invalid follower_id" }),
    added: z.array(z.string().uuid()).optional().default([]),
    removed: z
       .array(z.string().uuid())
@@ -60,14 +64,22 @@ const syncFollowsSchema = z.object({
 
 // ===============================
 // GET /api/users
-// Get up to 50 users
+// Get users, optionally filtered by search
 // ===============================
 router.get("/", async (req, res) => {
    try {
-      const { data, error } = await supabase
+      const { search } = req.query;
+
+      let query = supabase
          .from("users")
          .select("*")
-         .limit(50);
+         .order("created_at", { ascending: false });
+
+      if (search) {
+         query = query.ilike("name", `%${search}%`);
+      }
+
+      const { data, error } = await query.limit(50);
 
       if (error) {
          throw error;
@@ -78,7 +90,6 @@ router.get("/", async (req, res) => {
          normalizeUser,
       );
 
-      console.log("Fetched users:", normalizedUsers.length);
       return res.status(200).json(normalizedUsers);
    } catch (error) {
       return handleServerError(
@@ -129,13 +140,6 @@ router.get("/:id", async (req, res) => {
       // Validate route param first so bad ids fail fast.
       const { id } = userIdParamsSchema.parse(req.params);
 
-      // 🔴 Debug
-      console.log("GET /api/users/:id id =", id);
-      console.log(
-         "SUPABASE_URL =",
-         process.env.SUPABASE_URL,
-      );
-
       const { data, error } = await supabase
          .from("users")
          .select("*")
@@ -170,7 +174,7 @@ router.get("/:id", async (req, res) => {
          );
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
@@ -229,7 +233,7 @@ router.patch("/:id", async (req, res) => {
       if (error instanceof z.ZodError) {
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
@@ -323,7 +327,7 @@ router.get("/:id/follows", async (req, res) => {
          );
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }
@@ -385,7 +389,7 @@ router.post("/follows/sync", async (req, res) => {
          );
          return res.status(400).json({
             error:
-               error.errors?.[0]?.message ||
+               error.issues[0]?.message ||
                "Invalid request",
          });
       }

@@ -123,8 +123,8 @@ describe("SignUp component", () => {
       expect(checkbox).toBeChecked();
    });
 
-   // ── Test 4: Successful sign up flow ───────────────────
-   test("navigates to /onboarding when sign up is submitted successfully", async () => {
+   test("requests email confirmation when sign up is submitted successfully", async () => {
+
       const user = userEvent.setup();
 
       // Mock a successful Supabase sign up response with a valid session
@@ -177,35 +177,23 @@ describe("SignUp component", () => {
                data: {
                   name: "Adrian",
                },
+               emailRedirectTo:
+                  "http://localhost/auth/callback",
             },
          });
       });
 
       // Backend should have been called to save the user profile
       await waitFor(() => {
-         expect(global.fetch).toHaveBeenCalledWith(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
-            {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  id: "test-user-id",
-                  name: "Adrian",
-                  email: "adrian@example.com",
-                  avatar_url:
-                     "https://ui-avatars.com/api/?name=Adrian",
-                  is_verified: false,
-               }),
-            },
-         );
+
+         expect(global.fetch).not.toHaveBeenCalled();
+
       });
 
       // Should navigate to onboarding after successful sign up
       await waitFor(() => {
          expect(mockNavigate).toHaveBeenCalledWith(
-            "/onboarding",
+            "/auth/callback",
          );
       });
    });

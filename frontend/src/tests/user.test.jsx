@@ -9,10 +9,42 @@ import {
 import {
    render as rtlRender,
    screen,
+   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
 import UserPage from "../pages/User.jsx";
+import { uploadProfilePhoto } from "../lib/uploadPhoto";
+
+// Mock Supabase to avoid 'import.meta' Vite errors in Jest and prevent real DB calls
+jest.mock("../lib/supabase", () => {
+   const mockChain = {
+      select: function () {
+         return this;
+      },
+      insert: function () {
+         return this;
+      },
+      delete: function () {
+         return this;
+      },
+      eq: function () {
+         return this;
+      },
+      then: function (resolve) {
+         resolve({ data: [], error: null });
+      },
+   };
+   return {
+      supabase: { from: () => mockChain },
+   };
+});
+
+jest.mock("../lib/uploadPhoto", () => ({
+   uploadProfilePhoto: jest.fn(),
+   removeProfilePhoto: jest.fn(),
+}));
 
 // Custom render function that wraps components in MemoryRouter so React Router hooks work
 const render = (ui, options) =>
@@ -223,6 +255,11 @@ beforeAll(() => {
          status: 200,
       }),
    );
+
+   URL.createObjectURL = jest.fn(
+      () => "blob:profile-preview",
+   );
+   URL.revokeObjectURL = jest.fn();
 });
 
 describe("User Profile Page", () => {
@@ -356,11 +393,49 @@ describe("User Profile Page", () => {
    test("renders edit profile buttons", () => {
       render(<UserPage user={testUser} />);
       expect(
-         screen.getByText("Add Photo"),
+         screen.getByText("Edit Photo"),
       ).toBeInTheDocument();
       expect(
          screen.getByText("Edit Profile"),
       ).toBeInTheDocument();
+   });
+
+   test("previews a profile photo before uploading it", async () => {
+      const user = userEvent.setup();
+      uploadProfilePhoto.mockResolvedValue(
+         "https://example.com/new-avatar.jpg",
+      );
+
+      render(<UserPage user={testUser} reviews={[]} />);
+
+      const input = document.querySelector(
+         'input[type="file"]',
+      );
+      const file = new File(["avatar"], "avatar.png", {
+         type: "image/png",
+      });
+
+      await user.upload(input, file);
+
+      const preview = await screen.findByAltText(
+         "Selected profile preview",
+      );
+      expect(preview).toHaveAttribute(
+         "src",
+         "blob:profile-preview",
+      );
+      expect(uploadProfilePhoto).not.toHaveBeenCalled();
+
+      await user.click(
+         screen.getByRole("button", { name: /use photo/i }),
+      );
+
+      await waitFor(() => {
+         expect(uploadProfilePhoto).toHaveBeenCalledWith(
+            file,
+            testUser.id,
+         );
+      });
    });
 
    // Verify that section headings are present for accessibility and structure

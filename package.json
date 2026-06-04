@@ -38,6 +38,8 @@
    },
    "homepage": "https://github.com/Calpoly-Yelp/UMami#readme",
    "devDependencies": {
+      "cypress": "^15.15.0",
+      "dotenv": "^17.4.2",
       "eslint": "^9.39.2",
       "eslint-config-prettier": "^10.1.8",
       "eslint-plugin-prettier": "^5.5.5",
@@ -46,6 +48,9 @@
       "prettier": "^3.8.1"
    },
    "dependencies": {
-      "node-cron": "^4.2.1"
+      "@phosphor-icons/react": "^2.1.10",
+      "node-cron": "^4.2.1",
+      "pdf-parse": "^2.4.5",
+      "phosphor-react": "^1.4.1"
    }
 }

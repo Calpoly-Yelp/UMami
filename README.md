@@ -88,7 +88,7 @@ npm run dev
 
 | Project  | Lines  | Statements | Functions | Branches |
 | :------- | :----: | :--------: | :-------: | :------: |
-| Frontend | 59.15% |   58.2%    |  51.53%   |  49.44%  |
+| Frontend | 58.44% |   56.78%   |  53.84%   |  53.06%  |
 | Backend  |  100%  |    100%    |   100%    |   100%   |
 
 <!-- COVERAGE-END -->

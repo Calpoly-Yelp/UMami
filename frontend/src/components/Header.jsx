@@ -9,6 +9,8 @@ import {
    MdCheck,
 } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { API_BASE_URL } from "../lib/api";
 import "./Header.css";
 
 // Header component that contains the logo, search, notifications, and profile dropdown
@@ -20,6 +22,7 @@ function Header() {
       useState(false);
    const [isSearchOpen, setIsSearchOpen] = useState(false);
    const [searchQuery, setSearchQuery] = useState("");
+   const [isSearching, setIsSearching] = useState(false);
    const [allUsers, setAllUsers] = useState([]);
    const [followedSet, setFollowedSet] = useState(
       new Set(),
@@ -44,6 +47,8 @@ function Header() {
    const toggleSearch = () => {
       setIsSearchOpen(!isSearchOpen);
       setSearchQuery("");
+      setAllUsers([]);
+      setIsSearching(false);
       if (isDropdownOpen) setIsDropdownOpen(false);
       if (isNotificationsOpen)
          setIsNotificationsOpen(false);
@@ -54,11 +59,19 @@ function Header() {
       navigate("/user");
       setIsDropdownOpen(false);
    };
-   const handleSignOut = () => {
-      localStorage.removeItem("user");
-      setUser(null);
-      navigate("/");
-      setIsDropdownOpen(false);
+   const handleSignOut = async () => {
+      try {
+         await supabase.auth.signOut();
+      } catch (error) {
+         console.error("Error signing out:", error);
+      } finally {
+         localStorage.removeItem("user");
+         setUser(null);
+         setNotifications([]);
+         setFollowedSet(new Set());
+         navigate("/");
+         setIsDropdownOpen(false);
+      }
    };
 
    // logic for handling user clicking a notification to mark it as read
@@ -80,7 +93,7 @@ function Header() {
       // sync with database
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${notification.id}/read`,
+            `${API_BASE_URL}/api/notifications/${notification.id}/read`,
             { method: "PATCH" },
          );
       } catch (error) {
@@ -102,7 +115,7 @@ function Header() {
       const userId = "b677be85-81db-4245-91ca-acb713bd5564";
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}/read-all`,
+            `${API_BASE_URL}/api/notifications/${userId}/read-all`,
             {
                method: "PATCH",
             },
@@ -122,7 +135,7 @@ function Header() {
       const userId = "b677be85-81db-4245-91ca-acb713bd5564";
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}/delete-all`,
+            `${API_BASE_URL}/api/notifications/${userId}/delete-all`,
             { method: "DELETE" },
          );
       } catch (error) {
@@ -148,7 +161,7 @@ function Header() {
       // sync request with data base
       try {
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${notificationId}`,
+            `${API_BASE_URL}/api/notifications/${notificationId}`,
             {
                method: "DELETE",
             },
@@ -175,18 +188,24 @@ function Header() {
             storedUser = localStorage.getItem("user");
          }
 
-         let userId =
-            "b677be85-81db-4245-91ca-acb713bd5564";
+         if (!storedUser) {
+            setUser(null);
+            setNotifications([]);
+            return;
+         }
 
-         if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            if (parsedUser.id) userId = parsedUser.id;
+         const parsedUser = JSON.parse(storedUser);
+         setUser(parsedUser);
+         const userId = parsedUser.id;
+
+         if (!userId) {
+            setNotifications([]);
+            return;
          }
 
          try {
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/notifications/${userId}`,
+               `${API_BASE_URL}/api/notifications/${userId}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -217,6 +236,34 @@ function Header() {
          window.removeEventListener(
             "notification-added",
             handleNewNotification,
+         );
+   }, []);
+
+   // Listen for avatar updates to instantly update the profile picture in the header
+   useEffect(() => {
+      const handleAvatarUpdate = (e) => {
+         if (
+            e.detail &&
+            e.detail.avatar_url !== undefined
+         ) {
+            setUser((prev) =>
+               prev
+                  ? {
+                       ...prev,
+                       avatar_url: e.detail.avatar_url,
+                    }
+                  : prev,
+            );
+         }
+      };
+      window.addEventListener(
+         "avatar-updated",
+         handleAvatarUpdate,
+      );
+      return () =>
+         window.removeEventListener(
+            "avatar-updated",
+            handleAvatarUpdate,
          );
    }, []);
 
@@ -256,21 +303,45 @@ function Header() {
 
    // logic for fetching all users for search
    useEffect(() => {
-      const fetchUsers = async () => {
+      if (!isSearchOpen || searchQuery.trim() === "") {
+         return;
+      }
+
+      const controller = new AbortController();
+
+      // Debounce: Wait 300ms after the user stops typing before making the request
+      const delayDebounceFn = setTimeout(async () => {
          try {
             const response = await fetch(
-               "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users",
+               `${API_BASE_URL}/api/users?search=${encodeURIComponent(searchQuery.trim())}`,
+               { signal: controller.signal },
             );
             if (response.ok) {
                const data = await response.json();
                setAllUsers(data);
+            } else {
+               setAllUsers([]);
             }
          } catch (error) {
-            console.error("Error fetching users:", error);
+            if (error.name !== "AbortError") {
+               console.error(
+                  "Error fetching users:",
+                  error,
+               );
+               setAllUsers([]);
+            }
+         } finally {
+            if (!controller.signal.aborted) {
+               setIsSearching(false);
+            }
          }
+      }, 300);
+
+      return () => {
+         controller.abort();
+         clearTimeout(delayDebounceFn);
       };
-      fetchUsers();
-   }, []);
+   }, [isSearchOpen, searchQuery]);
 
    // logic for fetching users the current user follows
    useEffect(() => {
@@ -278,7 +349,7 @@ function Header() {
          const fetchFollows = async () => {
             try {
                const response = await fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}/follows`,
+                  `${API_BASE_URL}/api/users/${user.id}/follows`,
                );
                if (response.ok) {
                   const data = await response.json();
@@ -314,7 +385,7 @@ function Header() {
 
       try {
          const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
+            `${API_BASE_URL}/api/users/follows/sync`,
             {
                method: "POST",
                headers: {
@@ -363,7 +434,7 @@ function Header() {
       // Sync with backend
       try {
          const response = await fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
+            `${API_BASE_URL}/api/users/follows/sync`,
             {
                method: "POST",
                headers: {
@@ -396,12 +467,7 @@ function Header() {
       searchQuery.trim() === ""
          ? []
          : allUsers.filter(
-              (p) =>
-                 p.id !== user?.id && // filter out the logged in user
-                 p.name &&
-                 p.name
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()),
+              (p) => p.id !== user?.id && p.name,
            );
 
    return (
@@ -568,6 +634,8 @@ function Header() {
                onClick={() => {
                   setIsSearchOpen(false);
                   setSearchQuery("");
+                  setAllUsers([]);
+                  setIsSearching(false);
                }}
             >
                <div
@@ -581,9 +649,14 @@ function Header() {
                         placeholder="Search Umami..."
                         className="search-modal-input"
                         value={searchQuery}
-                        onChange={(e) =>
-                           setSearchQuery(e.target.value)
-                        }
+                        onChange={(e) => {
+                           const val = e.target.value;
+                           setSearchQuery(val);
+                           setAllUsers([]);
+                           setIsSearching(
+                              val.trim() !== "",
+                           );
+                        }}
                         autoFocus
                      />
                      <MdClose
@@ -593,13 +666,19 @@ function Header() {
                         onClick={() => {
                            setIsSearchOpen(false);
                            setSearchQuery("");
+                           setAllUsers([]);
+                           setIsSearching(false);
                         }}
                      />
                   </div>
                   {searchQuery.trim() !== "" && (
                      <div className="search-results-wrapper">
                         <div className="search-results">
-                           {filteredPeople.length > 0 ? (
+                           {isSearching ? (
+                              <div className="search-result-empty">
+                                 Searching...
+                              </div>
+                           ) : filteredPeople.length > 0 ? (
                               <>
                                  <div className="search-result-spacer" />
                                  {filteredPeople.map(
@@ -607,6 +686,27 @@ function Header() {
                                        <div
                                           key={person.id}
                                           className="search-result-item"
+                                          onClick={() => {
+                                             navigate(
+                                                `/user/${person.id}`,
+                                             );
+                                             setIsSearchOpen(
+                                                false,
+                                             );
+                                             setSearchQuery(
+                                                "",
+                                             );
+                                             setAllUsers(
+                                                [],
+                                             );
+                                             setIsSearching(
+                                                false,
+                                             );
+                                          }}
+                                          style={{
+                                             cursor:
+                                                "pointer",
+                                          }}
                                        >
                                           {person.avatar_url ? (
                                              <img

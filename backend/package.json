@@ -7,7 +7,8 @@
       "start": "node index.js",
       "dev": "nodemon index.js",
       "scrape:menus": "node utils/scrapeCurrentMenus.js",
-      "test": "jest",
+      "seed:reviews": "node utils/seedReviews.js",
+      "test": "cross-env DOTENV_CONFIG_QUIET=true jest",
       "lint": "eslint .",
       "lint:fix": "eslint . --fix"
    },
@@ -40,6 +41,7 @@
       "@babel/preset-react": "^7.28.5",
       "@eslint/js": "^9.39.2",
       "babel-jest": "^30.2.0",
+      "cross-env": "^7.0.3",
       "eslint": "^9.39.2",
       "eslint-plugin-jest": "^29.14.0",
       "globals": "^17.3.0",

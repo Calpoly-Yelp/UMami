@@ -2,19 +2,24 @@ import { MdOutlineAccountCircle } from "react-icons/md";
 import ReviewCard from "../components/ReviewCard.jsx";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import FollowedUserCard from "../components/FollowUserCard.jsx";
+import ProfilePhotoPreviewModal from "../components/ProfilePhotoPreviewModal.jsx";
 import {
    CaretLeft,
    CaretRight,
 } from "@phosphor-icons/react";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import UserName from "../components/UserName.jsx";
 import editIcon from "../assets/editProfileIcon.png";
 import addPhotoIcon from "../assets/addPhotoIcon.png";
-import { uploadProfilePhoto } from "../lib/uploadPhoto";
+import { useBookmarks } from "../hooks/useBookmarks";
+import {
+   uploadProfilePhoto,
+   removeProfilePhoto,
+} from "../lib/uploadPhoto";
 import "./User.css";
+import { API_BASE_URL } from "../lib/api";
 
-// This is our user page layout
 function User({
    session,
    user: initialUser,
@@ -23,20 +28,12 @@ function User({
    followedUsers: initialFollowing,
 }) {
    const navigate = useNavigate();
+   const { userId } = useParams();
 
-   // used to scroll in between pieces of the page
-   const handleNavClick = (e, sectionId) => {
-      e.preventDefault();
-      const section = document.getElementById(sectionId);
-      if (section) {
-         section.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-         });
-      }
-   };
+   const currentUserId = session?.user?.id;
+   const profileUserId = userId || currentUserId;
+   const isOwnProfile = !userId || userId === currentUserId;
 
-   // Data Extraction from DB
    const [user, setUser] = useState(
       initialUser || {
          id: "",
@@ -45,6 +42,11 @@ function User({
          is_verified: false,
       },
    );
+
+   const [privacy, setPrivacy] = useState(
+      localStorage.getItem("profilePrivacy") || "public",
+   );
+
    const [reviews, setReviews] = useState(
       initialReviews
          ? [...initialReviews].sort(
@@ -54,19 +56,24 @@ function User({
            )
          : [],
    );
+
    const [restaurants, setRestaurants] = useState(
       initialRestaurants || [],
    );
-   const [bookmarkedIds, setBookmarkedIds] = useState(
-      () =>
-         new Set(
-            initialRestaurants?.map((r) => r.id) || [],
-         ),
+   const {
+      bookmarkedIds,
+      setBookmarkedIds,
+      toggleBookmark,
+   } = useBookmarks(
+      initialRestaurants?.map((r) => r.id) || [],
    );
+
    const originalBookmarkedIdsRef = useRef(
       new Set(initialRestaurants?.map((r) => r.id) || []),
    );
+
    const bookmarkedIdsRef = useRef(new Set());
+
    const initialFollowingArray = initialFollowing ?? [];
    const initialFollowingIdsInit = new Set(
       initialFollowingArray.map((f) => f.id),
@@ -75,6 +82,7 @@ function User({
    const [following, setFollowing] = useState(
       initialFollowingArray,
    );
+
    const [followingIds, setFollowingIds] = useState(
       () => new Set(initialFollowingIdsInit),
    );
@@ -82,20 +90,45 @@ function User({
    const originalFollowingIdsRef = useRef(
       new Set(initialFollowingIdsInit),
    );
+
    const followingIdsRef = useRef(new Set());
 
-   // State to track whether a carousel can scroll left or right
+   const fileInputRef = useRef(null);
+   const profilePhotoPreviewUrlRef = useRef("");
+
+   const [uploadingPhoto, setUploadingPhoto] =
+      useState(false);
+   const [selectedProfilePhoto, setSelectedProfilePhoto] =
+      useState(null);
+   const [
+      profilePhotoPreviewUrl,
+      setProfilePhotoPreviewUrl,
+   ] = useState("");
+   const [isPhotoModalOpen, setIsPhotoModalOpen] =
+      useState(false);
+
    const [canScroll, setCanScroll] = useState({
       reviews: { left: false, right: false },
       restaurants: { left: false, right: false },
       following: { left: false, right: false },
    });
 
-   // Checks the DOM properties of the carousel to see if there is scrollable space
-   // Used only for onScroll events on the carousel containers
+   const handleNavClick = (e, sectionId) => {
+      e.preventDefault();
+      const section = document.getElementById(sectionId);
+
+      if (section) {
+         section.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+         });
+      }
+   };
+
    const checkScroll = (id) => {
       const el = document.getElementById(`${id}-list`);
       if (!el) return;
+
       setCanScroll((prev) => ({
          ...prev,
          [id]: {
@@ -107,83 +140,34 @@ function User({
       }));
    };
 
-   /*
-   // Re-evaluate scroll capabilities whenever the data changes or window resizes
-   // Uses an inline checkScrollInner to avoid calling setState directly from effect
    useEffect(() => {
-      const checkScrollInner = (id) => {
-         const el = document.getElementById(`${id}-list`);
-         if (!el) return;
-         setCanScroll((prev) => ({
-            ...prev,
-            [id]: {
-               left: el.scrollLeft > 0,
-               right:
-                  Math.ceil(
-                     el.scrollLeft + el.clientWidth,
-                  ) < el.scrollWidth,
-            },
-         }));
-      };
-
-      checkScrollInner("reviews");
-      checkScrollInner("restaurants");
-      checkScrollInner("following");
+      const frame = requestAnimationFrame(() => {
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
+      });
 
       const handleResize = () => {
-         checkScrollInner("reviews");
-         checkScrollInner("restaurants");
-         checkScrollInner("following");
+         checkScroll("reviews");
+         checkScroll("restaurants");
+         checkScroll("following");
       };
 
       window.addEventListener("resize", handleResize);
-      return () =>
+
+      return () => {
+         cancelAnimationFrame(frame);
          window.removeEventListener("resize", handleResize);
-   }, [reviews, restaurants, following]);
-   */
-
-   // -- UPDATED --
-   // Re-evaluate scroll capabilities whenever the data changes or window resizes
-
-   useEffect(() => {
-      const checkScrollInner = (id) => {
-         const el = document.getElementById(`${id}-list`);
-         if (!el) return;
-         setCanScroll((prev) => ({
-            ...prev,
-            [id]: {
-               left: el.scrollLeft > 0,
-               right:
-                  Math.ceil(
-                     el.scrollLeft + el.clientWidth,
-                  ) < el.scrollWidth,
-            },
-         }));
       };
-
-      checkScrollInner("reviews");
-      checkScrollInner("restaurants");
-      checkScrollInner("following");
-
-      const handleResize = () => {
-         checkScrollInner("reviews");
-         checkScrollInner("restaurants");
-         checkScrollInner("following");
-      };
-
-      window.addEventListener("resize", handleResize);
-      return () =>
-         window.removeEventListener("resize", handleResize);
    }, [reviews, restaurants, following]);
 
-   // Logic to scroll the horizontal lists
    const scrollContainer = (containerId, direction) => {
       const container = document.getElementById(
          `${containerId}-list`,
       );
 
       if (container) {
-         const scrollAmount = 300; // Approximate width of a card + gap
+         const scrollAmount = 300;
          container.scrollBy({
             left:
                direction === "left"
@@ -195,6 +179,31 @@ function User({
    };
 
    useEffect(() => {
+      const syncPrivacy = () => {
+         setPrivacy(
+            localStorage.getItem("profilePrivacy") ||
+               "public",
+         );
+      };
+
+      window.addEventListener(
+         "profilePrivacyChanged",
+         syncPrivacy,
+      );
+      window.addEventListener("storage", syncPrivacy);
+
+      syncPrivacy();
+
+      return () => {
+         window.removeEventListener(
+            "profilePrivacyChanged",
+            syncPrivacy,
+         );
+         window.removeEventListener("storage", syncPrivacy);
+      };
+   }, []);
+
+   useEffect(() => {
       bookmarkedIdsRef.current = bookmarkedIds;
    }, [bookmarkedIds]);
 
@@ -203,7 +212,6 @@ function User({
    }, [followingIds]);
 
    useEffect(() => {
-      // check if we are in testing mode
       if (
          initialUser ||
          initialReviews ||
@@ -212,47 +220,16 @@ function User({
       )
          return;
 
-      //------------Fetch data function---------------
-      // gets all data for webpage
-      // - user data
-      //     - following users data
-      //     - review data
-      //.    - bookmarked restaurant data
       const fetchData = async () => {
          try {
-            const sessionUser = session?.user || null;
-            const storedUserRaw =
-               localStorage.getItem("user");
-            const storedUser = storedUserRaw
-               ? JSON.parse(storedUserRaw)
-               : null;
-
-            // assign user data to object
-            const userData = {
-               ...(storedUser || {}),
-               ...(initialUser || {}),
-               id:
-                  sessionUser?.id ||
-                  initialUser?.id ||
-                  storedUser?.id ||
-                  "",
-               name:
-                  initialUser?.name ||
-                  storedUser?.name ||
-                  sessionUser?.user_metadata?.name ||
-                  "Anonymous",
-               avatar_url:
-                  initialUser?.avatar_url ||
-                  storedUser?.avatar_url ||
-                  sessionUser?.user_metadata?.avatar_url ||
-                  "",
-               is_verified:
-                  initialUser?.is_verified ||
-                  storedUser?.is_verified ||
-                  false,
-            };
-
-            if (!userData.id) {
+            if (!profileUserId) {
+               setUser({
+                  id: "",
+                  name: "Anonymous",
+                  avatar_url: "",
+                  is_verified: false,
+               });
+               setReviews([]);
                setRestaurants([]);
                setBookmarkedIds(new Set());
                setFollowing([]);
@@ -260,63 +237,98 @@ function User({
                return;
             }
 
-            if (userData.id) {
-               setUser({
-                  id: userData.id,
-                  name: userData.name || "Anonymous",
-                  avatar_url: userData.avatar_url || "",
-                  is_verified:
-                     userData.is_verified || false,
-               });
+            const storedUserRaw =
+               localStorage.getItem("user");
+            const storedUser = storedUserRaw
+               ? JSON.parse(storedUserRaw)
+               : null;
+
+            let profileUser = {
+               id: profileUserId,
+               name: isOwnProfile
+                  ? storedUser?.name ||
+                    session?.user?.user_metadata?.name ||
+                    "Anonymous"
+                  : "Anonymous",
+               avatar_url: isOwnProfile
+                  ? storedUser?.avatar_url ||
+                    session?.user?.user_metadata
+                       ?.avatar_url ||
+                    ""
+                  : "",
+               is_verified: isOwnProfile
+                  ? storedUser?.is_verified || false
+                  : false,
+            };
+
+            try {
+               const userResponse = await fetch(
+                  `${API_BASE_URL}/api/users/${profileUserId}`,
+               );
+
+               if (userResponse.ok) {
+                  const userData =
+                     await userResponse.json();
+
+                  profileUser = {
+                     id: userData.id || profileUserId,
+                     name:
+                        userData.name ||
+                        userData.username ||
+                        "Anonymous",
+                     avatar_url: userData.avatar_url || "",
+                     is_verified:
+                        userData.is_verified || false,
+                  };
+               }
+            } catch (error) {
+               console.error(
+                  "Failed to fetch profile user:",
+                  error,
+               );
             }
 
-            // Execute all fetches in parallel
+            setUser(profileUser);
+
             const [
                reviewsResponse,
                bookmarksResponse,
                followingResponse,
             ] = await Promise.all([
                fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews?user_id=${userData.id}`,
+                  `${API_BASE_URL}/api/reviews?user_id=${profileUser.id}`,
                ),
                fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/${userData.id}`,
+                  `${API_BASE_URL}/api/restaurants/bookmarks/${profileUser.id}`,
                ),
                fetch(
-                  `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userData.id}/follows`,
+                  `${API_BASE_URL}/api/users/${profileUser.id}/follows`,
                ),
             ]);
 
-            // handle response errors
-            if (
-               !reviewsResponse.ok &&
-               reviewsResponse.status !== 404
-            ) {
-               throw new Error(
-                  `Backend error when fetching reviews: ${reviewsResponse.statusText}`,
-               );
-            }
-
-            // assign review data to object
             if (reviewsResponse.ok) {
                const reviewsData =
                   await reviewsResponse.json();
-               console.log("Fetched reviews:", reviewsData);
 
-               // filter reviews for this user
                const userReviews = reviewsData
                   .map((review) => ({
                      id: review.id,
-                     user_id: userData.id,
-                     avatar_url: userData.avatar_url || "",
-                     userName: userData.name || "Anonymous",
+                     user_id: profileUserId,
+                     avatar_url:
+                        profileUser.avatar_url || "",
+                     userName:
+                        profileUser.name || "Anonymous",
                      is_verified:
-                        userData.is_verified || false,
+                        profileUser.is_verified || false,
                      rating: review.rating,
                      date: review.created_at,
                      comments: review.comment || "",
                      tags: review.tags || [],
                      photos: review.photo_urls || [],
+                     restaurant_id:
+                        review.restaurant_id || "",
+                     restaurant_name:
+                        review.restaurant_name || "",
                   }))
                   .sort(
                      (a, b) =>
@@ -330,23 +342,12 @@ function User({
 
                setReviews(userReviews);
             } else {
-               console.error(
-                  "Failed to fetch reviews:",
-                  reviewsResponse.status,
-               );
+               setReviews([]);
             }
 
-            // fetch bookmarks and restaurants for this user
-            console.log(
-               `Fetching bookmarks for user: ${userData.id}`,
-            );
             if (bookmarksResponse.ok) {
                const restaurantsData =
                   await bookmarksResponse.json();
-               console.log(
-                  "Fetched restaurants data:",
-                  restaurantsData,
-               );
 
                const mappedRestaurants =
                   restaurantsData.map((r) => ({
@@ -359,70 +360,65 @@ function User({
                      location: r.location,
                   }));
 
-               console.log(
-                  "Mapped restaurants:",
-                  mappedRestaurants,
-               );
                setRestaurants(mappedRestaurants);
 
                const ids = new Set(
                   mappedRestaurants.map((r) => r.id),
                );
+
                setBookmarkedIds(ids);
                originalBookmarkedIdsRef.current = new Set(
                   ids,
                );
             } else {
-               console.error(
-                  "Failed to fetch bookmarks:",
-                  bookmarksResponse.status,
-               );
+               setRestaurants([]);
+               setBookmarkedIds(new Set());
             }
 
-            // fetch our followed users
             if (followingResponse.ok) {
                const followingData =
                   await followingResponse.json();
-               console.log(
-                  "Fetched following data:",
-                  followingData,
-               );
+
                setFollowing(followingData);
 
                const ids = new Set(
                   followingData.map((f) => f.id),
                );
+
                setFollowingIds(ids);
                originalFollowingIdsRef.current = new Set(
                   ids,
                );
             } else {
-               console.error(
-                  "Failed to fetch following:",
-                  followingResponse.status,
-               );
+               setFollowing([]);
+               setFollowingIds(new Set());
             }
          } catch (error) {
             console.error("Error loading data:", error);
          }
       };
+
       fetchData();
    }, [
       session,
+      profileUserId,
+      isOwnProfile,
       initialUser,
       initialReviews,
       initialRestaurants,
       initialFollowing,
+      setBookmarkedIds,
    ]);
 
-   // Sync bookmarks on page refresh
    useEffect(() => {
       const syncBookmarks = () => {
+         if (!isOwnProfile) return;
+
          const original = originalBookmarkedIdsRef.current;
          const current = bookmarkedIdsRef.current;
-         const userId = user.id;
+         const userIdToSync = user.id;
 
-         if (!userId) return;
+         if (!userIdToSync) return;
 
          const added = [...current].filter(
             (id) => !original.has(id),
@@ -434,16 +430,15 @@ function User({
          if (added.length === 0 && removed.length === 0)
             return;
 
-         // sync the bookmarked restaurants
          fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/bookmarks/sync",
+            `${API_BASE_URL}/api/restaurants/bookmarks/sync`,
             {
                method: "POST",
                headers: {
                   "Content-Type": "application/json",
                },
                body: JSON.stringify({
-                  user_id: userId,
+                  user_id: userIdToSync,
                   added,
                   removed,
                }),
@@ -464,16 +459,17 @@ function User({
          );
          syncBookmarks();
       };
-   }, [user.id]);
+   }, [user.id, isOwnProfile]);
 
-   // Sync following on page refresh
    useEffect(() => {
       const syncFollowing = () => {
+         if (!isOwnProfile) return;
+
          const original = originalFollowingIdsRef.current;
          const current = followingIdsRef.current;
-         const userId = user.id;
+         const userIdToSync = user.id;
 
-         if (!userId) return;
+         if (!userIdToSync) return;
 
          const added = [...current].filter(
             (id) => !original.has(id),
@@ -485,26 +481,25 @@ function User({
          if (added.length === 0 && removed.length === 0)
             return;
 
-         fetch(
-            "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/follows/sync",
-            {
-               method: "POST",
-               headers: {
-                  "Content-Type": "application/json",
-               },
-               body: JSON.stringify({
-                  follower_id: userId,
-                  added,
-                  removed,
-               }),
-               keepalive: true,
+         fetch(`${API_BASE_URL}/api/users/follows/sync`, {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
             },
-         );
+            body: JSON.stringify({
+               follower_id: userIdToSync,
+               added,
+               removed,
+            }),
+            keepalive: true,
+         });
       };
+
       window.addEventListener(
          "beforeunload",
          syncFollowing,
       );
+
       return () => {
          window.removeEventListener(
             "beforeunload",
@@ -512,37 +507,34 @@ function User({
          );
          syncFollowing();
       };
-   }, [user.id]);
+   }, [user.id, isOwnProfile]);
 
    const handleBookmarkToggle = (restaurantId) => {
-      setBookmarkedIds((prev) => {
-         const next = new Set(prev);
-         if (next.has(restaurantId)) {
-            next.delete(restaurantId);
-         } else {
-            next.add(restaurantId);
-         }
-         return next;
-      });
+      toggleBookmark(user.id, restaurantId, true);
    };
 
    const handleFollowToggle = (followedUserId) => {
+      if (!isOwnProfile) return;
+
       setFollowingIds((prev) => {
          const next = new Set(prev);
+
          if (next.has(followedUserId)) {
             next.delete(followedUserId);
          } else {
             next.add(followedUserId);
          }
+
          return next;
       });
    };
 
-   // Deletes a review from the backend and updates local state
    const handleDeleteReview = async (reviewId) => {
+      if (!isOwnProfile) return;
+
       try {
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${reviewId}`,
+            `${API_BASE_URL}/api/reviews/${reviewId}`,
             {
                method: "DELETE",
                headers: {
@@ -551,6 +543,7 @@ function User({
                body: JSON.stringify({ user_id: user.id }),
             },
          );
+
          if (response.ok) {
             setReviews((prev) =>
                prev.filter((r) => r.id !== reviewId),
@@ -563,21 +556,76 @@ function User({
       }
    };
 
-   // --- ADD PHOTO ---
-   const fileInputRef = useRef(null);
-   const [uploadingPhoto, setUploadingPhoto] =
-      useState(false);
+   useEffect(() => {
+      return () => {
+         if (profilePhotoPreviewUrlRef.current) {
+            URL.revokeObjectURL(
+               profilePhotoPreviewUrlRef.current,
+            );
+         }
+      };
+   }, []);
 
-   const handleAddPhoto = async (e) => {
+   const resetSelectedProfilePhoto = () => {
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+         profilePhotoPreviewUrlRef.current = "";
+      }
+
+      setSelectedProfilePhoto(null);
+      setProfilePhotoPreviewUrl("");
+      if (fileInputRef.current) {
+         fileInputRef.current.value = "";
+      }
+      setIsPhotoModalOpen(false);
+   };
+
+   const handleAddPhoto = (e) => {
+      if (!isOwnProfile) return;
+
       const file = e.target.files?.[0];
       if (!file || !user.id) return;
 
-      setUploadingPhoto(true);
-      try {
-         const url = await uploadProfilePhoto(file);
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+      }
 
-         await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
+      const objectUrl = URL.createObjectURL(file);
+      profilePhotoPreviewUrlRef.current = objectUrl;
+
+      setSelectedProfilePhoto(file);
+      setProfilePhotoPreviewUrl(objectUrl);
+      setIsPhotoModalOpen(true);
+   };
+
+   const handleChooseDifferentPhoto = () => {
+      resetSelectedProfilePhoto();
+      fileInputRef.current?.click();
+   };
+
+   const handleSubmitProfilePhoto = async () => {
+      if (
+         !isOwnProfile ||
+         !selectedProfilePhoto ||
+         !user.id
+      ) {
+         return;
+      }
+
+      setUploadingPhoto(true);
+
+      try {
+         const url = await uploadProfilePhoto(
+            selectedProfilePhoto,
+            user.id,
+         );
+
+         const response = await fetch(
+            `${API_BASE_URL}/api/users/${user.id}`,
             {
                method: "PATCH",
                headers: {
@@ -587,11 +635,23 @@ function User({
             },
          );
 
+         if (!response.ok) {
+            throw new Error(
+               "Failed to save new profile photo URL",
+            );
+         }
+
          setUser((prev) => ({ ...prev, avatar_url: url }));
 
+         setReviews((prev) =>
+            prev.map((r) => ({ ...r, avatar_url: url })),
+         );
+
          const stored = localStorage.getItem("user");
+
          if (stored) {
             const parsed = JSON.parse(stored);
+
             localStorage.setItem(
                "user",
                JSON.stringify({
@@ -600,6 +660,12 @@ function User({
                }),
             );
          }
+
+         window.dispatchEvent(
+            new CustomEvent("avatar-updated", {
+               detail: { avatar_url: url },
+            }),
+         );
       } catch (err) {
          console.error(
             "Failed to upload profile photo:",
@@ -607,24 +673,133 @@ function User({
          );
       } finally {
          setUploadingPhoto(false);
-         if (fileInputRef.current)
-            fileInputRef.current.value = "";
+         resetSelectedProfilePhoto();
+      }
+   };
+
+   const handleRemovePhoto = async () => {
+      if (!isOwnProfile || !user.id) return;
+
+      setUploadingPhoto(true);
+      try {
+         const defaultAvatar = await removeProfilePhoto(
+            user.id,
+         );
+
+         const response = await fetch(
+            `${API_BASE_URL}/api/users/${user.id}`,
+            {
+               method: "PATCH",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  avatar_url: defaultAvatar,
+               }),
+            },
+         );
+
+         if (!response.ok) {
+            throw new Error(
+               "Failed to save removed profile photo URL",
+            );
+         }
+
+         setUser((prev) => ({
+            ...prev,
+            avatar_url: defaultAvatar,
+         }));
+
+         setReviews((prev) =>
+            prev.map((r) => ({
+               ...r,
+               avatar_url: defaultAvatar,
+            })),
+         );
+
+         const stored = localStorage.getItem("user");
+
+         if (stored) {
+            const parsed = JSON.parse(stored);
+
+            localStorage.setItem(
+               "user",
+               JSON.stringify({
+                  ...parsed,
+                  avatar_url: defaultAvatar,
+               }),
+            );
+         }
+
+         window.dispatchEvent(
+            new CustomEvent("avatar-updated", {
+               detail: { avatar_url: defaultAvatar },
+            }),
+         );
+      } catch (err) {
+         console.error(
+            "Failed to remove profile photo:",
+            err,
+         );
+      } finally {
+         setUploadingPhoto(false);
+         resetSelectedProfilePhoto();
       }
    };
 
    return (
       <div className="user-page">
-         {/* Content Section */}
+         <ProfilePhotoPreviewModal
+            open={
+               isPhotoModalOpen ||
+               Boolean(selectedProfilePhoto)
+            }
+            previewUrl={
+               profilePhotoPreviewUrl ||
+               (user.avatar_url &&
+               !user.avatar_url.includes("ui-avatars.com")
+                  ? user.avatar_url
+                  : "")
+            }
+            fileName={
+               selectedProfilePhoto?.name ||
+               (user.avatar_url &&
+               !user.avatar_url.includes("ui-avatars.com")
+                  ? "Current Photo"
+                  : "")
+            }
+            uploading={uploadingPhoto}
+            onCancel={resetSelectedProfilePhoto}
+            onChooseDifferent={handleChooseDifferentPhoto}
+            onSubmit={() => {
+               if (selectedProfilePhoto) {
+                  handleSubmitProfilePhoto();
+               } else {
+                  setIsPhotoModalOpen(false);
+               }
+            }}
+            onRemove={handleRemovePhoto}
+            showRemove={Boolean(
+               user.avatar_url &&
+               !user.avatar_url.includes("ui-avatars.com"),
+            )}
+            hasNewSelection={Boolean(selectedProfilePhoto)}
+         />
+
          <div className="user-content">
             <div className="user-info">
-               {/* Card Section */}
                <div className="user-card">
-                  {/* If user has a profile picture, display that, otherwise display default image */}
                   {user.avatar_url ? (
                      <img
                         className="user-profile-picture"
                         src={user.avatar_url}
                         alt={`${user.name}'s profile picture`}
+                        onError={() =>
+                           setUser((prev) => ({
+                              ...prev,
+                              avatar_url: "",
+                           }))
+                        }
                      />
                   ) : (
                      <MdOutlineAccountCircle
@@ -632,48 +807,96 @@ function User({
                         color="#8E9089"
                      />
                   )}
-                  {/* Display users name and optionally a verified badge */}
+
                   <UserName
                      name={user.name}
                      is_verified={user.is_verified}
                   />
-                  <div className="edit-icons">
-                     <div
-                        className="edit-icon-wrapper"
-                        onClick={() =>
-                           !uploadingPhoto &&
-                           fileInputRef.current?.click()
-                        }
-                        style={{
-                           cursor: uploadingPhoto
-                              ? "wait"
-                              : "pointer",
-                        }}
-                     >
-                        <input
-                           ref={fileInputRef}
-                           type="file"
-                           accept="image/*"
-                           style={{ display: "none" }}
-                           onChange={handleAddPhoto}
-                        />
-                        <img
-                           src={addPhotoIcon}
-                           alt="Add Photo"
-                        />
-                        <span>
-                           {uploadingPhoto
-                              ? "Uploading..."
-                              : "Add Photo"}
-                        </span>
+
+                  <p className="user-review-count">
+                     {reviews.length}{" "}
+                     {reviews.length === 1
+                        ? "review"
+                        : "reviews"}
+                  </p>
+
+                  {isOwnProfile && (
+                     <p className="user-privacy">
+                        {privacy === "private"
+                           ? "Private"
+                           : "Public"}
+                     </p>
+                  )}
+
+                  {isOwnProfile && (
+                     <div className="edit-icons">
+                        <div
+                           className="edit-icon-wrapper"
+                           onClick={() => {
+                              if (uploadingPhoto) return;
+                              if (
+                                 user.avatar_url &&
+                                 !user.avatar_url.includes(
+                                    "ui-avatars.com",
+                                 )
+                              ) {
+                                 setIsPhotoModalOpen(true);
+                              } else {
+                                 fileInputRef.current?.click();
+                              }
+                           }}
+                           style={{
+                              cursor: uploadingPhoto
+                                 ? "wait"
+                                 : "pointer",
+                           }}
+                        >
+                           <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              style={{ display: "none" }}
+                              onChange={handleAddPhoto}
+                           />
+
+                           <img
+                              src={addPhotoIcon}
+                              alt={
+                                 user.avatar_url &&
+                                 !user.avatar_url.includes(
+                                    "ui-avatars.com",
+                                 )
+                                    ? "Edit Photo"
+                                    : "Add Photo"
+                              }
+                           />
+
+                           <span>
+                              {uploadingPhoto
+                                 ? "Uploading..."
+                                 : user.avatar_url &&
+                                     !user.avatar_url.includes(
+                                        "ui-avatars.com",
+                                     )
+                                   ? "Edit Photo"
+                                   : "Add Photo"}
+                           </span>
+                        </div>
+
+                        <div
+                           className="edit-icon-wrapper"
+                           onClick={() =>
+                              navigate("/settings")
+                           }
+                           style={{ cursor: "pointer" }}
+                        >
+                           <img src={editIcon} alt="Edit" />
+                           <span>Edit Profile</span>
+                        </div>
                      </div>
-                     <div className="edit-icon-wrapper">
-                        <img src={editIcon} alt="Edit" />
-                        <span>Edit Profile</span>
-                     </div>
-                  </div>
+                  )}
                </div>
-               {/* Navigation Links for the user webpage */}
+
                <div className="navigation-links">
                   <a
                      href="#reviews"
@@ -681,18 +904,24 @@ function User({
                         handleNavClick(e, "reviews")
                      }
                   >
-                     My Reviews
+                     {isOwnProfile
+                        ? "My Reviews"
+                        : "Reviews"}
                   </a>
+
                   <a
                      href="#restaurants"
                      onClick={(e) =>
                         handleNavClick(e, "restaurants")
                      }
                   >
-                     My Saved Restaurants
+                     {isOwnProfile
+                        ? "My Saved Restaurants"
+                        : "Saved Restaurants"}
                   </a>
+
                   <a
-                     href="#other-accounts"
+                     href="#following"
                      onClick={(e) =>
                         handleNavClick(e, "following")
                      }
@@ -701,12 +930,17 @@ function User({
                   </a>
                </div>
             </div>
+
             <div className="user-activity">
-               {/* Review Section */}
                <div className="reviews" id="reviews">
                   <div className="activity-header">
-                     <h2>My Reviews</h2>
+                     <h2>
+                        {isOwnProfile
+                           ? "My Reviews"
+                           : `${user.name}'s Reviews`}
+                     </h2>
                   </div>
+
                   <div className="carousel-container">
                      {canScroll.reviews.left && (
                         <button
@@ -724,6 +958,7 @@ function User({
                            />
                         </button>
                      )}
+
                      <div
                         className="review-list"
                         id="reviews-list"
@@ -731,7 +966,6 @@ function User({
                            checkScroll("reviews")
                         }
                      >
-                        {/* map all the users reviews */}
                         {reviews.length > 0 ? (
                            reviews.map((review, index) => (
                               <ReviewCard
@@ -740,10 +974,17 @@ function User({
                                     `${review.date ?? "review"}-${index}`
                                  }
                                  review={review}
-                                 currentUserId={user.id}
-                                 onDelete={
-                                    handleDeleteReview
+                                 currentUserId={
+                                    isOwnProfile
+                                       ? user.id
+                                       : null
                                  }
+                                 onDelete={
+                                    isOwnProfile
+                                       ? handleDeleteReview
+                                       : undefined
+                                 }
+                                 disableProfileClick={true}
                               />
                            ))
                         ) : (
@@ -752,6 +993,7 @@ function User({
                            </p>
                         )}
                      </div>
+
                      {canScroll.reviews.right && (
                         <button
                            className="carousel-arrow right"
@@ -770,14 +1012,19 @@ function User({
                      )}
                   </div>
                </div>
-               {/* Restaurant Section */}
+
                <div
                   className="restaurants"
                   id="restaurants"
                >
                   <div className="activity-header">
-                     <h2>My Saved Restaurants</h2>
+                     <h2>
+                        {isOwnProfile
+                           ? "My Saved Restaurants"
+                           : `${user.name}'s Saved Restaurants`}
+                     </h2>
                   </div>
+
                   <div className="carousel-container">
                      {canScroll.restaurants.left && (
                         <button
@@ -795,6 +1042,7 @@ function User({
                            />
                         </button>
                      )}
+
                      <div
                         className="restaurant-list"
                         id="restaurants-list"
@@ -802,7 +1050,6 @@ function User({
                            checkScroll("restaurants")
                         }
                      >
-                        {/* map all the users favorited restaurants */}
                         {restaurants.length > 0 ? (
                            restaurants.map(
                               (restaurant, index) => (
@@ -827,10 +1074,13 @@ function User({
                                        isBookmarked={bookmarkedIds.has(
                                           restaurant.id,
                                        )}
-                                       onToggle={() =>
-                                          handleBookmarkToggle(
-                                             restaurant.id,
-                                          )
+                                       onToggle={
+                                          isOwnProfile
+                                             ? () =>
+                                                  handleBookmarkToggle(
+                                                     restaurant.id,
+                                                  )
+                                             : undefined
                                        }
                                        className="compact"
                                     />
@@ -843,6 +1093,7 @@ function User({
                            </p>
                         )}
                      </div>
+
                      {canScroll.restaurants.right && (
                         <button
                            className="carousel-arrow right"
@@ -861,11 +1112,12 @@ function User({
                      )}
                   </div>
                </div>
-               {/* Other Accounts Section */}
+
                <div className="following" id="following">
                   <div className="activity-header">
                      <h2>Following</h2>
                   </div>
+
                   <div className="carousel-container">
                      {canScroll.following.left && (
                         <button
@@ -883,6 +1135,7 @@ function User({
                            />
                         </button>
                      )}
+
                      <div
                         className="following-list"
                         id="following-list"
@@ -890,7 +1143,6 @@ function User({
                            checkScroll("following")
                         }
                      >
-                        {/* map all the users followed accounts */}
                         {following.length === 0 ? (
                            <p className="no-content-message">
                               Not following anyone yet.
@@ -898,27 +1150,34 @@ function User({
                         ) : (
                            following.map(
                               (followedUser, index) => (
-                                 <FollowedUserCard
+                                 <div
                                     key={
                                        followedUser.id ??
                                        `${followedUser.name ?? "user"}-${index}`
                                     }
-                                    followedUser={
-                                       followedUser
-                                    }
-                                    isFollowing={followingIds.has(
-                                       followedUser.id,
-                                    )}
-                                    onToggleFollow={() =>
-                                       handleFollowToggle(
+                                 >
+                                    <FollowedUserCard
+                                       followedUser={
+                                          followedUser
+                                       }
+                                       isFollowing={followingIds.has(
                                           followedUser.id,
-                                       )
-                                    }
-                                 />
+                                       )}
+                                       onToggleFollow={
+                                          isOwnProfile
+                                             ? () =>
+                                                  handleFollowToggle(
+                                                     followedUser.id,
+                                                  )
+                                             : undefined
+                                       }
+                                    />
+                                 </div>
                               ),
                            )
                         )}
                      </div>
+
                      {canScroll.following.right && (
                         <button
                            className="carousel-arrow right"

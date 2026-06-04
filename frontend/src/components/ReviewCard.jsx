@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UserName from "./UserName.jsx";
 import {
    Tag,
    ThumbsUp,
    Trash,
 } from "@phosphor-icons/react";
+import { API_BASE_URL } from "../lib/api";
 import "./ReviewCard.css";
+import "./PhotoOverlay.css";
 
 function ReviewCard({
    review = {},
    showHelpful = false,
    currentUserId,
    onDelete,
+   disableProfileClick = false,
 }) {
+   const navigate = useNavigate();
    // assign our review object to variables
    const {
       id,
@@ -67,6 +72,20 @@ function ReviewCard({
       // Prevent triggering the card click (which expands comments)
       e.stopPropagation();
       setAreTagsExpanded((v) => !v);
+   };
+
+   const handlePhotoClick = (e) => {
+      e.stopPropagation(); // Prevent the review card from expanding
+      if (user_id) {
+         navigate(`/user/${user_id}`);
+      }
+   };
+
+   const handleProfileClick = (e) => {
+      e.stopPropagation(); // Prevent the review card from expanding
+      if (!disableProfileClick && user_id) {
+         navigate(`/user/${user_id}`);
+      }
    };
 
    // Temporarily force the "collapsed" class, measure height, and determine whether the "see more" indicator should appear
@@ -180,7 +199,7 @@ function ReviewCard({
          const CURRENT_USER_ID =
             "b677be85-81db-4245-91ca-acb713bd5564";
          const response = await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/reviews/${review.id}/helpful`,
+            `${API_BASE_URL}/api/reviews/${review.id}/helpful`,
             {
                method: "POST",
                headers: {
@@ -216,7 +235,15 @@ function ReviewCard({
       >
          <header className="review-header">
             <div className="review-header-top">
-               <div className="review-user-info">
+               <div
+                  className="review-user-info"
+                  onClick={handleProfileClick}
+                  style={{
+                     cursor: disableProfileClick
+                        ? "default"
+                        : "pointer",
+                  }}
+               >
                   {/* Review avatar that contains pfp */}
                   <img
                      className="review-avatar"
@@ -384,19 +411,41 @@ function ReviewCard({
                         typeof photo === "string"
                            ? photo
                            : photo?.url;
+
+                     const typeLabel =
+                        typeof photo === "object" &&
+                        photo !== null
+                           ? photo.type === "Menu Item" &&
+                             photo.item
+                              ? photo.item
+                              : photo.type
+                           : null;
+
                      const alt =
-                        typeof photo === "string"
-                           ? `Review photo ${index + 1}`
-                           : photo?.alt ||
-                             `Review photo ${index + 1}`;
+                        typeLabel ||
+                        (typeof photo === "object"
+                           ? photo?.alt
+                           : null) ||
+                        `Review photo ${index + 1}`;
 
                      return (
-                        <img
+                        <div
                            key={src || index}
-                           className="review-photo"
-                           src={src}
-                           alt={alt}
-                        />
+                           className="review-photo-wrapper"
+                           onClick={handlePhotoClick}
+                           style={{ cursor: "pointer" }}
+                        >
+                           <img
+                              className="review-photo"
+                              src={src}
+                              alt={alt}
+                           />
+                           {typeLabel && (
+                              <div className="shared-photo-caption">
+                                 {typeLabel}
+                              </div>
+                           )}
+                        </div>
                      );
                   })}
                </div>

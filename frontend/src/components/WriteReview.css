@@ -244,6 +244,7 @@ button.wr-uploadBtn:active {
    display: flex;
    flex-direction: column;
    width: 180px;
+   aspect-ratio: 4 / 3;
    background: #fff;
    border-radius: 12px;
    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -254,23 +255,8 @@ button.wr-uploadBtn:active {
 
 .wr-photoThumbH {
    width: 100%;
-   aspect-ratio: 4 / 3;
-   height: auto;
+   height: 100%;
    object-fit: cover;
-}
-
-.wr-photoDetailsH {
-   padding: 10px;
-   text-align: center;
-}
-
-.wr-photoCaptionH {
-   font-size: 14px;
-   color: #333;
-   font-weight: 500;
-   display: block;
-   word-wrap: break-word;
-   line-height: 1.3;
 }
 
 .wr-photoRemoveBtnH {

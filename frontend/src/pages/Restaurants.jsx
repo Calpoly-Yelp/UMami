@@ -9,14 +9,17 @@ import RestaurantCard from "../components/RestaurantCard.jsx";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { supabase } from "../lib/supabase";
 import Modal from "../components/Modal.jsx";
+import ProfilePhotoPreviewModal from "../components/ProfilePhotoPreviewModal.jsx";
 import { uploadProfilePhoto } from "../lib/uploadPhoto";
+import { API_BASE_URL } from "../lib/api";
 import "./Restaurants.css";
+import { getIsOpenNow } from "../utils/getIsOpenNow";
 
 function Restaurants({ restaurants: initialRestaurants }) {
    // Search query entered by the user
    const [query, setQuery] = useState("");
 
-   // Filter option: "all", "bookmarked", or "open_now"
+   // Filter option: "all", "bookmarked", "open_now", "closed_now"
    const [filter, setFilter] = useState("all");
 
    // Sort option: "default", "lowest_rating", or "highest_rating"
@@ -50,9 +53,16 @@ function Restaurants({ restaurants: initialRestaurants }) {
    // Tracks whether a profile photo upload is in progress
    const [uploadingPhoto, setUploadingPhoto] =
       useState(false);
+   const [selectedProfilePhoto, setSelectedProfilePhoto] =
+      useState(null);
+   const [
+      profilePhotoPreviewUrl,
+      setProfilePhotoPreviewUrl,
+   ] = useState("");
 
    // Ref to the hidden file input for profile photo selection
    const fileInputRef = useRef(null);
+   const profilePhotoPreviewUrlRef = useRef("");
 
    const navigate = useNavigate();
 
@@ -88,7 +98,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                if (!hasSkipped) {
                   try {
                      const userRes = await fetch(
-                        `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${user.id}`,
+                        `${API_BASE_URL}/api/users/${user.id}`,
                      );
                      const userData = await userRes.json();
 
@@ -131,7 +141,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
             // Only fetch from backend if no restaurants were passed in as props
             if (!initialRestaurants) {
                const restaurantsResponse = await fetch(
-                  "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants",
+                  `${API_BASE_URL}/api/restaurants`,
                );
 
                if (!restaurantsResponse.ok) {
@@ -164,9 +174,11 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         : r.location || "",
                      tags: r.tags || [],
                      hours: r.hours || [],
+                     location_mapping:
+                        r.location_mapping || null,
                      rating_count: r.rating_count ?? 0,
                      rating_sum: r.rating_sum ?? 0,
-                     is_open_now: r.is_open_now ?? false,
+                     is_open_now: getIsOpenNow(r),
                   }),
                );
 
@@ -211,19 +223,68 @@ function Restaurants({ restaurants: initialRestaurants }) {
       loadData();
    }, [initialRestaurants]);
 
-   // Handles uploading a profile photo from the modal prompt
-   const handleProfilePhotoUpload = async (e) => {
+   useEffect(() => {
+      return () => {
+         if (profilePhotoPreviewUrlRef.current) {
+            URL.revokeObjectURL(
+               profilePhotoPreviewUrlRef.current,
+            );
+         }
+      };
+   }, []);
+
+   const resetSelectedProfilePhoto = () => {
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+         profilePhotoPreviewUrlRef.current = "";
+      }
+
+      setSelectedProfilePhoto(null);
+      setProfilePhotoPreviewUrl("");
+      if (fileInputRef.current) {
+         fileInputRef.current.value = "";
+      }
+   };
+
+   const handleProfilePhotoSelection = (e) => {
       const file = e.target.files?.[0];
       if (!file || !userId) return;
+
+      if (profilePhotoPreviewUrlRef.current) {
+         URL.revokeObjectURL(
+            profilePhotoPreviewUrlRef.current,
+         );
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      profilePhotoPreviewUrlRef.current = objectUrl;
+
+      setSelectedProfilePhoto(file);
+      setProfilePhotoPreviewUrl(objectUrl);
+   };
+
+   const handleChooseDifferentProfilePhoto = () => {
+      resetSelectedProfilePhoto();
+      fileInputRef.current?.click();
+   };
+
+   // Handles uploading a profile photo after preview confirmation
+   const handleProfilePhotoUpload = async () => {
+      if (!selectedProfilePhoto || !userId) return;
 
       setUploadingPhoto(true);
       try {
          // Upload file to Supabase storage and get the public URL
-         const url = await uploadProfilePhoto(file);
+         const url = await uploadProfilePhoto(
+            selectedProfilePhoto,
+            userId,
+         );
 
          // Save the new avatar URL to the user's record in the database
          await fetch(
-            `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/users/${userId}`,
+            `${API_BASE_URL}/api/users/${userId}`,
             {
                method: "PATCH",
                headers: {
@@ -255,9 +316,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
          );
       } finally {
          setUploadingPhoto(false);
-         // Reset the file input so the same file can be re-selected if needed
-         if (fileInputRef.current)
-            fileInputRef.current.value = "";
+         resetSelectedProfilePhoto();
       }
    };
 
@@ -274,16 +333,10 @@ function Restaurants({ restaurants: initialRestaurants }) {
             "true",
          );
 
-         // Use localhost in dev, Azure in production
-         const baseUrl =
-            window.location.hostname === "localhost"
-               ? "http://localhost:4000"
-               : "https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net";
-
          // Send a persistent notification reminding them to add a photo
          try {
             const res = await fetch(
-               `${baseUrl}/api/notifications`,
+               `${API_BASE_URL}/api/notifications`,
                {
                   method: "POST",
                   headers: {
@@ -382,29 +435,46 @@ function Restaurants({ restaurants: initialRestaurants }) {
    // Filters and sorts the restaurant list based on search query,
    // active filter, and sort selection — recomputed only when dependencies change
    const visibleRestaurants = useMemo(() => {
-      const lowerQuery = query.toLowerCase();
+      // Split the query into individual words, ignoring empty spaces
+      const queryTerms = query
+         .toLowerCase()
+         .split(/\s+/)
+         .filter(Boolean);
 
       let filtered = restaurants.filter((restaurant) => {
-         const nameMatch = restaurant.name
-            ?.toLowerCase()
-            .includes(lowerQuery);
+         // If nothing is typed, show all restaurants
+         if (queryTerms.length === 0) return true;
+
+         const nameText =
+            restaurant.name?.toLowerCase() || "";
 
          const locationText = Array.isArray(
             restaurant.location,
          )
-            ? restaurant.location.join(", ")
-            : restaurant.location || "";
+            ? restaurant.location.join(", ").toLowerCase()
+            : (restaurant.location || "").toLowerCase();
 
-         const locationMatch = locationText
-            .toLowerCase()
-            .includes(lowerQuery);
-
-         const tagsMatch = (restaurant.tags || []).some(
-            (tag) =>
-               tag?.toLowerCase().includes(lowerQuery),
+         const tagsList = (restaurant.tags || []).map(
+            (tag) => tag?.toLowerCase() || "",
          );
 
-         return nameMatch || locationMatch || tagsMatch;
+         // Ensure EVERY word in the user's search matches the name, location, or at least one tag
+         return queryTerms.every((term) => {
+            // Provide aliases for common shorthand terms
+            const searchTerms = [term];
+            if (term === "gf") searchTerms.push("gluten");
+            if (term === "veg")
+               searchTerms.push("vegetarian", "vegan");
+            if (term === "veggie")
+               searchTerms.push("vegetarian");
+
+            return searchTerms.some(
+               (st) =>
+                  nameText.includes(st) ||
+                  locationText.includes(st) ||
+                  tagsList.some((tag) => tag.includes(st)),
+            );
+         });
       });
 
       // Filter to only bookmarked restaurants
@@ -417,7 +487,16 @@ function Restaurants({ restaurants: initialRestaurants }) {
       // Filter to only currently open restaurants
       if (filter === "open_now") {
          filtered = filtered.filter(
-            (restaurant) => restaurant.is_open_now,
+            (restaurant) => restaurant.is_open_now === true,
+         );
+      }
+
+      // Filter to only currently closed restaurants
+
+      if (filter === "closed_now") {
+         filtered = filtered.filter(
+            (restaurant) =>
+               restaurant.is_open_now === false,
          );
       }
 
@@ -444,7 +523,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
       <div className="restaurants-page">
          {/* Profile photo prompt modal — shown once on login if user has no real avatar */}
          <Modal
-            open={showPhotoPrompt}
+            open={showPhotoPrompt && !selectedProfilePhoto}
             onClose={handleSkipPhotoPrompt}
             title="Add a Profile Photo"
          >
@@ -469,7 +548,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                   type="file"
                   accept="image/*"
                   style={{ display: "none" }}
-                  onChange={handleProfilePhotoUpload}
+                  onChange={handleProfilePhotoSelection}
                />
                {/* Opens the file picker */}
                <button
@@ -511,6 +590,20 @@ function Restaurants({ restaurants: initialRestaurants }) {
             </div>
          </Modal>
 
+         <ProfilePhotoPreviewModal
+            open={Boolean(
+               showPhotoPrompt && selectedProfilePhoto,
+            )}
+            previewUrl={profilePhotoPreviewUrl}
+            fileName={selectedProfilePhoto?.name}
+            uploading={uploadingPhoto}
+            onCancel={resetSelectedProfilePhoto}
+            onChooseDifferent={
+               handleChooseDifferentProfilePhoto
+            }
+            onSubmit={handleProfilePhotoUpload}
+         />
+
          <div className="restaurants-content">
             <h1 className="restaurants-title">
                All Restaurants
@@ -526,7 +619,7 @@ function Restaurants({ restaurants: initialRestaurants }) {
                   />
                   <input
                      className="search-input"
-                     placeholder="Search restaurants"
+                     placeholder="Search restaurants and interests"
                      value={query}
                      onChange={(e) =>
                         setQuery(e.target.value)
@@ -553,6 +646,9 @@ function Restaurants({ restaurants: initialRestaurants }) {
                         </option>
                         <option value="open_now">
                            open now
+                        </option>
+                        <option value="closed_now">
+                           closed now
                         </option>
                      </select>
                   </div>

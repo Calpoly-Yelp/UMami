@@ -1,11 +1,65 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { API_BASE_URL } from "../lib/api";
 import "./RestaurantMenu.css";
 
 const displayValue = (value) =>
    value === null || value === undefined || value === ""
       ? "N/A"
       : value;
+
+const renderDietaryIcons = (tags) => {
+   if (!tags || tags.length === 0) return null;
+
+   const icons = [];
+   const tagStr = tags.join(" ").toLowerCase();
+
+   // Use a single "VG" or "V" to avoid duplicate visual clutter
+   if (
+      tagStr.includes("vegan") ||
+      tagStr.includes("plant-based")
+   ) {
+      icons.push(
+         <span
+            key="vegan"
+            className="dietary-icon dietary-vegan"
+            data-tooltip="Vegan"
+         >
+            VG
+         </span>,
+      );
+   } else if (tagStr.includes("vegetarian")) {
+      icons.push(
+         <span
+            key="veg"
+            className="dietary-icon dietary-veg"
+            data-tooltip="Vegetarian"
+         >
+            V
+         </span>,
+      );
+   }
+
+   if (
+      tagStr.includes("gluten-free") ||
+      tagStr.includes("gluten free") ||
+      tagStr.includes("avoiding gluten") ||
+      tags.some((t) => t.toLowerCase().trim() === "gf")
+   ) {
+      icons.push(
+         <span
+            key="gf"
+            className="dietary-icon dietary-gf"
+            data-tooltip="Gluten-Free"
+         >
+            GF
+         </span>,
+      );
+   }
+
+   if (icons.length === 0) return null;
+   return <div className="dietary-icons-row">{icons}</div>;
+};
 
 export default function RestaurantMenu() {
    const navigate = useNavigate();
@@ -24,7 +78,7 @@ export default function RestaurantMenu() {
       const fetchRestaurant = async () => {
          try {
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}`,
+               `${API_BASE_URL}/api/restaurants/${id}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -53,7 +107,7 @@ export default function RestaurantMenu() {
             setIsMenuLoading(true);
             setMenuError("");
             const response = await fetch(
-               `https://umami-api-calpoly-bpgzacb7ckf3hked.westus3-01.azurewebsites.net/api/restaurants/${id}/menu`,
+               `${API_BASE_URL}/api/restaurants/${id}/menu`,
             );
 
             if (!response.ok) {
@@ -79,6 +133,81 @@ export default function RestaurantMenu() {
 
       fetchMenu();
    }, [id]);
+
+   useEffect(() => {
+      if (isMenuLoading || menuData.length === 0) return;
+
+      const handleScroll = (e) => {
+         // Ignore scroll events from the sidebar to prevent jitter
+         if (
+            e?.target?.classList?.contains(
+               "menu-categories",
+            )
+         )
+            return;
+
+         const sectionElements = Array.from(
+            document.querySelectorAll(".menu-section"),
+         );
+         let currentCategory = "";
+
+         // Use the vertical center of the viewport as the trigger line
+         const triggerLine = window.innerHeight / 2;
+
+         for (const el of sectionElements) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= triggerLine) {
+               currentCategory =
+                  el.getAttribute("data-category");
+            } else {
+               break;
+            }
+         }
+
+         if (
+            !currentCategory &&
+            sectionElements.length > 0
+         ) {
+            currentCategory =
+               sectionElements[0].getAttribute(
+                  "data-category",
+               );
+         }
+
+         // Dynamically find the scroll container (handles if a specific div is scrolling instead of window)
+         const scrollContainer =
+            e?.target && e.target !== document
+               ? e.target
+               : document.documentElement;
+
+         // Check if scrolled to the absolute bottom of the scroll container
+         if (
+            scrollContainer.scrollHeight -
+               scrollContainer.scrollTop <=
+               scrollContainer.clientHeight + 10 &&
+            scrollContainer.scrollTop > 0
+         ) {
+            currentCategory =
+               sectionElements[
+                  sectionElements.length - 1
+               ].getAttribute("data-category");
+         }
+
+         if (currentCategory)
+            setActiveCategory(currentCategory);
+      };
+
+      // Use capture phase to catch scroll events from internal scrollable divs
+      window.addEventListener("scroll", handleScroll, true);
+      handleScroll(); // Initial check on mount
+
+      return () =>
+         window.removeEventListener(
+            "scroll",
+            handleScroll,
+            true,
+         );
+   }, [isMenuLoading, menuData]);
 
    const scrollToCategory = (category) => {
       setActiveCategory(category);
@@ -176,7 +305,8 @@ export default function RestaurantMenu() {
                   !menuError &&
                   menuData.length === 0 && (
                      <p className="menu-empty">
-                        No menu items available.
+                        Campus Dining has not posted a menu
+                        for this restaurant yet.
                      </p>
                   )}
 
@@ -189,6 +319,7 @@ export default function RestaurantMenu() {
                         id={section.category
                            .replace(/\s+/g, "-")
                            .toLowerCase()}
+                        data-category={section.category}
                      >
                         <h3 className="menu-section-title">
                            {section.category}
@@ -215,7 +346,24 @@ export default function RestaurantMenu() {
                                           )
                                        }
                                     >
-                                       <td>{item.name}</td>
+                                       <td>
+                                          <div
+                                             style={{
+                                                display:
+                                                   "flex",
+                                                alignItems:
+                                                   "center",
+                                                gap: "8px",
+                                             }}
+                                          >
+                                             <span>
+                                                {item.name}
+                                             </span>
+                                             {renderDietaryIcons(
+                                                item.dietary_tags,
+                                             )}
+                                          </div>
+                                       </td>
                                        <td>
                                           {displayValue(
                                              item.portion,
@@ -233,6 +381,40 @@ export default function RestaurantMenu() {
                         </table>
                      </div>
                   ))}
+
+               {!isMenuLoading &&
+                  !menuError &&
+                  menuData.length > 0 && (
+                     <div className="menu-legend">
+                        <div className="menu-legend-items">
+                           <div className="menu-legend-item">
+                              <span className="dietary-icon dietary-vegan">
+                                 VG
+                              </span>{" "}
+                              Vegan
+                           </div>
+                           <div className="menu-legend-item">
+                              <span className="dietary-icon dietary-veg">
+                                 V
+                              </span>{" "}
+                              Vegetarian
+                           </div>
+                           <div className="menu-legend-item">
+                              <span className="dietary-icon dietary-gf">
+                                 GF
+                              </span>{" "}
+                              Gluten-Free
+                           </div>
+                        </div>
+                        <p className="menu-disclaimer">
+                           * Dietary tags are provided by
+                           campus dining and may
+                           occasionally be inaccurate.
+                           Please verify with the restaurant
+                           if you have a severe allergy.
+                        </p>
+                     </div>
+                  )}
             </main>
          </div>
 
@@ -289,6 +471,40 @@ export default function RestaurantMenu() {
                            )}
                         </span>
                      </div>
+                     {selectedItem.dietary_tags &&
+                        selectedItem.dietary_tags.length >
+                           0 && (
+                           <div className="modal-nutrient-row">
+                              <span>Dietary</span>
+                              <span
+                                 style={{
+                                    textAlign: "right",
+                                    maxWidth: "65%",
+                                 }}
+                              >
+                                 {selectedItem.dietary_tags.join(
+                                    ", ",
+                                 )}
+                              </span>
+                           </div>
+                        )}
+                     {selectedItem.allergens &&
+                        selectedItem.allergens.length >
+                           0 && (
+                           <div className="modal-nutrient-row">
+                              <span>Allergens</span>
+                              <span
+                                 style={{
+                                    textAlign: "right",
+                                    maxWidth: "65%",
+                                 }}
+                              >
+                                 {selectedItem.allergens.join(
+                                    ", ",
+                                 )}
+                              </span>
+                           </div>
+                        )}
                   </div>
                </div>
             </div>

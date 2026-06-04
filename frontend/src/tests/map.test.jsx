@@ -49,8 +49,18 @@ jest.mock("react-leaflet", () => ({
    ),
    useMap: () => ({
       setView: jest.fn(),
+      getContainer: jest.fn(() => ({})),
+      invalidateSize: jest.fn(),
    }),
 }));
+
+global.ResizeObserver = jest
+   .fn()
+   .mockImplementation(() => ({
+      observe: jest.fn(),
+      unobserve: jest.fn(),
+      disconnect: jest.fn(),
+   }));
 
 describe("Map", () => {
    // Mock window.open

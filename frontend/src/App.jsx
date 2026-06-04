@@ -18,6 +18,8 @@ import RestaurantInfo from "./pages/RestaurantInfo";
 import RestaurantMenu from "./pages/RestaurantMenu";
 import Header from "./components/Header";
 import AccountSettings from "./pages/AccountSettings";
+import AuthCallback from "./pages/AuthCallback";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function ProtectedRoute({ session, children }) {
    if (!session) {
@@ -37,6 +39,8 @@ function AppLayout() {
       "/signup",
       "/signup-form",
       "/onboarding",
+      "/auth/callback",
+      "/verify-email",
    ];
 
    const showHeader = !hideHeaderPaths.includes(
@@ -95,21 +99,20 @@ function AppLayout() {
 
                <Route path="/signin" element={<SignIn />} />
                <Route path="/signup" element={<SignUp />} />
+               <Route
+                  path="/auth/callback"
+                  element={<AuthCallback />}
+               />
+               <Route
+                  path="/verify-email"
+                  element={<VerifyEmail />}
+               />
 
                <Route
                   path="/onboarding"
                   element={
                      <ProtectedRoute session={session}>
                         <Onboarding />
-                     </ProtectedRoute>
-                  }
-               />
-
-               <Route
-                  path="/gallery"
-                  element={
-                     <ProtectedRoute session={session}>
-                        <PhotoGallery />
                      </ProtectedRoute>
                   }
                />
@@ -122,7 +125,14 @@ function AppLayout() {
                      </ProtectedRoute>
                   }
                />
-
+               <Route
+                  path="/user/:userId"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <UserPage session={session} />
+                     </ProtectedRoute>
+                  }
+               />
                <Route
                   path="/restaurants"
                   element={
@@ -132,7 +142,6 @@ function AppLayout() {
                   }
                />
 
-               {/* NEW ROUTES FROM MAIN */}
                <Route
                   path="/restaurants/:id"
                   element={
@@ -147,6 +156,15 @@ function AppLayout() {
                   element={
                      <ProtectedRoute session={session}>
                         <RestaurantMenu />
+                     </ProtectedRoute>
+                  }
+               />
+
+               <Route
+                  path="/restaurants/:id/gallery"
+                  element={
+                     <ProtectedRoute session={session}>
+                        <PhotoGallery />
                      </ProtectedRoute>
                   }
                />
