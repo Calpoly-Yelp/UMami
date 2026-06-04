@@ -1000,9 +1000,9 @@
 
 .review__menuImgWrap {
    position: relative;
-   width: 280px;
-   height: 190px;
-   flex: 0 0 280px;
+   width: calc((100% - 54px) / 4);
+   height: 160px;
+   flex: 0 0 calc((100% - 54px) / 4);
 
    border-radius: 18px;
    overflow: hidden;
