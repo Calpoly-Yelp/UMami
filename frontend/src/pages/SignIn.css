@@ -89,6 +89,32 @@
    opacity: 1;
 }
 
+/* Extra right padding so text doesn't overlap the toggle button */
+.auth__input--pw {
+   padding-right: 40px;
+}
+
+/* Eye / eye-off toggle button inside the password field */
+.auth__pw-toggle {
+   position: absolute;
+   top: 50%;
+   right: 12px;
+   transform: translateY(-50%);
+   background: none;
+   border: none;
+   padding: 0;
+   cursor: pointer;
+   color: var(--color-text-soft);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   line-height: 1;
+}
+
+.auth__pw-toggle:hover {
+   color: var(--color-text);
+}
+
 .auth__error {
    width: 100%;
    margin: -4px 0 12px;

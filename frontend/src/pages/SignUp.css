@@ -1,10 +1,13 @@
+/* ─── Page layout ─────────────────────────────────────── */
 .signup {
    min-height: 100vh;
    display: grid;
+   /* Left column: form | Right column: hero image */
    grid-template-columns: 49% 51%;
    background: var(--color-bg-top);
 }
 
+/* ─── Left panel (form side) ──────────────────────────── */
 .signup__left {
    display: flex;
    align-items: center;
@@ -33,6 +36,7 @@
    letter-spacing: -0.03em;
 }
 
+/* ─── Form ─────────────────────────────────────────────── */
 .signup__form {
    display: flex;
    flex-direction: column;
@@ -47,11 +51,13 @@
    font-weight: 600;
 }
 
+/* Wrapper gives us a positioning context for the icon and toggle button */
 .signup__inputWrap {
    position: relative;
    width: 100%;
 }
 
+/* Leading icon — absolutely positioned on the left inside the input */
 .signup__icon {
    position: absolute;
    top: 50%;
@@ -61,6 +67,7 @@
    display: flex;
    align-items: center;
    justify-content: center;
+   /* Prevent the icon from blocking clicks on the input */
    pointer-events: none;
 }
 
@@ -71,6 +78,7 @@
    border-radius: 8px;
    background: transparent;
    outline: none;
+   /* Left padding leaves room for the leading icon */
    padding: 0 16px 0 52px;
    color: var(--color-text);
    font-size: 16px;
@@ -87,17 +95,49 @@
    background: rgba(255, 255, 255, 0.35);
 }
 
+/* Extra right padding so typed text doesn't slide under the toggle button */
+.signup__input--pw {
+   padding-right: 48px;
+}
+
+/* Eye / eye-off toggle button — absolutely positioned on the right inside the input */
+.signup__pw-toggle {
+   position: absolute;
+   top: 50%;
+   right: 14px;
+   transform: translateY(-50%);
+   background: none;
+   border: none;
+   padding: 0;
+   cursor: pointer;
+   color: var(--color-text-soft);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   line-height: 1;
+}
+
+.signup__pw-toggle:hover,
+.signup__pw-toggle:focus-visible {
+   color: var(--color-text);
+   outline: 2px solid var(--color-text);
+   outline-offset: 2px;
+}
+
+/* ─── Error message ────────────────────────────────────── */
 .signup__error {
    margin: -2px 0 0;
    color: var(--color-danger);
    font-size: 14px;
 }
 
+/* ─── Submit button ────────────────────────────────────── */
 .signup__button {
    width: 100%;
    margin-top: 2px;
 }
 
+/* ─── Footer (sign in link) ────────────────────────────── */
 .signup__footer {
    display: flex;
    align-items: center;
@@ -106,6 +146,7 @@
    margin-top: 4px;
 }
 
+/* Decorative horizontal rules flanking the footer text */
 .signup__footerLine {
    flex: 1;
    height: 1px;
@@ -121,6 +162,7 @@
    font-weight: 500;
 }
 
+/* Inline "Sign in" link styled as a button to avoid nested <a> issues */
 .signup__link {
    border: none;
    background: transparent;
@@ -133,6 +175,7 @@
    font-family: inherit;
 }
 
+/* ─── Right panel (hero image side) ───────────────────── */
 .signup__right {
    min-height: 100vh;
    padding: 0;
@@ -142,6 +185,7 @@
    justify-content: stretch;
 }
 
+/* Hero image fills the full right panel with a rounded left edge */
 .signup__image {
    width: 100%;
    height: 100%;
@@ -152,6 +196,7 @@
    border-bottom-left-radius: 72px;
 }
 
+/* ─── Responsive: large tablets ────────────────────────── */
 @media (max-width: 1200px) {
    .signup {
       grid-template-columns: 47% 53%;
@@ -167,16 +212,19 @@
    }
 }
 
+/* ─── Responsive: mobile — stack panels vertically ─────── */
 @media (max-width: 900px) {
    .signup {
       grid-template-columns: 1fr;
    }
 
+   /* Hero image moves above the form on mobile */
    .signup__right {
       order: -1;
       min-height: 320px;
    }
 
+   /* Remove left-only rounding; round bottom corners instead */
    .signup__image {
       border-top-left-radius: 0;
       border-bottom-left-radius: 32px;
@@ -205,6 +253,7 @@
       white-space: normal;
       text-align: center;
    }
+
    .signup__checkRow {
       display: flex;
       align-items: center;
