@@ -646,7 +646,7 @@ function Header() {
                      <MdSearch size={30} color="#666" />
                      <input
                         type="text"
-                        placeholder="Search Umami..."
+                        placeholder="Search User..."
                         className="search-modal-input"
                         value={searchQuery}
                         onChange={(e) => {
