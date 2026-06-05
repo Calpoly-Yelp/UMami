@@ -48,10 +48,24 @@ export default function PhotoGallery() {
    const [isLoadingPhotos, setIsLoadingPhotos] =
       useState(true);
    const [photoError, setPhotoError] = useState("");
+   const [menuSearchQuery, setMenuSearchQuery] =
+      useState("");
 
    const menuItemPhotos = reviews.flatMap((review) =>
       getPhotosByType(review, "Menu Item"),
    );
+
+   const normalizedMenuSearch = menuSearchQuery
+      .trim()
+      .toLowerCase();
+
+   const filteredMenuItemPhotos = normalizedMenuSearch
+      ? menuItemPhotos.filter((photo) =>
+           (getPhotoCaption(photo) || "")
+              .toLowerCase()
+              .includes(normalizedMenuSearch),
+        )
+      : menuItemPhotos;
 
    const ambiancePhotos = reviews.flatMap((review) =>
       getPhotosByType(review, "Ambiance"),
@@ -65,7 +79,7 @@ export default function PhotoGallery() {
       {
          label: "Menu Items",
          key: "menuItems",
-         photos: menuItemPhotos,
+         photos: filteredMenuItemPhotos,
       },
       {
          label: "Ambiance",
@@ -168,6 +182,12 @@ export default function PhotoGallery() {
       fetchPhotos();
    }, [restaurantId, restaurantStatus]);
 
+   useEffect(() => {
+      if (activeTab !== "menuItems") {
+         setMenuSearchQuery("");
+      }
+   }, [activeTab]);
+
    return (
       <div className="photo-page">
          {restaurantStatus === "not-found" ? (
@@ -243,14 +263,38 @@ export default function PhotoGallery() {
                </nav>
 
                <main className="photo-content">
-                  <h3 className="photo-section-title">
-                     {selectedGallery.label}
-                  </h3>
+                  <div className="photo-sectionHeader">
+                     <div>
+                        <h3 className="photo-section-title">
+                           {selectedGallery.label}
+                        </h3>
 
-                  <p className="photo-count">
-                     View {selectedGallery.photos.length}{" "}
-                     photos
-                  </p>
+                        <p className="photo-count">
+                           View{" "}
+                           {selectedGallery.photos.length}{" "}
+                           photos
+                        </p>
+                     </div>
+
+                     {activeTab === "menuItems" && (
+                        <label className="photo-search">
+                           <span className="photo-searchLabel">
+                              Search menu items
+                           </span>
+                           <input
+                              type="search"
+                              className="photo-searchInput"
+                              placeholder="Search menu items..."
+                              value={menuSearchQuery}
+                              onChange={(event) =>
+                                 setMenuSearchQuery(
+                                    event.target.value,
+                                 )
+                              }
+                           />
+                        </label>
+                     )}
+                  </div>
 
                   {isLoadingPhotos && (
                      <p className="photo-empty">
@@ -269,7 +313,10 @@ export default function PhotoGallery() {
                      selectedGallery.photos.length ===
                         0 && (
                         <p className="photo-empty">
-                           No photos available.
+                           {activeTab === "menuItems" &&
+                           normalizedMenuSearch
+                              ? "No menu item photos match your search."
+                              : "No photos available."}
                         </p>
                      )}
 
