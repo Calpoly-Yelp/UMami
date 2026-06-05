@@ -137,6 +137,16 @@ describe("Restaurant Endpoints", () => {
       expect(res.body.error).toBe("Restaurant not found");
    });
 
+   it("GET /api/restaurants/:id should reject invalid restaurant ids", async () => {
+      const res = await request(app).get(
+         "/api/restaurants/not-a-number",
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("Invalid restaurant id");
+      expect(supabase.from).not.toHaveBeenCalled();
+   });
+
    it("GET /api/restaurants/:id should handle errors", async () => {
       supabase.from.mockReturnValue({
          select: jest.fn().mockReturnThis(),
@@ -394,6 +404,16 @@ describe("Restaurant Endpoints", () => {
       expect(res.body.error).toBe("Invalid restaurant id");
    });
 
+   it("GET /api/restaurants/:id/menu should reject non-integer restaurant ids", async () => {
+      const res = await request(app).get(
+         "/api/restaurants/1.5/menu",
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("Invalid restaurant id");
+      expect(supabase.from).not.toHaveBeenCalled();
+   });
+
    it("GET /api/restaurants/:id/menu should handle errors", async () => {
       const query = {
          select: jest.fn().mockReturnThis(),
@@ -472,6 +492,16 @@ describe("Restaurant Endpoints", () => {
       );
       expect(res.statusCode).toBe(404);
       expect(res.body.error).toBe("Restaurant not found");
+   });
+
+   it("GET /api/restaurants/:id/tags should reject invalid restaurant ids", async () => {
+      const res = await request(app).get(
+         "/api/restaurants/not-a-number/tags",
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe("Invalid restaurant id");
+      expect(supabase.from).not.toHaveBeenCalled();
    });
 
    it("GET /api/restaurants/:id/tags should handle errors", async () => {

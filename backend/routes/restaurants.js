@@ -9,6 +9,13 @@ import { z } from "zod";
 
 const router = express.Router();
 
+const parseRestaurantId = (id) => {
+   const restaurantId = Number(id);
+   return Number.isInteger(restaurantId) && restaurantId > 0
+      ? restaurantId
+      : null;
+};
+
 // Get all restaurants
 router.get("/", async (req, res) => {
    try {
@@ -122,10 +129,10 @@ router.post("/bookmarks/sync", async (req, res) => {
 // Get menu items by restaurant id
 router.get("/:id/menu", async (req, res) => {
    try {
-      const restaurantId = Number(req.params.id);
+      const restaurantId = parseRestaurantId(req.params.id);
       const { meal_period: mealPeriod } = req.query;
 
-      if (Number.isNaN(restaurantId)) {
+      if (!restaurantId) {
          return res
             .status(400)
             .json({ error: "Invalid restaurant id" });
@@ -195,11 +202,18 @@ router.get("/:id/menu", async (req, res) => {
 // Get tags by restaurant id
 router.get("/:id/tags", async (req, res) => {
    try {
-      const { id } = req.params;
+      const restaurantId = parseRestaurantId(req.params.id);
+
+      if (!restaurantId) {
+         return res
+            .status(400)
+            .json({ error: "Invalid restaurant id" });
+      }
+
       const { data, error } = await supabase
          .from("restaurants")
          .select("tags")
-         .eq("id", id)
+         .eq("id", restaurantId)
          .single();
 
       if (error) {
@@ -222,11 +236,18 @@ router.get("/:id/tags", async (req, res) => {
 // Get restaurant by id
 router.get("/:id", async (req, res) => {
    try {
-      const { id } = req.params;
+      const restaurantId = parseRestaurantId(req.params.id);
+
+      if (!restaurantId) {
+         return res
+            .status(400)
+            .json({ error: "Invalid restaurant id" });
+      }
+
       const { data, error } = await supabase
          .from("restaurants")
          .select("*")
-         .eq("id", id)
+         .eq("id", restaurantId)
          .single();
 
       if (error) {

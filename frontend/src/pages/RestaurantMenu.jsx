@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE_URL } from "../lib/api";
+import { parseRestaurantPathId } from "../lib/restaurantIds";
 import "./RestaurantMenu.css";
 
 const displayValue = (value) =>
@@ -64,10 +65,14 @@ const renderDietaryIcons = (tags) => {
 export default function RestaurantMenu() {
    const navigate = useNavigate();
    const { id } = useParams();
+   const restaurantId = parseRestaurantPathId(id);
    const [restaurantName, setRestaurantName] =
       useState("Loading...");
    const [restaurantBanner, setRestaurantBanner] =
       useState(null);
+   const [restaurantStatus, setRestaurantStatus] = useState(
+      restaurantId ? "loading" : "not-found",
+   );
    const [menuData, setMenuData] = useState([]);
    const [activeCategory, setActiveCategory] = useState("");
    const [selectedItem, setSelectedItem] = useState(null);
@@ -76,9 +81,17 @@ export default function RestaurantMenu() {
 
    useEffect(() => {
       const fetchRestaurant = async () => {
+         if (!restaurantId) {
+            setRestaurantName("Unknown Restaurant");
+            setRestaurantBanner(null);
+            setRestaurantStatus("not-found");
+            return;
+         }
+
          try {
+            setRestaurantStatus("loading");
             const response = await fetch(
-               `${API_BASE_URL}/api/restaurants/${id}`,
+               `${API_BASE_URL}/api/restaurants/${restaurantId}`,
             );
             if (response.ok) {
                const data = await response.json();
@@ -86,8 +99,11 @@ export default function RestaurantMenu() {
                setRestaurantBanner(
                   data.image_urls?.[0] || null,
                );
+               setRestaurantStatus("found");
             } else {
                setRestaurantName("Unknown Restaurant");
+               setRestaurantBanner(null);
+               setRestaurantStatus("not-found");
             }
          } catch (error) {
             console.error(
@@ -95,19 +111,28 @@ export default function RestaurantMenu() {
                error,
             );
             setRestaurantName("Unknown Restaurant");
+            setRestaurantBanner(null);
+            setRestaurantStatus("not-found");
          }
       };
 
       fetchRestaurant();
-   }, [id]);
+   }, [restaurantId]);
 
    useEffect(() => {
       const fetchMenu = async () => {
+         if (restaurantStatus !== "found") {
+            setIsMenuLoading(false);
+            setMenuData([]);
+            setActiveCategory("");
+            return;
+         }
+
          try {
             setIsMenuLoading(true);
             setMenuError("");
             const response = await fetch(
-               `${API_BASE_URL}/api/restaurants/${id}/menu`,
+               `${API_BASE_URL}/api/restaurants/${restaurantId}/menu`,
             );
 
             if (!response.ok) {
@@ -132,7 +157,7 @@ export default function RestaurantMenu() {
       };
 
       fetchMenu();
-   }, [id]);
+   }, [restaurantId, restaurantStatus]);
 
    useEffect(() => {
       if (isMenuLoading || menuData.length === 0) return;
@@ -224,290 +249,326 @@ export default function RestaurantMenu() {
 
    return (
       <div className="menu-page">
-         <section
-            className="menu-hero"
-            style={{
-               backgroundImage: restaurantBanner
-                  ? `url(${restaurantBanner})`
-                  : "none",
-            }}
-            aria-label={`${restaurantName} hero`}
-         >
-            <div className="hero-overlay" />
-
-            <div className="hero-content">
+         {restaurantStatus === "not-found" ? (
+            <main className="menu-notFound">
+               <h1>Restaurant not found</h1>
+               <p>
+                  The restaurant URL is invalid or no longer
+                  exists.
+               </p>
                <button
                   type="button"
-                  className="menu-backBtn"
-                  onClick={() =>
-                     navigate(`/restaurants/${id}`)
-                  }
+                  className="menu-notFoundBtn"
+                  onClick={() => navigate("/restaurants")}
                >
-                  Back to {restaurantName}
+                  Back to Restaurants
                </button>
-               <h1 className="hero-title">
-                  {restaurantName}
-               </h1>
-               <h2 className="hero-subtitle">
-                  Menu & Nutrition
-               </h2>
-            </div>
-         </section>
-
-         <div className="menu-content">
-            <aside className="menu-sidebar">
-               <h3 className="menu-sidebar-title">
-                  Categories
-               </h3>
-               <ul className="menu-categories">
-                  {menuData.length > 0 ? (
-                     menuData.map((section) => (
-                        <li
-                           key={section.category}
-                           className={
-                              activeCategory ===
-                              section.category
-                                 ? "is-active"
-                                 : ""
-                           }
-                           onClick={() =>
-                              scrollToCategory(
-                                 section.category,
-                              )
-                           }
-                        >
-                           {section.category}
-                        </li>
-                     ))
-                  ) : (
-                     <li
-                        className="is-disabled"
-                        aria-disabled="true"
-                     >
-                        No categories
-                     </li>
-                  )}
-               </ul>
-            </aside>
-
-            <main className="menu-items">
-               {isMenuLoading && (
-                  <p className="menu-empty">
-                     Loading menu...
-                  </p>
-               )}
-
-               {!isMenuLoading && menuError && (
-                  <p className="menu-empty">{menuError}</p>
-               )}
-
-               {!isMenuLoading &&
-                  !menuError &&
-                  menuData.length === 0 && (
-                     <p className="menu-empty">
-                        Campus Dining has not posted a menu
-                        for this restaurant yet.
-                     </p>
-                  )}
-
-               {!isMenuLoading &&
-                  !menuError &&
-                  menuData.map((section) => (
-                     <div
-                        key={section.category}
-                        className="menu-section"
-                        id={section.category
-                           .replace(/\s+/g, "-")
-                           .toLowerCase()}
-                        data-category={section.category}
-                     >
-                        <h3 className="menu-section-title">
-                           {section.category}
-                        </h3>
-                        <table className="menu-table">
-                           <thead>
-                              <tr>
-                                 <th>Menu Item</th>
-                                 <th>Portion</th>
-                                 <th>Calories</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                              {(section.items || []).map(
-                                 (item) => (
-                                    <tr
-                                       key={
-                                          item.id ||
-                                          item.name
-                                       }
-                                       onClick={() =>
-                                          setSelectedItem(
-                                             item,
-                                          )
-                                       }
-                                    >
-                                       <td>
-                                          <div
-                                             style={{
-                                                display:
-                                                   "flex",
-                                                alignItems:
-                                                   "center",
-                                                gap: "8px",
-                                             }}
-                                          >
-                                             <span>
-                                                {item.name}
-                                             </span>
-                                             {renderDietaryIcons(
-                                                item.dietary_tags,
-                                             )}
-                                          </div>
-                                       </td>
-                                       <td>
-                                          {displayValue(
-                                             item.portion,
-                                          )}
-                                       </td>
-                                       <td>
-                                          {displayValue(
-                                             item.calories,
-                                          )}
-                                       </td>
-                                    </tr>
-                                 ),
-                              )}
-                           </tbody>
-                        </table>
-                     </div>
-                  ))}
-
-               {!isMenuLoading &&
-                  !menuError &&
-                  menuData.length > 0 && (
-                     <div className="menu-legend">
-                        <div className="menu-legend-items">
-                           <div className="menu-legend-item">
-                              <span className="dietary-icon dietary-vegan">
-                                 VG
-                              </span>{" "}
-                              Vegan
-                           </div>
-                           <div className="menu-legend-item">
-                              <span className="dietary-icon dietary-veg">
-                                 V
-                              </span>{" "}
-                              Vegetarian
-                           </div>
-                           <div className="menu-legend-item">
-                              <span className="dietary-icon dietary-gf">
-                                 GF
-                              </span>{" "}
-                              Gluten-Free
-                           </div>
-                        </div>
-                        <p className="menu-disclaimer">
-                           * Dietary tags are provided by
-                           campus dining and may
-                           occasionally be inaccurate.
-                           Please verify with the restaurant
-                           if you have a severe allergy.
-                        </p>
-                     </div>
-                  )}
             </main>
-         </div>
-
-         {selectedItem && (
-            <div
-               className="modal-overlay"
-               onClick={() => setSelectedItem(null)}
-            >
-               <div
-                  className="modal-content"
-                  onClick={(e) => e.stopPropagation()}
+         ) : (
+            <>
+               <section
+                  className="menu-hero"
+                  style={{
+                     backgroundImage: restaurantBanner
+                        ? `url(${restaurantBanner})`
+                        : "none",
+                  }}
+                  aria-label={`${restaurantName} hero`}
                >
-                  <button
-                     className="modal-close"
+                  <div className="hero-overlay" />
+
+                  <div className="hero-content">
+                     <button
+                        type="button"
+                        className="menu-backBtn"
+                        onClick={() =>
+                           navigate(`/restaurants/${id}`)
+                        }
+                     >
+                        Back to {restaurantName}
+                     </button>
+                     <h1 className="hero-title">
+                        {restaurantName}
+                     </h1>
+                     <h2 className="hero-subtitle">
+                        Menu & Nutrition
+                     </h2>
+                  </div>
+               </section>
+
+               <div className="menu-content">
+                  <aside className="menu-sidebar">
+                     <h3 className="menu-sidebar-title">
+                        Categories
+                     </h3>
+                     <ul className="menu-categories">
+                        {menuData.length > 0 ? (
+                           menuData.map((section) => (
+                              <li
+                                 key={section.category}
+                                 className={
+                                    activeCategory ===
+                                    section.category
+                                       ? "is-active"
+                                       : ""
+                                 }
+                                 onClick={() =>
+                                    scrollToCategory(
+                                       section.category,
+                                    )
+                                 }
+                              >
+                                 {section.category}
+                              </li>
+                           ))
+                        ) : (
+                           <li
+                              className="is-disabled"
+                              aria-disabled="true"
+                           >
+                              No categories
+                           </li>
+                        )}
+                     </ul>
+                  </aside>
+
+                  <main className="menu-items">
+                     {isMenuLoading && (
+                        <p className="menu-empty">
+                           Loading menu...
+                        </p>
+                     )}
+
+                     {!isMenuLoading && menuError && (
+                        <p className="menu-empty">
+                           {menuError}
+                        </p>
+                     )}
+
+                     {!isMenuLoading &&
+                        !menuError &&
+                        menuData.length === 0 && (
+                           <p className="menu-empty">
+                              Campus Dining has not posted a
+                              menu for this restaurant yet.
+                           </p>
+                        )}
+
+                     {!isMenuLoading &&
+                        !menuError &&
+                        menuData.map((section) => (
+                           <div
+                              key={section.category}
+                              className="menu-section"
+                              id={section.category
+                                 .replace(/\s+/g, "-")
+                                 .toLowerCase()}
+                              data-category={
+                                 section.category
+                              }
+                           >
+                              <h3 className="menu-section-title">
+                                 {section.category}
+                              </h3>
+                              <table className="menu-table">
+                                 <thead>
+                                    <tr>
+                                       <th>Menu Item</th>
+                                       <th>Portion</th>
+                                       <th>Calories</th>
+                                    </tr>
+                                 </thead>
+                                 <tbody>
+                                    {(
+                                       section.items || []
+                                    ).map((item) => (
+                                       <tr
+                                          key={
+                                             item.id ||
+                                             item.name
+                                          }
+                                          onClick={() =>
+                                             setSelectedItem(
+                                                item,
+                                             )
+                                          }
+                                       >
+                                          <td>
+                                             <div
+                                                style={{
+                                                   display:
+                                                      "flex",
+                                                   alignItems:
+                                                      "center",
+                                                   gap: "8px",
+                                                }}
+                                             >
+                                                <span>
+                                                   {
+                                                      item.name
+                                                   }
+                                                </span>
+                                                {renderDietaryIcons(
+                                                   item.dietary_tags,
+                                                )}
+                                             </div>
+                                          </td>
+                                          <td>
+                                             {displayValue(
+                                                item.portion,
+                                             )}
+                                          </td>
+                                          <td>
+                                             {displayValue(
+                                                item.calories,
+                                             )}
+                                          </td>
+                                       </tr>
+                                    ))}
+                                 </tbody>
+                              </table>
+                           </div>
+                        ))}
+
+                     {!isMenuLoading &&
+                        !menuError &&
+                        menuData.length > 0 && (
+                           <div className="menu-legend">
+                              <div className="menu-legend-items">
+                                 <div className="menu-legend-item">
+                                    <span className="dietary-icon dietary-vegan">
+                                       VG
+                                    </span>{" "}
+                                    Vegan
+                                 </div>
+                                 <div className="menu-legend-item">
+                                    <span className="dietary-icon dietary-veg">
+                                       V
+                                    </span>{" "}
+                                    Vegetarian
+                                 </div>
+                                 <div className="menu-legend-item">
+                                    <span className="dietary-icon dietary-gf">
+                                       GF
+                                    </span>{" "}
+                                    Gluten-Free
+                                 </div>
+                              </div>
+                              <p className="menu-disclaimer">
+                                 * Dietary tags are provided
+                                 by campus dining and may
+                                 occasionally be inaccurate.
+                                 Please verify with the
+                                 restaurant if you have a
+                                 severe allergy.
+                              </p>
+                           </div>
+                        )}
+                  </main>
+               </div>
+
+               {selectedItem && (
+                  <div
+                     className="modal-overlay"
                      onClick={() => setSelectedItem(null)}
                   >
-                     &times;
-                  </button>
-                  <h3 className="modal-title">
-                     {selectedItem.name}
-                  </h3>
-                  <div className="modal-portion">
-                     Portion:{" "}
-                     {displayValue(selectedItem.portion)}
-                  </div>
-                  <div className="modal-nutrients">
-                     <div className="modal-nutrient-row">
-                        <span>Calories</span>
-                        <span>
+                     <div
+                        className="modal-content"
+                        onClick={(e) => e.stopPropagation()}
+                     >
+                        <button
+                           className="modal-close"
+                           onClick={() =>
+                              setSelectedItem(null)
+                           }
+                        >
+                           &times;
+                        </button>
+                        <h3 className="modal-title">
+                           {selectedItem.name}
+                        </h3>
+                        <div className="modal-portion">
+                           Portion:{" "}
                            {displayValue(
-                              selectedItem.calories,
+                              selectedItem.portion,
                            )}
-                        </span>
-                     </div>
-                     <div className="modal-nutrient-row">
-                        <span>Total Fat</span>
-                        <span>
-                           {displayValue(selectedItem.fat)}
-                        </span>
-                     </div>
-                     <div className="modal-nutrient-row">
-                        <span>Total Carbohydrates</span>
-                        <span>
-                           {displayValue(
-                              selectedItem.carbs,
-                           )}
-                        </span>
-                     </div>
-                     <div className="modal-nutrient-row">
-                        <span>Protein</span>
-                        <span>
-                           {displayValue(
-                              selectedItem.protein,
-                           )}
-                        </span>
-                     </div>
-                     {selectedItem.dietary_tags &&
-                        selectedItem.dietary_tags.length >
-                           0 && (
+                        </div>
+                        <div className="modal-nutrients">
                            <div className="modal-nutrient-row">
-                              <span>Dietary</span>
-                              <span
-                                 style={{
-                                    textAlign: "right",
-                                    maxWidth: "65%",
-                                 }}
-                              >
-                                 {selectedItem.dietary_tags.join(
-                                    ", ",
+                              <span>Calories</span>
+                              <span>
+                                 {displayValue(
+                                    selectedItem.calories,
                                  )}
                               </span>
                            </div>
-                        )}
-                     {selectedItem.allergens &&
-                        selectedItem.allergens.length >
-                           0 && (
                            <div className="modal-nutrient-row">
-                              <span>Allergens</span>
-                              <span
-                                 style={{
-                                    textAlign: "right",
-                                    maxWidth: "65%",
-                                 }}
-                              >
-                                 {selectedItem.allergens.join(
-                                    ", ",
+                              <span>Total Fat</span>
+                              <span>
+                                 {displayValue(
+                                    selectedItem.fat,
                                  )}
                               </span>
                            </div>
-                        )}
+                           <div className="modal-nutrient-row">
+                              <span>
+                                 Total Carbohydrates
+                              </span>
+                              <span>
+                                 {displayValue(
+                                    selectedItem.carbs,
+                                 )}
+                              </span>
+                           </div>
+                           <div className="modal-nutrient-row">
+                              <span>Protein</span>
+                              <span>
+                                 {displayValue(
+                                    selectedItem.protein,
+                                 )}
+                              </span>
+                           </div>
+                           {selectedItem.dietary_tags &&
+                              selectedItem.dietary_tags
+                                 .length > 0 && (
+                                 <div className="modal-nutrient-row">
+                                    <span>Dietary</span>
+                                    <span
+                                       style={{
+                                          textAlign:
+                                             "right",
+                                          maxWidth: "65%",
+                                       }}
+                                    >
+                                       {selectedItem.dietary_tags.join(
+                                          ", ",
+                                       )}
+                                    </span>
+                                 </div>
+                              )}
+                           {selectedItem.allergens &&
+                              selectedItem.allergens
+                                 .length > 0 && (
+                                 <div className="modal-nutrient-row">
+                                    <span>Allergens</span>
+                                    <span
+                                       style={{
+                                          textAlign:
+                                             "right",
+                                          maxWidth: "65%",
+                                       }}
+                                    >
+                                       {selectedItem.allergens.join(
+                                          ", ",
+                                       )}
+                                    </span>
+                                 </div>
+                              )}
+                        </div>
+                     </div>
                   </div>
-               </div>
-            </div>
+               )}
+            </>
          )}
       </div>
    );

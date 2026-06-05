@@ -16,6 +16,41 @@
       sans-serif;
 }
 
+.photo-notFound {
+   min-height: 100vh;
+   max-width: 720px;
+   margin: 0 auto;
+   padding: 120px 24px;
+   display: flex;
+   flex-direction: column;
+   align-items: flex-start;
+   justify-content: center;
+}
+
+.photo-notFound h1 {
+   margin: 0 0 12px;
+   font-size: 42px;
+   line-height: 1.1;
+   font-weight: 900;
+}
+
+.photo-notFound p {
+   margin: 0 0 24px;
+   color: #6f716b;
+   font-size: 17px;
+   font-weight: 600;
+}
+
+.photo-notFoundBtn {
+   border: 0;
+   border-radius: 999px;
+   background: #f36b2b;
+   color: #111;
+   cursor: pointer;
+   font-weight: 800;
+   padding: 10px 16px;
+}
+
 .photo-hero {
    height: 240px;
    background-size: cover;

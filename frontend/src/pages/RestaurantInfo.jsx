@@ -23,6 +23,7 @@ import {
 } from "@phosphor-icons/react";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { API_BASE_URL } from "../lib/api";
+import { parseRestaurantPathId } from "../lib/restaurantIds";
 
 // Helper to get Menu Item Photos
 const getMenuItemPhotos = (reviews) =>
@@ -38,9 +39,13 @@ export default function Review() {
    const navigate = useNavigate();
    // Get the restaurant id from the URL e.g. /restaurants/5
    const { id } = useParams();
+   const restaurantId = parseRestaurantPathId(id);
    const [activeTab, setActiveTab] = useState("menu");
    const [restaurantInfo, setRestaurantInfo] =
       useState(null);
+   const [restaurantError, setRestaurantError] = useState(
+      restaurantId ? "" : "Restaurant not found.",
+   );
    const [ratingFilter, setRatingFilter] = useState(null);
    const [isWriteReviewOpen, setIsWriteReviewOpen] =
       useState(false);
@@ -60,7 +65,9 @@ export default function Review() {
       setBookmarkedIds,
       toggleBookmark,
    } = useBookmarks();
-   const isBookmarked = bookmarkedIds.has(parseInt(id, 10));
+   const isBookmarked =
+      restaurantId !== null &&
+      bookmarkedIds.has(restaurantId);
 
    // Retrieve the actual logged-in user from localStorage
    const [currentUser] = useState(() => {
@@ -448,8 +455,10 @@ export default function Review() {
 
    // Fetches all the individual reviews associated with this restaurant
    const fetchReviews = useCallback(async () => {
+      if (!restaurantId) return;
+
       try {
-         let url = `${API_BASE_URL}/api/reviews?restaurant_id=${id}`;
+         let url = `${API_BASE_URL}/api/reviews?restaurant_id=${restaurantId}`;
          if (CURRENT_USER_ID) {
             url += `&current_user_id=${CURRENT_USER_ID}`;
          }
@@ -480,43 +489,59 @@ export default function Review() {
       } catch (error) {
          console.error("Failed to fetch reviews:", error);
       }
-   }, [id, CURRENT_USER_ID]);
+   }, [restaurantId, CURRENT_USER_ID]);
 
    // Fetches the restaurant's data
    const fetchRestaurant = useCallback(async () => {
+      if (!restaurantId) {
+         setRestaurantInfo(null);
+         setRestaurantError("Restaurant not found.");
+         return;
+      }
+
       try {
          const response = await fetch(
-            `${API_BASE_URL}/api/restaurants/${id}`,
+            `${API_BASE_URL}/api/restaurants/${restaurantId}`,
          );
          if (response.ok) {
             const data = await response.json();
             setRestaurantInfo(data);
+            setRestaurantError("");
+         } else {
+            setRestaurantInfo(null);
+            setRestaurantError("Restaurant not found.");
          }
       } catch (error) {
          console.error(
             "Failed to fetch restaurant:",
             error,
          );
+         setRestaurantInfo(null);
+         setRestaurantError("Restaurant not found.");
       }
-   }, [id]);
+   }, [
+      restaurantId,
+      setRestaurantError,
+      setRestaurantInfo,
+   ]);
 
    const fetchBookmarkStatus = useCallback(async () => {
-      if (!CURRENT_USER_ID) return;
+      if (!CURRENT_USER_ID || !restaurantId) return;
       try {
          const { data, error } = await supabase
             .from("bookmarks")
             .select("restaurant_id")
             .eq("user_id", CURRENT_USER_ID)
-            .eq("restaurant_id", id);
+            .eq("restaurant_id", restaurantId);
 
          if (!error && data && data.length > 0) {
             setBookmarkedIds((prev) =>
-               new Set(prev).add(parseInt(id, 10)),
+               new Set(prev).add(restaurantId),
             );
          } else {
             setBookmarkedIds((prev) => {
                const next = new Set(prev);
-               next.delete(parseInt(id, 10));
+               next.delete(restaurantId);
                return next;
             });
          }
@@ -526,7 +551,7 @@ export default function Review() {
             err,
          );
       }
-   }, [id, CURRENT_USER_ID, setBookmarkedIds]);
+   }, [restaurantId, CURRENT_USER_ID, setBookmarkedIds]);
 
    const handleBookmarkToggle = async (e) => {
       if (e) e.stopPropagation();
@@ -536,7 +561,7 @@ export default function Review() {
       }
       const { error } = await toggleBookmark(
          CURRENT_USER_ID,
-         id,
+         restaurantId,
       );
       if (error) {
          console.error(error);
@@ -732,7 +757,7 @@ export default function Review() {
 
          return next;
       });
-   }, []);
+   }, [setCanScrollMenu]);
 
    useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -750,6 +775,27 @@ export default function Review() {
          window.removeEventListener("resize", handleResize);
       };
    }, [checkMenuScroll, restaurantInfo, menuItemPhotos]);
+
+   if (restaurantError) {
+      return (
+         <div className="review">
+            <main className="review__notFound">
+               <h1>Restaurant not found</h1>
+               <p>
+                  The restaurant URL is invalid or no longer
+                  exists.
+               </p>
+               <button
+                  type="button"
+                  className="pillBtn"
+                  onClick={() => navigate("/restaurants")}
+               >
+                  Back to Restaurants
+               </button>
+            </main>
+         </div>
+      );
+   }
 
    const scrollMenuCarousel = (direction) => {
       const container = document.getElementById(
@@ -1400,7 +1446,7 @@ export default function Review() {
          >
             <WriteReview
                onClose={() => setIsWriteReviewOpen(false)}
-               restaurantId={parseInt(id, 10)}
+               restaurantId={restaurantId}
                userId={CURRENT_USER_ID}
                onSuccess={(newReview) => {
                   // Optimistically update the restaurant rating & count
