@@ -23,9 +23,15 @@ import RestaurantMenu from "../pages/RestaurantMenu.jsx";
 import { API_BASE_URL } from "../lib/api";
 
 // Custom render function that wraps components in MemoryRouter so React Router hooks work
-const render = (ui, options) =>
+const render = (
+   ui,
+   {
+      initialEntries = ["/restaurant/1/menu"],
+      ...options
+   } = {},
+) =>
    rtlRender(
-      <MemoryRouter initialEntries={["/restaurant/1/menu"]}>
+      <MemoryRouter initialEntries={initialEntries}>
          <Routes>
             <Route
                path="/restaurant/:id/menu"
@@ -146,6 +152,9 @@ describe("Restaurant Menu Page", () => {
    test("renders all menu categories in the sidebar", async () => {
       render(<RestaurantMenu />);
       await screen.findByText("Shake Smart");
+      await screen.findByText("Signature Shakes", {
+         selector: "li",
+      });
 
       const expectedCategories = [
          "Signature Shakes",
@@ -165,7 +174,7 @@ describe("Restaurant Menu Page", () => {
       await screen.findByText("Shake Smart");
 
       expect(
-         screen.getByText("Acai Energy"),
+         await screen.findByText("Acai Energy"),
       ).toBeInTheDocument();
       expect(
          screen.getByText("Avocado Toast"),
@@ -176,9 +185,12 @@ describe("Restaurant Menu Page", () => {
       render(<RestaurantMenu />);
       await screen.findByText("Shake Smart");
 
-      const acaiBowlsLink = screen.getByText("Acai Bowls", {
-         selector: "li",
-      });
+      const acaiBowlsLink = await screen.findByText(
+         "Acai Bowls",
+         {
+            selector: "li",
+         },
+      );
 
       fireEvent.click(acaiBowlsLink);
 
@@ -193,7 +205,9 @@ describe("Restaurant Menu Page", () => {
       await screen.findByText("Shake Smart");
 
       // Click the Acai Energy row
-      fireEvent.click(screen.getByText("Acai Energy"));
+      fireEvent.click(
+         await screen.findByText("Acai Energy"),
+      );
 
       // Assert modal content is displayed
       expect(
@@ -221,7 +235,7 @@ describe("Restaurant Menu Page", () => {
 });
 
 describe("Restaurant Menu Page Edge Cases", () => {
-   test("displays Unknown Restaurant if the fetch request fails", async () => {
+   test("displays not found if the restaurant fetch request fails", async () => {
       const consoleSpy = jest
          .spyOn(console, "error")
          .mockImplementation(() => {});
@@ -240,7 +254,7 @@ describe("Restaurant Menu Page Edge Cases", () => {
 
       await waitFor(() => {
          expect(
-            screen.getByText("Unknown Restaurant"),
+            screen.getByText("Restaurant not found"),
          ).toBeInTheDocument();
       });
 
@@ -299,5 +313,42 @@ describe("Restaurant Menu Page Edge Cases", () => {
       expect(
          screen.getByText("No categories"),
       ).toBeInTheDocument();
+   });
+
+   test("displays not found for invalid restaurant ids", async () => {
+      render(<RestaurantMenu />, {
+         initialEntries: ["/restaurant/not-a-number/menu"],
+      });
+
+      expect(
+         await screen.findByText("Restaurant not found"),
+      ).toBeInTheDocument();
+      expect(
+         screen.getByText(
+            "The restaurant URL is invalid or no longer exists.",
+         ),
+      ).toBeInTheDocument();
+      expect(global.fetch).not.toHaveBeenCalled();
+   });
+
+   test("displays not found when restaurant lookup fails", async () => {
+      global.fetch.mockResolvedValue({
+         ok: false,
+         json: () =>
+            Promise.resolve({
+               error: "Invalid restaurant id",
+            }),
+         status: 400,
+      });
+
+      render(<RestaurantMenu />);
+
+      expect(
+         await screen.findByText("Restaurant not found"),
+      ).toBeInTheDocument();
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledWith(
+         `${API_BASE_URL}/api/restaurants/1`,
+      );
    });
 });

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./PhotoGallery.css";
 import { supabase } from "../lib/supabase";
 import { API_BASE_URL } from "../lib/api";
+import { parseRestaurantPathId } from "../lib/restaurantIds";
 
 const getPhotosByType = (review, type) => {
    if (!Array.isArray(review.photo_urls)) {
@@ -31,11 +32,15 @@ const getPhotoCaption = (photo) => {
 export default function PhotoGallery() {
    const navigate = useNavigate();
    const { id } = useParams();
+   const restaurantId = parseRestaurantPathId(id);
 
    const [restaurantName, setRestaurantName] =
       useState("Loading...");
    const [restaurantBanner, setRestaurantBanner] =
       useState(null);
+   const [restaurantStatus, setRestaurantStatus] = useState(
+      restaurantId ? "loading" : "not-found",
+   );
    const [activeTab, setActiveTab] = useState("menuItems");
 
    const [reviews, setReviews] = useState([]);
@@ -79,14 +84,23 @@ export default function PhotoGallery() {
 
    useEffect(() => {
       const fetchRestaurant = async () => {
+         if (!restaurantId) {
+            setRestaurantName("Unknown Restaurant");
+            setRestaurantBanner(null);
+            setRestaurantStatus("not-found");
+            return;
+         }
+
          try {
+            setRestaurantStatus("loading");
             const response = await fetch(
-               `${API_BASE_URL}/api/restaurants/${id}`,
+               `${API_BASE_URL}/api/restaurants/${restaurantId}`,
             );
 
             if (!response.ok) {
                setRestaurantName("Unknown Restaurant");
                setRestaurantBanner(null);
+               setRestaurantStatus("not-found");
                return;
             }
 
@@ -98,6 +112,7 @@ export default function PhotoGallery() {
             setRestaurantBanner(
                data.image_urls?.[0] || null,
             );
+            setRestaurantStatus("found");
          } catch (error) {
             console.error(
                "Failed to fetch restaurant:",
@@ -105,16 +120,21 @@ export default function PhotoGallery() {
             );
             setRestaurantName("Unknown Restaurant");
             setRestaurantBanner(null);
+            setRestaurantStatus("not-found");
          }
       };
 
-      if (id) {
-         fetchRestaurant();
-      }
-   }, [id]);
+      fetchRestaurant();
+   }, [restaurantId]);
 
    useEffect(() => {
       const fetchPhotos = async () => {
+         if (restaurantStatus !== "found") {
+            setIsLoadingPhotos(false);
+            setReviews([]);
+            return;
+         }
+
          try {
             setIsLoadingPhotos(true);
             setPhotoError("");
@@ -122,7 +142,7 @@ export default function PhotoGallery() {
             const { data, error } = await supabase
                .from("reviews")
                .select("id, restaurant_id, photo_urls")
-               .eq("restaurant_id", Number(id))
+               .eq("restaurant_id", restaurantId)
                .not("photo_urls", "is", null);
 
             if (error) {
@@ -144,136 +164,159 @@ export default function PhotoGallery() {
          }
       };
 
-      if (id) {
-         fetchPhotos();
-      }
-   }, [id]);
+      fetchPhotos();
+   }, [restaurantId, restaurantStatus]);
 
    return (
       <div className="photo-page">
-         <section
-            className="photo-hero"
-            style={{
-               backgroundImage: restaurantBanner
-                  ? `url(${restaurantBanner})`
-                  : "none",
-            }}
-            aria-label={`${restaurantName} photo gallery`}
-         >
-            <div className="photo-hero-overlay" />
-
-            <div className="photo-hero-content">
+         {restaurantStatus === "not-found" ? (
+            <main className="photo-notFound">
+               <h1>Restaurant not found</h1>
+               <p>
+                  The restaurant URL is invalid or no longer
+                  exists.
+               </p>
                <button
                   type="button"
-                  className="photo-backBtn"
-                  onClick={() =>
-                     navigate(`/restaurants/${id}`)
-                  }
+                  className="photo-notFoundBtn"
+                  onClick={() => navigate("/restaurants")}
                >
-                  Back to {restaurantName}
+                  Back to Restaurants
                </button>
+            </main>
+         ) : (
+            <>
+               <section
+                  className="photo-hero"
+                  style={{
+                     backgroundImage: restaurantBanner
+                        ? `url(${restaurantBanner})`
+                        : "none",
+                  }}
+                  aria-label={`${restaurantName} photo gallery`}
+               >
+                  <div className="photo-hero-overlay" />
 
-               <h1 className="photo-hero-title">
-                  {restaurantName}
-               </h1>
-               <h2 className="photo-hero-subtitle">
-                  Photo Gallery
-               </h2>
-            </div>
-         </section>
+                  <div className="photo-hero-content">
+                     <button
+                        type="button"
+                        className="photo-backBtn"
+                        onClick={() =>
+                           navigate(`/restaurants/${id}`)
+                        }
+                     >
+                        Back to {restaurantName}
+                     </button>
 
-         <nav
-            className="photo-tabs"
-            aria-label="Photo categories"
-         >
-            <div className="photo-tabsInner">
-               {galleryTabs.map((tab) => (
-                  <button
-                     key={tab.key}
-                     type="button"
-                     className={`photo-tab ${
-                        activeTab === tab.key
-                           ? "is-active"
-                           : ""
-                     }`}
-                     onClick={() => setActiveTab(tab.key)}
-                  >
-                     {tab.label}
-                  </button>
-               ))}
-            </div>
-         </nav>
-
-         <main className="photo-content">
-            <h3 className="photo-section-title">
-               {selectedGallery.label}
-            </h3>
-
-            <p className="photo-count">
-               View {selectedGallery.photos.length} photos
-            </p>
-
-            {isLoadingPhotos && (
-               <p className="photo-empty">
-                  Loading photos...
-               </p>
-            )}
-
-            {!isLoadingPhotos && photoError && (
-               <p className="photo-empty">{photoError}</p>
-            )}
-
-            {!isLoadingPhotos &&
-               !photoError &&
-               selectedGallery.photos.length === 0 && (
-                  <p className="photo-empty">
-                     No photos available.
-                  </p>
-               )}
-
-            {!isLoadingPhotos &&
-               !photoError &&
-               selectedGallery.photos.length > 0 && (
-                  <div className="photo-grid">
-                     {selectedGallery.photos.map(
-                        (photo, index) => {
-                           const caption =
-                              getPhotoCaption(photo);
-
-                           return (
-                              <button
-                                 type="button"
-                                 className="photo-card"
-                                 key={`${photo.url}-${index}`}
-                              >
-                                 <div className="photo-wrapper">
-                                    <img
-                                       src={photo.url}
-                                       alt={
-                                          caption ||
-                                          `${restaurantName} photo ${index + 1}`
-                                       }
-                                       onError={() =>
-                                          console.error(
-                                             "Image failed:",
-                                             photo.url,
-                                          )
-                                       }
-                                    />
-
-                                    {caption && (
-                                       <div className="photo-caption">
-                                          {caption}
-                                       </div>
-                                    )}
-                                 </div>
-                              </button>
-                           );
-                        },
-                     )}
+                     <h1 className="photo-hero-title">
+                        {restaurantName}
+                     </h1>
+                     <h2 className="photo-hero-subtitle">
+                        Photo Gallery
+                     </h2>
                   </div>
-               )}
-         </main>
+               </section>
+
+               <nav
+                  className="photo-tabs"
+                  aria-label="Photo categories"
+               >
+                  <div className="photo-tabsInner">
+                     {galleryTabs.map((tab) => (
+                        <button
+                           key={tab.key}
+                           type="button"
+                           className={`photo-tab ${
+                              activeTab === tab.key
+                                 ? "is-active"
+                                 : ""
+                           }`}
+                           onClick={() =>
+                              setActiveTab(tab.key)
+                           }
+                        >
+                           {tab.label}
+                        </button>
+                     ))}
+                  </div>
+               </nav>
+
+               <main className="photo-content">
+                  <h3 className="photo-section-title">
+                     {selectedGallery.label}
+                  </h3>
+
+                  <p className="photo-count">
+                     View {selectedGallery.photos.length}{" "}
+                     photos
+                  </p>
+
+                  {isLoadingPhotos && (
+                     <p className="photo-empty">
+                        Loading photos...
+                     </p>
+                  )}
+
+                  {!isLoadingPhotos && photoError && (
+                     <p className="photo-empty">
+                        {photoError}
+                     </p>
+                  )}
+
+                  {!isLoadingPhotos &&
+                     !photoError &&
+                     selectedGallery.photos.length ===
+                        0 && (
+                        <p className="photo-empty">
+                           No photos available.
+                        </p>
+                     )}
+
+                  {!isLoadingPhotos &&
+                     !photoError &&
+                     selectedGallery.photos.length > 0 && (
+                        <div className="photo-grid">
+                           {selectedGallery.photos.map(
+                              (photo, index) => {
+                                 const caption =
+                                    getPhotoCaption(photo);
+
+                                 return (
+                                    <button
+                                       type="button"
+                                       className="photo-card"
+                                       key={`${photo.url}-${index}`}
+                                    >
+                                       <div className="photo-wrapper">
+                                          <img
+                                             src={photo.url}
+                                             alt={
+                                                caption ||
+                                                `${restaurantName} photo ${index + 1}`
+                                             }
+                                             onError={() =>
+                                                console.error(
+                                                   "Image failed:",
+                                                   photo.url,
+                                                )
+                                             }
+                                          />
+
+                                          {caption && (
+                                             <div className="photo-caption">
+                                                {caption}
+                                             </div>
+                                          )}
+                                       </div>
+                                    </button>
+                                 );
+                              },
+                           )}
+                        </div>
+                     )}
+               </main>
+            </>
+         )}
       </div>
    );
 }
