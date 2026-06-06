@@ -182,12 +182,6 @@ export default function PhotoGallery() {
       fetchPhotos();
    }, [restaurantId, restaurantStatus]);
 
-   useEffect(() => {
-      if (activeTab !== "menuItems") {
-         setMenuSearchQuery("");
-      }
-   }, [activeTab]);
-
    return (
       <div className="photo-page">
          {restaurantStatus === "not-found" ? (
@@ -252,9 +246,12 @@ export default function PhotoGallery() {
                                  ? "is-active"
                                  : ""
                            }`}
-                           onClick={() =>
-                              setActiveTab(tab.key)
-                           }
+                           onClick={() => {
+                              if (tab.key !== "menuItems") {
+                                 setMenuSearchQuery("");
+                              }
+                              setActiveTab(tab.key);
+                           }}
                         >
                            {tab.label}
                         </button>
