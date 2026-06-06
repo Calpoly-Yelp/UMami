@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
       let query = supabase
          .from("reviews")
          .select(
-            "*, users!reviews_user_id_fkey(name, avatar_url, is_verified)",
+            "*, users!reviews_user_id_fkey(name, avatar_url, is_verified), restaurants!reviews_restaurant_id_fkey(name)",
          );
 
       // Filter by user if user_id query param was provided

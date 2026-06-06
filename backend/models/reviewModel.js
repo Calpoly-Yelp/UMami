@@ -28,4 +28,10 @@ export const Review = z.object({
       })
       .nullable()
       .optional(),
+   restaurants: z
+      .object({
+         name: z.string().nullable(),
+      })
+      .nullable()
+      .optional(),
 });

@@ -111,6 +111,21 @@ describe("ReviewCard component", () => {
       ).toBeInTheDocument();
    });
 
+   test("renders the restaurant name when present", () => {
+      render(
+         <ReviewCard
+            review={{
+               ...mockReview,
+               restaurant_name: "Shake Smart",
+            }}
+         />,
+      );
+
+      expect(
+         screen.getByText("Shake Smart"),
+      ).toBeInTheDocument();
+   });
+
    test("renders first 5 tags by default and shows extra tag button", () => {
       render(<ReviewCard review={mockReview} />);
 

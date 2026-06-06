@@ -328,7 +328,9 @@ function User({
                      restaurant_id:
                         review.restaurant_id || "",
                      restaurant_name:
-                        review.restaurant_name || "",
+                        review.restaurants?.name ||
+                        review.restaurant_name ||
+                        "",
                   }))
                   .sort(
                      (a, b) =>

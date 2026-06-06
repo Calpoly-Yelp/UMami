@@ -38,6 +38,22 @@
    min-width: 0;
 }
 
+.review-restaurant-name {
+   align-self: center;
+   border: 1px solid #54585a;
+   border-radius: 999px;
+   color: #54585a;
+   flex: 0 0 auto;
+   font-size: 0.9rem;
+   font-weight: 700;
+   line-height: 1;
+   max-width: 220px;
+   overflow: hidden;
+   padding: 6px 12px;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
 .review-card .review-user-info img.review-avatar {
    width: 60px;
    height: 60px;

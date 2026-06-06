@@ -32,7 +32,12 @@ function ReviewCard({
       photos = [],
       helpfulCount = 0,
       hasVotedHelpful: initialHasVotedHelpful = false,
+      restaurant_name,
+      restaurantName,
    } = review;
+
+   const displayRestaurantName =
+      restaurant_name || restaurantName || "";
 
    //------------------- Expansion, Visibility & Tag Logic -------------------
    // isExpanded: whether the comment text is currently expanded
@@ -263,6 +268,12 @@ function ReviewCard({
                      is_verified={is_verified}
                   />
                </div>
+
+               {displayRestaurantName ? (
+                  <div className="review-restaurant-name">
+                     {displayRestaurantName}
+                  </div>
+               ) : null}
 
                {/* Actions Wrapper */}
                <div className="review-actions">
