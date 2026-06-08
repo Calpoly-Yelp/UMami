@@ -421,3 +421,32 @@
 .search-result-spacer {
    min-height: 12px;
 }
+
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+   .app-header {
+      padding: 0 12px;
+   }
+
+   .header-logo {
+      height: 100px;
+   }
+
+   .header-right {
+      gap: 12px;
+   }
+
+   .notification-dropdown {
+      width: calc(100vw - 24px);
+      right: -60px;
+   }
+
+   .search-modal-container {
+      margin-top: 15vh;
+      width: 95%;
+   }
+
+   .search-modal-input {
+      font-size: 16px;
+   }
+}

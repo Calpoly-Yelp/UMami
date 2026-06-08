@@ -301,3 +301,27 @@
       cursor: pointer;
    }
 }
+
+/* mobile responsive adjustments */
+@media (max-width: 480px) {
+   .user-activity {
+      padding-left: 0;
+   }
+
+   .activity-header {
+      font-size: 16px;
+   }
+
+   .carousel-arrow {
+      width: 32px;
+      height: 32px;
+   }
+
+   .carousel-arrow.left {
+      left: -12px;
+   }
+
+   .carousel-arrow.right {
+      right: -12px;
+   }
+}

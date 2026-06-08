@@ -167,3 +167,18 @@
       margin-bottom: 22px;
    }
 }
+
+/* ─── Responsive: small mobile ───── */
+@media (max-width: 480px) {
+   .auth__card {
+      padding: 28px 16px 32px;
+   }
+
+   .auth__title {
+      font-size: 18px;
+   }
+
+   .auth__input {
+      font-size: 14px;
+   }
+}

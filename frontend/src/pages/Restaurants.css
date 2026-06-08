@@ -105,3 +105,18 @@
       cursor: pointer;
    }
 }
+
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+   .restaurants-title {
+      font-size: 36px;
+   }
+
+   .controls-right {
+      flex-wrap: wrap;
+   }
+
+   .pill {
+      flex: 1;
+   }
+}

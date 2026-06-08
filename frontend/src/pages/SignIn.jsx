@@ -40,9 +40,7 @@ export default function SignIn() {
             );
          }
 
-
          const body = await ensureUserProfile(data.user);
-
 
          console.log("Fetched user data:", body);
 
