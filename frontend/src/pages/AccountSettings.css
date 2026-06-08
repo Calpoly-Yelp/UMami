@@ -311,3 +311,54 @@
    background: #ffffff;
    color: #3a8f34;
 }
+
+/* Dark mode toggle */
+.as-darkmode-row {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   max-width: 520px;
+   margin: 20px 0;
+   padding: 16px;
+   background: var(--color-surface-muted);
+   border: 1px solid var(--color-border);
+   border-radius: 10px;
+}
+
+.as-darkmode-hint {
+   font-size: 12px;
+   color: var(--color-text-soft);
+   margin-top: 2px;
+}
+
+.as-darkmode-toggle {
+   position: relative;
+   width: 48px;
+   height: 26px;
+   border-radius: 999px;
+   border: none;
+   background: var(--color-border);
+   cursor: pointer;
+   transition: background 0.2s ease;
+   flex-shrink: 0;
+}
+
+.as-darkmode-toggle.is-on {
+   background: var(--color-primary);
+}
+
+.as-darkmode-thumb {
+   position: absolute;
+   top: 3px;
+   left: 3px;
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+   background: #fff;
+   transition: transform 0.2s ease;
+   display: block;
+}
+
+.as-darkmode-toggle.is-on .as-darkmode-thumb {
+   transform: translateX(22px);
+}

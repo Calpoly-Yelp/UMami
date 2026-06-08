@@ -325,3 +325,67 @@
       right: -12px;
    }
 }
+
+/* Dark mode */
+[data-theme="dark"] .user-activity {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .user-card {
+   background-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .activity-header {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .navigation-links a {
+   color: #aaaaaa;
+   border-color: #444;
+}
+
+[data-theme="dark"] .carousel-arrow {
+   color: #f0f0f0;
+   border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .carousel-arrow.left {
+   background: linear-gradient(
+      to right,
+      rgba(30, 30, 30, 0.9),
+      rgba(30, 30, 30, 0)
+   );
+}
+
+[data-theme="dark"] .carousel-arrow.right {
+   background: linear-gradient(
+      to left,
+      rgba(30, 30, 30, 0.9),
+      rgba(30, 30, 30, 0)
+   );
+}
+
+[data-theme="dark"] .user-page {
+   background: linear-gradient(#1a1a1a, #111111);
+}
+
+[data-theme="dark"] .activity-header {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .user-activity {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .navigation-links a {
+   color: #aaaaaa;
+   border-color: #444444;
+}
+
+[data-theme="dark"] .no-content-message {
+   color: #aaaaaa;
+}
+
+[data-theme="dark"] .user-card {
+   background-color: rgba(255, 255, 255, 0.08);
+}

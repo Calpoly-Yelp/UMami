@@ -1101,3 +1101,73 @@
       flex-basis: 190px;
    }
 }
+
+/* Dark mode for RestaurantInfo page */
+[data-theme="dark"] .card {
+   background: #2a2a2a;
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review__h2 {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .reviewCard {
+   background: rgba(255, 255, 255, 0.06);
+   border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .reviewCard__name {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .reviewCard__text {
+   color: #e0e0e0;
+}
+
+[data-theme="dark"] .reviewCard__meta,
+[data-theme="dark"] .reviewCard__date,
+[data-theme="dark"] .reviewCard__helpful {
+   color: #aaaaaa;
+}
+
+[data-theme="dark"] .review__ratingLabel,
+[data-theme="dark"] .review__ratingValue {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review__tab {
+   color: #f0f0f0;
+   background: #2a2a2a;
+   border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .review__tabs {
+   background: #2a2a2a;
+   border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .pillBtn {
+   background: #3a3a3a;
+   color: #f0f0f0;
+   border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .review__filterDropdown {
+   background: #2a2a2a;
+   color: #f0f0f0;
+   border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .review__hoursRow,
+[data-theme="dark"] .review__time {
+   color: #cccccc;
+}
+
+[data-theme="dark"] .ratingRow__star {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .ratingRow__percent {
+   color: #aaaaaa;
+}
