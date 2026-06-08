@@ -68,7 +68,9 @@ describe("Frontend UI Tests", () => {
 
       cy.get("textarea.wr-textarea").type(reviewMessage);
 
+      // Wait for tag suggestions to load before clicking
       cy.get(".wr-tag-input").type("Fast");
+      cy.wait(500);
       cy.contains(".wr-tag-option", "Fast").click();
 
       cy.get(".wr-photoBox").click();
