@@ -14,6 +14,8 @@
 
 [![CI Testing](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/ci-testing.yml?style=for-the-badge&label=CI+Testing&logo=github)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/ci-testing.yml)
 
+[![Cypress E2E Tests](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/cypress.yml?style=for-the-badge&label=Cypress+E2E&logo=cypress)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/cypress.yml)
+
 ## Running Testing:
 
 ```console
