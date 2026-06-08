@@ -49,7 +49,6 @@ export default function SignUp() {
             );
          }
 
-
          if (data.session) {
             navigate("/auth/callback");
          } else {

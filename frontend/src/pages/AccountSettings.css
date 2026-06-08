@@ -189,7 +189,7 @@
    accent-color: var(--color-primary);
 }
 
-/* Responsive */
+/* Mobile Responsive */
 @media (max-width: 860px) {
    .as-main {
       grid-template-columns: 1fr;
@@ -217,6 +217,48 @@
       background: var(--color-primary-soft);
    }
 }
+
+/* Mobile: stack panels vertically, make sidebar static */
+@media (max-width: 480px) {
+   .as-main {
+      width: calc(100% - 24px);
+      padding: 16px 0 40px;
+      gap: 12px;
+   }
+
+   .as-sidebar {
+      position: static;
+   }
+
+   .as-nav {
+      gap: 8px;
+   }
+
+   .as-nav-item {
+      font-size: 13px;
+      padding: 6px 10px;
+   }
+
+   .as-h1,
+   .as-h2 {
+      font-size: 22px;
+   }
+
+   .as-h3 {
+      font-size: 16px;
+   }
+
+   .as-privacy-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+   }
+
+   .as-privacy-title {
+      font-size: 22px;
+   }
+}
+
 .as-privacy-row {
    margin: 24px 0 36px;
    max-width: 520px;
@@ -268,4 +310,55 @@
 .as-privacy-toggle button.is-active {
    background: #ffffff;
    color: #3a8f34;
+}
+
+/* Dark mode toggle */
+.as-darkmode-row {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   max-width: 520px;
+   margin: 20px 0;
+   padding: 16px;
+   background: var(--color-surface-muted);
+   border: 1px solid var(--color-border);
+   border-radius: 10px;
+}
+
+.as-darkmode-hint {
+   font-size: 12px;
+   color: var(--color-text-soft);
+   margin-top: 2px;
+}
+
+.as-darkmode-toggle {
+   position: relative;
+   width: 48px;
+   height: 26px;
+   border-radius: 999px;
+   border: none;
+   background: var(--color-border);
+   cursor: pointer;
+   transition: background 0.2s ease;
+   flex-shrink: 0;
+}
+
+.as-darkmode-toggle.is-on {
+   background: var(--color-primary);
+}
+
+.as-darkmode-thumb {
+   position: absolute;
+   top: 3px;
+   left: 3px;
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+   background: #fff;
+   transition: transform 0.2s ease;
+   display: block;
+}
+
+.as-darkmode-toggle.is-on .as-darkmode-thumb {
+   transform: translateX(22px);
 }

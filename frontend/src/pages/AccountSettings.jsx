@@ -53,6 +53,24 @@ export default function AccountSettings() {
       },
    });
 
+   // Dark mode state and toggle functionality
+   const [darkMode, setDarkMode] = useState(
+      () => localStorage.getItem("theme") === "dark",
+   );
+
+   const toggleDarkMode = () => {
+      const next = !darkMode;
+      setDarkMode(next);
+      document.documentElement.setAttribute(
+         "data-theme",
+         next ? "dark" : "light",
+      );
+      localStorage.setItem(
+         "theme",
+         next ? "dark" : "light",
+      );
+   };
+
    const sectionEls = useRef({});
 
    const setPrivacy = (value) => {
@@ -138,6 +156,17 @@ export default function AccountSettings() {
             "scroll",
             handleScroll,
          );
+   }, []);
+
+   // Apply saved theme on page load (dark mode persistence)
+   useEffect(() => {
+      const saved = localStorage.getItem("theme");
+      if (saved) {
+         document.documentElement.setAttribute(
+            "data-theme",
+            saved,
+         );
+      }
    }, []);
 
    const onInput = (key) => (e) =>
@@ -321,6 +350,27 @@ export default function AccountSettings() {
                            onChange={onInput("email")}
                         />
                      </div>
+                  </div>
+
+                  {/* Dark mode toggle */}
+                  <div className="as-darkmode-row">
+                     <div>
+                        <div className="as-label">
+                           Dark Mode
+                        </div>
+                        <div className="as-darkmode-hint">
+                           Switch between light and dark
+                           theme
+                        </div>
+                     </div>
+                     <button
+                        type="button"
+                        className={`as-darkmode-toggle ${darkMode ? "is-on" : ""}`}
+                        onClick={toggleDarkMode}
+                        aria-label="Toggle dark mode"
+                     >
+                        <span className="as-darkmode-thumb" />
+                     </button>
                   </div>
 
                   <div className="as-privacy-row">

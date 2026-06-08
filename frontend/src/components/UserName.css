@@ -56,3 +56,8 @@
       margin-left: 0;
    }
 }
+
+/* Dark theme overrides User Name */
+[data-theme="dark"] .name {
+   color: #f0f0f0;
+}

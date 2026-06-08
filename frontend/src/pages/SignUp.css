@@ -349,3 +349,24 @@
       text-decoration: underline;
    }
 }
+
+/* ─── Responsive: small mobile — further adjustments ───── */
+@media (max-width: 480px) {
+   .signup__title {
+      font-size: 28px;
+      margin-bottom: 24px;
+   }
+
+   .signup__right {
+      min-height: 200px;
+   }
+
+   .signup__label {
+      font-size: 15px;
+   }
+
+   .signup__input {
+      height: 48px;
+      font-size: 15px;
+   }
+}

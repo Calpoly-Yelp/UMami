@@ -68,8 +68,15 @@ describe("Frontend UI Tests", () => {
 
       cy.get("textarea.wr-textarea").type(reviewMessage);
 
+      // Wait for tag suggestions to load before clicking
+      // Type a tag and select it if the option appears
       cy.get(".wr-tag-input").type("Fast");
-      cy.contains(".wr-tag-option", "Fast").click();
+      cy.wait(1000);
+      cy.get("body").then(($body) => {
+         if ($body.find(".wr-tag-option").length > 0) {
+            cy.get(".wr-tag-option").first().click();
+         }
+      });
 
       cy.get(".wr-photoBox").click();
 

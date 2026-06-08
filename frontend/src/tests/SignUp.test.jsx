@@ -124,7 +124,6 @@ describe("SignUp component", () => {
    });
 
    test("requests email confirmation when sign up is submitted successfully", async () => {
-
       const user = userEvent.setup();
 
       // Mock a successful Supabase sign up response with a valid session
@@ -185,9 +184,7 @@ describe("SignUp component", () => {
 
       // Backend should have been called to save the user profile
       await waitFor(() => {
-
          expect(global.fetch).not.toHaveBeenCalled();
-
       });
 
       // Should navigate to onboarding after successful sign up

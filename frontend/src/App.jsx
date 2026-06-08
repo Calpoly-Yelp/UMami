@@ -72,6 +72,17 @@ function AppLayout() {
       return () => subscription.unsubscribe();
    }, []);
 
+   // Apply dark theme saved on every page load
+   useEffect(() => {
+      const saved = localStorage.getItem("theme");
+      if (saved) {
+         document.documentElement.setAttribute(
+            "data-theme",
+            saved,
+         );
+      }
+   }, []);
+
    if (authLoading) {
       return (
          <div style={{ padding: "2rem" }}>Loading...</div>

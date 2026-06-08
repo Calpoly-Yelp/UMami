@@ -300,3 +300,53 @@
    outline: 2px solid #ff6a39;
    outline-offset: 2px;
 }
+
+/* Dark theme overrides switch */
+[data-theme="dark"] .review-card {
+   background: #2a2a2a;
+   border-color: rgba(255, 255, 255, 0.12);
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review-text {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .reviewer-name {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review-date {
+   color: #aaaaaa;
+}
+
+[data-theme="dark"] .review-tag {
+   background: #3a3a3a;
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .reviewer-name,
+[data-theme="dark"] .review-username {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review-comments {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review-user-meta {
+   color: #f0f0f0;
+}
+
+[data-theme="dark"] .review-see-more {
+   color: #aaaaaa;
+}
+
+[data-theme="dark"] .review-helpful-btn {
+   color: #aaaaaa;
+   border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .review-card .star.empty {
+   color: #444444;
+}
