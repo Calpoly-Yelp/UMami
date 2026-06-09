@@ -124,11 +124,14 @@ export default function SignUp() {
                      </label>
 
                      <div className="signup__tooltipWrap">
-                        <span className="signup__tooltipIcon">i</span>
+                        <span className="signup__tooltipIcon">
+                           i
+                        </span>
 
                         <div className="signup__tooltip">
-                           Use your @calpoly.edu email to earn a verified
-                           badge on your profile.
+                           Use your @calpoly.edu email to
+                           earn a verified badge on your
+                           profile.
                         </div>
                      </div>
                   </div>

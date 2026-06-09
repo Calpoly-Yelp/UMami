@@ -117,8 +117,6 @@ function AppLayout() {
                   element={<VerifyEmail />}
                />
 
-         
-
                <Route
                   path="/user"
                   element={

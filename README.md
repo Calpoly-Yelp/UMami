@@ -1,5 +1,10 @@
 # UMami
 
+## Project Documents
+
+- [Tech Spec](https://docs.google.com/document/d/1biFBA__u-CT9FaSdJ9TKkr0FtEnpOxAQAJ2IcFMF8Ec/edit?tab=t.0)
+- [Presentation](https://docs.google.com/presentation/d/1GdwA16oiCBMre5I_dxVai33FX3x5VDIYP7rzQ17KHrA/edit?slide=id.p1#slide=id.p1)
+
 ## Deployment
 
 ### Live App
@@ -13,8 +18,6 @@
 [![Backend Deploy](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/main_umami-api-calpoly.yml?style=for-the-badge&label=Backend+Deploy&logo=microsoft-azure)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/main_umami-api-calpoly.yml)
 
 [![CI Testing](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/ci-testing.yml?style=for-the-badge&label=CI+Testing&logo=github)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/ci-testing.yml)
-
-[![Cypress E2E Tests](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/cypress.yml?style=for-the-badge&label=Cypress+E2E&logo=cypress)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/cypress.yml)
 
 ## Running Testing:
 
@@ -90,7 +93,7 @@ npm run dev
 
 | Project  | Lines  | Statements | Functions | Branches |
 | :------- | :----: | :--------: | :-------: | :------: |
-| Frontend | 58.44% |   56.78%   |  53.84%   |  53.06%  |
+| Frontend | 59.11% |   57.37%   |  52.78%   |  53.8%   |
 | Backend  |  100%  |    100%    |   100%    |   100%   |
 
 <!-- COVERAGE-END -->

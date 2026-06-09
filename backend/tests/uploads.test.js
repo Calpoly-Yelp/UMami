@@ -155,6 +155,33 @@ describe("Uploads Endpoints", () => {
          );
       });
 
+      it("should append timestamp with '&' if publicUrl already contains '?'", async () => {
+         supabase.storage.from.mockReturnValue({
+            upload: jest
+               .fn()
+               .mockResolvedValue({ error: null }),
+            getPublicUrl: jest.fn().mockReturnValue({
+               data: {
+                  publicUrl:
+                     "http://example.com/image.png?token=xyz",
+               },
+            }),
+         });
+
+         const res = await request(app)
+            .post("/api/uploads/profile-photo")
+            .attach(
+               "file",
+               Buffer.from("fake image"),
+               "avatar.png",
+            );
+
+         expect(res.statusCode).toBe(201);
+         expect(res.body.url).toMatch(
+            /^http:\/\/example\.com\/image\.png\?token=xyz&v=\d+$/,
+         );
+      });
+
       it("should return 400 if no file is provided", async () => {
          const res = await request(app).post(
             "/api/uploads/profile-photo",
