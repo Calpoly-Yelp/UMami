@@ -4,6 +4,7 @@
 
 - [Tech Spec](https://docs.google.com/document/d/1biFBA__u-CT9FaSdJ9TKkr0FtEnpOxAQAJ2IcFMF8Ec/edit?tab=t.0)
 - [Presentation](https://docs.google.com/presentation/d/1GdwA16oiCBMre5I_dxVai33FX3x5VDIYP7rzQ17KHrA/edit?slide=id.p1#slide=id.p1)
+- [Video Demo](https://youtu.be/DkY0ubg_JFQ)
 
 ## Deployment
 
@@ -18,6 +19,8 @@
 [![Backend Deploy](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/main_umami-api-calpoly.yml?style=for-the-badge&label=Backend+Deploy&logo=microsoft-azure)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/main_umami-api-calpoly.yml)
 
 [![CI Testing](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/ci-testing.yml?style=for-the-badge&label=CI+Testing&logo=github)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/ci-testing.yml)
+
+[![Live Tests](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/live-tests.yml?style=for-the-badge&label=Live+Tests&logo=cypress)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/live-tests.yml)
 
 ## Running Testing:
 
