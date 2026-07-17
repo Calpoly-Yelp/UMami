@@ -50,6 +50,11 @@ app.get("/test-supabase", async (req, res) => {
    return res.json({ status: "Connected!", data });
 });
 
+// Health check for uptime monitoring
+app.get("/health", (req, res) => {
+   res.json({ ok: true });
+});
+
 // Root route
 app.get("/", (req, res) => {
    res.json({ status: "UMami API is running!" });
