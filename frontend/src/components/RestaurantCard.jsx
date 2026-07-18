@@ -36,6 +36,11 @@ function RestaurantCard({
                className="restaurant-image"
                src={restaurant.image}
                alt={restaurant.name}
+               onError={(e) => {
+                  e.target.src =
+                     "https://placehold.co/300x200/003831/FFFFFF?text=" +
+                     encodeURIComponent(restaurant.name);
+               }}
             />
          </div>
 

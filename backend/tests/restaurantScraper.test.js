@@ -21,10 +21,20 @@ jest.mock("../utils/scrapeCurrentMenus.js", () => ({
 
 // Mock Supabase
 const mockUpsert = jest.fn();
+const mockSelect = jest.fn();
+const mockUpdate = jest.fn();
+const mockEq = jest.fn();
+
 jest.mock("@supabase/supabase-js", () => ({
    createClient: jest.fn(() => ({
       from: jest.fn(() => ({
          upsert: mockUpsert,
+         select: mockSelect,
+         delete: jest.fn(() => ({
+            eq: mockEq,
+            in: mockEq,
+         })),
+         update: jest.fn(() => ({ eq: mockEq })),
       })),
    })),
 }));
@@ -66,6 +76,17 @@ describe("restaurantScraper", () => {
          .mockImplementation(() => {});
 
       mockUpsert.mockResolvedValue({ error: null });
+      mockSelect.mockResolvedValue({
+         data: [],
+         error: null,
+      });
+      mockEq.mockResolvedValue({ error: null });
+      mockUpdate.mockResolvedValue({ error: null });
+
+      // Mock fetch for image URL validation — always return OK
+      global.fetch = jest.fn(() =>
+         Promise.resolve({ status: 200, ok: true }),
+      );
    });
 
    afterEach(() => {

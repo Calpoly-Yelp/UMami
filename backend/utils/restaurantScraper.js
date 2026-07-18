@@ -737,6 +737,65 @@ export const scrapeRestaurants = async () => {
          `Consolidated into ${mappedRestaurants.length} unique restaurants.`,
       );
 
+      // Validate image URLs — only keep ones that are reachable
+      console.log("Validating image URLs...");
+      const validateImageUrl = async (url) => {
+         try {
+            const response = await fetch(url, {
+               method: "GET",
+               headers: {
+                  Range: "bytes=0-0",
+                  "User-Agent":
+                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+               },
+               signal: AbortSignal.timeout(8000),
+            });
+            return (
+               response.status >= 200 &&
+               response.status < 400
+            );
+         } catch {
+            return false;
+         }
+      };
+
+      await Promise.all(
+         mappedRestaurants.map(async (restaurant) => {
+            if (
+               !restaurant.image_urls ||
+               restaurant.image_urls.length === 0
+            ) {
+               return;
+            }
+            const validationResults = await Promise.all(
+               restaurant.image_urls.map((url) =>
+                  validateImageUrl(url),
+               ),
+            );
+            const validUrls = restaurant.image_urls.filter(
+               (_, i) => validationResults[i],
+            );
+            const removedCount =
+               restaurant.image_urls.length -
+               validUrls.length;
+            if (removedCount > 0) {
+               console.log(
+                  `  ${restaurant.name}: removed ${removedCount} dead image URL(s), ${validUrls.length} remaining`,
+               );
+            }
+            // Only update if we found valid images — don't wipe existing ones
+            if (validUrls.length > 0) {
+               restaurant.image_urls = validUrls;
+            } else {
+               console.log(
+                  `  ${restaurant.name}: all URLs failed validation, keeping existing images in DB`,
+               );
+               restaurant.image_urls = null; // Signal to skip image update
+            }
+         }),
+      );
+      console.log("Image validation complete.");
+
       // Fix Balance Cafe location to match Hearth
       const hearthRest = mappedRestaurants.find(
          (r) =>
@@ -767,13 +826,21 @@ export const scrapeRestaurants = async () => {
          "uu market",
       ];
 
-      const restaurantsToUpsert = mappedRestaurants.filter(
-         (restaurant) =>
-            restaurant.hours !== null &&
-            !EXCLUDED_LOCATIONS.includes(
-               restaurant.name.toLowerCase(),
-            ),
-      );
+      const restaurantsToUpsert = mappedRestaurants
+         .filter(
+            (restaurant) =>
+               restaurant.hours !== null &&
+               !EXCLUDED_LOCATIONS.includes(
+                  restaurant.name.toLowerCase(),
+               ),
+         )
+         .map((restaurant) => ({
+            ...restaurant,
+            // If validation failed, omit image_urls so we don't overwrite existing ones
+            ...(restaurant.image_urls === null
+               ? { image_urls: undefined }
+               : {}),
+         }));
       const skippedRestaurants = mappedRestaurants.filter(
          (restaurant) =>
             restaurant.hours === null ||
@@ -799,6 +866,89 @@ export const scrapeRestaurants = async () => {
                })
                .join("\n"),
          );
+      }
+
+      // Update image_urls for skipped restaurants that have valid images
+      // (even without hours, we want fresh images in the DB)
+      const imageOnlyUpdates = skippedRestaurants.filter(
+         (r) =>
+            !EXCLUDED_LOCATIONS.includes(
+               r.name.toLowerCase(),
+            ) &&
+            r.image_urls !== null &&
+            r.image_urls.length > 0,
+      );
+
+      if (imageOnlyUpdates.length > 0) {
+         console.log(
+            `Updating images for ${imageOnlyUpdates.length} restaurants without hours...`,
+         );
+         for (const restaurant of imageOnlyUpdates) {
+            const { error: imgError } = await supabase
+               .from("restaurants")
+               .update({
+                  image_urls: restaurant.image_urls,
+               })
+               .eq("name", restaurant.name);
+            if (imgError) {
+               console.warn(
+                  `  Failed to update images for ${restaurant.name}: ${imgError.message}`,
+               );
+            } else {
+               console.log(
+                  `  Updated images for ${restaurant.name} (${restaurant.image_urls.length} URLs)`,
+               );
+            }
+         }
+      }
+
+      // Remove any excluded locations that may have snuck into the DB
+      console.log(
+         "Cleaning up excluded locations from DB...",
+      );
+      const { data: allRestaurants, error: fetchError } =
+         await supabase
+            .from("restaurants")
+            .select("id, name");
+
+      if (fetchError) {
+         console.warn(
+            `Could not check for excluded locations: ${fetchError.message}`,
+         );
+      } else if (allRestaurants) {
+         const toDelete = allRestaurants.filter((r) =>
+            EXCLUDED_LOCATIONS.includes(
+               r.name.toLowerCase(),
+            ),
+         );
+         if (toDelete.length > 0) {
+            for (const restaurant of toDelete) {
+               // Delete associated reviews first
+               await supabase
+                  .from("reviews")
+                  .delete()
+                  .eq("restaurant_id", restaurant.id);
+
+               const { error: deleteError } = await supabase
+                  .from("restaurants")
+                  .delete()
+                  .eq("id", restaurant.id);
+
+               if (deleteError) {
+                  console.warn(
+                     `  Failed to delete ${restaurant.name}: ${deleteError.message}`,
+                  );
+               } else {
+                  console.log(
+                     `  Deleted ${restaurant.name} and its reviews`,
+                  );
+               }
+            }
+         } else {
+            console.log(
+               "No excluded locations found in DB.",
+            );
+         }
       }
 
       if (restaurantsToUpsert.length === 0) {

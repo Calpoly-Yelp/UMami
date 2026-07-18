@@ -1,22 +1,22 @@
 name: Keep Supabase alive
 
 on:
-  schedule:
-    - cron: '0 12 * * *'
-  workflow_dispatch:
+   schedule:
+      - cron: "0 12 * * *"
+   workflow_dispatch:
 
 jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ping Supabase
-        run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}")
-          echo "Status: $response"
-          if [ "$response" != "200" ]; then
-            echo "::error::Supabase health check failed (HTTP $response)"
-            exit 1
-          fi
-          echo "Supabase is alive"
+   ping:
+      runs-on: ubuntu-latest
+      steps:
+         - name: Ping Supabase
+           run: |
+              response=$(curl -s -o /dev/null -w "%{http_code}" \
+                "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+                -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}")
+              echo "Status: $response"
+              if [ "$response" != "200" ]; then
+                echo "::error::Supabase health check failed (HTTP $response)"
+                exit 1
+              fi
+              echo "Supabase is alive"
