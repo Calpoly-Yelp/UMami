@@ -10,17 +10,23 @@
 
 ### Live App
 
-🌐 [UMami](https://thankful-hill-0f3846d10.7.azurestaticapps.net)
+🌐 [UMami](https://umami.elischiffler.dev)
+
+[Backend API](https://api.umami.elischiffler.dev)
+
+The current application is maintained in the
+[personal repository](https://github.com/elischiffler/UMami).
+Azure retirement is pending deployment and public verification.
+This repository preserves the historical application and publishes only
+the isolated retirement artifacts through manually approved workflows.
+See [the retirement runbook](docs/azure-retirement.md) and
+[validation evidence](docs/validation.md).
 
 ### CI/CD Status
 
-[![Frontend Deploy](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/azure-static-web-apps-thankful-hill-0f3846d10.yml?style=for-the-badge&label=Frontend+Deploy&logo=microsoft-azure)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/azure-static-web-apps-thankful-hill-0f3846d10.yml)
-
-[![Backend Deploy](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/main_umami-api-calpoly.yml?style=for-the-badge&label=Backend+Deploy&logo=microsoft-azure)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/main_umami-api-calpoly.yml)
-
 [![CI Testing](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/ci-testing.yml?style=for-the-badge&label=CI+Testing&logo=github)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/ci-testing.yml)
 
-[![Live Tests](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/live-tests.yml?style=for-the-badge&label=Live+Tests&logo=cypress)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/live-tests.yml)
+[![Retirement browser smoke](https://img.shields.io/github/actions/workflow/status/Calpoly-Yelp/UMami/cypress.yml?style=for-the-badge&label=Retirement+Browser)](https://github.com/Calpoly-Yelp/UMami/actions/workflows/cypress.yml)
 
 ## Running Testing:
 

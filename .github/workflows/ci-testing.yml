@@ -16,11 +16,6 @@ jobs:
    build:
       runs-on: ubuntu-latest
 
-      # Pass Supabase credentials from GitHub Secrets as environment variables
-      env:
-         SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-         SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-
       steps:
          # Step 1: Check out the repository code onto the runner
          - uses: actions/checkout@v4
@@ -39,8 +34,14 @@ jobs:
          # Step 5: Clean install backend dependencies
          - run: npm ci --prefix backend
 
-         # Step 6: Run ESLint and Prettier checks on frontend and backend
+         - run: npm run format:check
+
+         # Step 6: Run ESLint checks on frontend, backend and retirement code
          - run: npm run lint
 
          # Step 7: Run all frontend and backend Jest tests
          - run: npm test
+         - run: npm --prefix frontend run build
+           env:
+              VITE_SUPABASE_URL: https://fixture.invalid
+              VITE_SUPABASE_ANON_KEY: fixture-only-build-key

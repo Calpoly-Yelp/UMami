@@ -1,45 +1,48 @@
-name: Azure Static Web Apps CI/CD
+name: Retire Azure frontend
+
 on:
-   push:
-      branches:
-         - main
-   pull_request:
-      types: [opened, synchronize, reopened, closed]
-      branches:
-         - main
+   workflow_dispatch:
+      inputs:
+         confirmation:
+            description: "Type retire-azure-frontend after approving retirement of the old site"
+            required: true
+            type: string
+
+permissions:
+   contents: read
+   actions: read
+
+concurrency:
+   group: azure-retirement-production
+   cancel-in-progress: false
 
 jobs:
-   build_and_deploy_job:
-      if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+   retire:
+      if: github.repository == 'Calpoly-Yelp/UMami' && github.ref == 'refs/heads/main' && inputs.confirmation == 'retire-azure-frontend'
       runs-on: ubuntu-latest
-      name: Build and Deploy Job
+      timeout-minutes: 15
       steps:
-         - uses: actions/checkout@v3
+         - uses: actions/checkout@v4
            with:
-              submodules: true
-              lfs: false
-         - name: Build And Deploy
-           id: builddeploy
-           uses: Azure/static-web-apps-deploy@v1
+              persist-credentials: false
+         - uses: actions/setup-node@v4
            with:
-              azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_HILL_0F3846D10 }}
-              repo_token: ${{ secrets.GITHUB_TOKEN }}
-              action: "upload"
-              app_location: "./frontend"
-              api_location: ""
-              output_location: "dist"
+              node-version: 24
+         - name: Test and build the keyless artifacts
+           run: node --test retirement/retirement.test.mjs
+         - name: Require successful CI on the latest main commit
+           run: node retirement/deployment-gate.mjs
            env:
-              VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-              VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-
-   close_pull_request_job:
-      if: github.event_name == 'pull_request' && github.event.action == 'closed'
-      runs-on: ubuntu-latest
-      name: Close Pull Request Job
-      steps:
-         - name: Close Pull Request
-           id: closepullrequest
+              GH_TOKEN: ${{ github.token }}
+         - name: Publish only the moved notice
            uses: Azure/static-web-apps-deploy@v1
            with:
               azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_HILL_0F3846D10 }}
-              action: "close"
+              action: upload
+              app_location: retirement/dist/frontend
+              api_location: ""
+              output_location: ""
+              skip_app_build: true
+              skip_api_build: true
+         - name: Verify public retirement responses
+           run: node retirement/verify-live.mjs frontend
