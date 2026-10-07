@@ -1,0 +1,23 @@
+{
+   "routes": [
+      { "route": "/assets/*", "statusCode": 410 },
+      { "route": "/static/*", "statusCode": 410 },
+      { "route": "/api/*", "statusCode": 410 },
+      { "route": "/service-worker.js", "statusCode": 410 }
+   ],
+   "navigationFallback": {
+      "rewrite": "/index.html",
+      "exclude": [
+         "/assets/*",
+         "/static/*",
+         "/api/*",
+         "/service-worker.js"
+      ]
+   },
+   "globalHeaders": {
+      "Cache-Control": "no-store",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'; style-src 'self'; script-src 'none'; connect-src 'none'; img-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+   }
+}
